@@ -1,18 +1,18 @@
-// AdvancedProgram.tsx
 import { useFocusEffect } from '@react-navigation/native';
 import { Icon } from '@rneui/themed';
+import axios from 'axios';
 import { router } from 'expo-router';
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScheduleType, useSchedule } from '../isa/context/ScheduleContext';
+import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
 interface CalendarDay {
   date: number;
   month: 'prev' | 'current' | 'next';
   schedule: ScheduleType;
   year: number;
-  monthIndex: number; // 0-11
+  monthIndex: number;
 }
 
 const getNextMonthCalendar = (scheduledEvents?: { [date: number]: ScheduleType }): CalendarDay[] => {
@@ -21,28 +21,28 @@ const getNextMonthCalendar = (scheduledEvents?: { [date: number]: ScheduleType }
   const year = nextMonth.getFullYear();
   const month = nextMonth.getMonth();
 
-  const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const prevMonthLastDay = new Date(year, month, 0).getDate();
-  const startWeekDay = (firstDay.getDay() + 6) % 7;
+  
+  const firstDay = new Date(year, month, 1).getDay(); 
+  
+  const firstDayOfWeek = (firstDay - 1 + 7) % 7; 
 
   const days: CalendarDay[] = [];
 
-  // Previous month padding
-  for (let i = startWeekDay; i > 0; i--) {
+  for (let i = 0; i < firstDayOfWeek; i++) {
     days.push({
-      date: prevMonthLastDay - i + 1,
+      date: 0,
       month: 'prev',
       schedule: 'NONE',
       year,
-      monthIndex: month - 1,
+      monthIndex: month,
     });
   }
 
-  // Current month
   for (let i = 1; i <= lastDay.getDate(); i++) {
-    const dateObj = new Date(year, month, i);
-    const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+    const dayObj = new Date(year, month, i);
+    const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6; 
+
     days.push({
       date: i,
       month: 'current',
@@ -52,34 +52,32 @@ const getNextMonthCalendar = (scheduledEvents?: { [date: number]: ScheduleType }
     });
   }
 
-  // Next month padding
-  let nextDate = 1;
   while (days.length % 7 !== 0) {
     days.push({
-      date: nextDate++,
+      date: 0,
       month: 'next',
       schedule: 'NONE',
       year,
-      monthIndex: month + 1,
+      monthIndex: month,
     });
   }
 
   return days;
 };
 
-// --- DayCell Component ---
 const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({ day, onPress }) => {
-  const isCurrentMonth = day.month === 'current';
+  if (day.date === 0) return <View style={styles.dayCell} />;
+
   const dayObj = new Date(day.year, day.monthIndex, day.date);
-  const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
+  const isWeekend = day.month === 'current' && (dayObj.getDay() === 0 || dayObj.getDay() === 6);
 
   const scheduleColors: Record<ScheduleType | 'NONE', { border: string; background?: string; text: string }> = {
-    HNST: { border: '#4C72B0', text: '#E0E0E0' },
-    EXAM: { border: '#6A1B9A', text: '#E0E0E0' },
-    EVAL: { border: '#66BB6A', text: '#E0E0E0' },
-    HOLIDAY: { border: '#EF5350', text: '#E0E0E0' },
+    HNST: { border: '#4C72B0', text: '#464545ff' },
+    EXAM: { border: '#6A1B9A', text: '#464545ff' },
+    EVAL: { border: '#66BB6A', text: '#464545ff' },
+    HOLIDAY: { border: '#EF5350', text: '#464545ff' },
     DEV: { border: '#FFC107', background: '#FFC107', text: '#333' },
-    NONE: { border: 'transparent', text: isCurrentMonth ? (isWeekend ? '#555' : '#E0E0E0') : '#555' },
+    NONE: { border: 'transparent', text: isWeekend ? '#b1aeaeff' : '#464545ff' },
   };
 
   const color = scheduleColors[day.schedule] || scheduleColors['NONE'];
@@ -87,8 +85,9 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({ day, onPress 
   return (
     <Pressable
       style={styles.dayCell}
-      disabled={!isCurrentMonth || isWeekend} // disables weekends & other months
-      onPress={() => onPress && onPress()}
+      disabled={isWeekend}
+      android_ripple={{ color: '#ccc' }}
+      onPress={onPress}
     >
       <View
         style={[
@@ -96,7 +95,6 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({ day, onPress 
           {
             borderColor: color.border,
             backgroundColor: color.background || 'transparent',
-            opacity: isCurrentMonth ? 1 : 0.5, // faded for other months
           },
         ]}
       >
@@ -106,40 +104,80 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({ day, onPress 
   );
 };
 
-// --- Main Component ---
+
+
 const AdvancedProgram: FC = () => {
-  const { scheduledEvents } = useSchedule(); // ScheduledEvent[]
+  const { scheduledEvents, fetchMonthVisits } = useSchedule();
+
+  const saveScheduleToBackend = async () => {
+    try {
+      const nextMonthName = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+          .toLocaleString('default', { month: 'long' });
+
+      const payloads = scheduledEvents
+          .filter(event => {
+            const eventMonthName = new Date(new Date().getFullYear(), new Date().getMonth() + 1, Number(event.date))
+                                      .toLocaleString('default', { month: 'long' });
+            return eventMonthName === nextMonthName;
+          })
+          .map(event => ({
+            visit_date: event.date,
+            month: nextMonthName,             isa_id: 13,
+            location_id: 9,
+            duty: event.duty,
+          }));
+
+      for (const payload of payloads) {
+        await axios.post('http://172.16.30.146:5000/api/visits', payload);
+      }
+
+      alert('✅ Schedule saved to the database!');
+      fetchMonthVisits(nextMonthName);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save schedule.');
+    }
+  };
+
+  const monthToFetch = useMemo(() => {
+    return new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+      .toLocaleString('default', { month: 'long' });
+  }, []);
+
+  useEffect(() => {
+    fetchMonthVisits(monthToFetch);
+  }, [fetchMonthVisits, monthToFetch]);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('🔁 AdvancedProgram focused', scheduledEvents);
-    }, [scheduledEvents])
+      fetchMonthVisits(monthToFetch);
+    }, [fetchMonthVisits, monthToFetch])
   );
 
-  const scheduledEventsObj = scheduledEvents.reduce(
-    (acc, event) => {
+  const scheduledEventsObj = useMemo(() => {
+    return scheduledEvents.reduce((acc, event) => {
       acc[Number(event.date)] = event.duty;
       return acc;
-    },
-    {} as { [date: number]: ScheduleType }
-  );
+    }, {} as { [date: number]: ScheduleType });
+  }, [scheduledEvents]);
 
-  const calendarData = useMemo(() => getNextMonthCalendar(scheduledEventsObj), [scheduledEvents]);
+  const calendarData = useMemo(() => getNextMonthCalendar(scheduledEventsObj), [scheduledEventsObj]);
 
   const monthTitle = useMemo(() => {
-    const today = new Date();
-    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const nextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1);
     return nextMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
   }, []);
 
   const unscheduledWeekdays = calendarData.filter(
     d => d.month === 'current' && d.schedule === 'NONE' &&
-         ![0, 6].includes(new Date(d.year, d.monthIndex, d.date).getDay())
+          ![0, 6].includes(new Date(d.year, d.monthIndex, d.date).getDay())
   ).length;
 
   const onDayPress = (dayDate: number) => {
-    router.push({ pathname: '/isa/dutySelection', params: { date: dayDate.toString() } });
+    router.push({ pathname: '/isa/dutySelection', params: { date: dayDate.toString(), month: monthToFetch } }); // Added month param for better context management
   };
+
+  const weekDays = ['M','T','W','T','F','S','S'];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -147,6 +185,7 @@ const AdvancedProgram: FC = () => {
         <View style={styles.header}>
           <Icon name="arrow-back" type="material" color="#E0E0E0" size={28} onPress={() => router.back()} />
           <Text style={styles.headerTitle}>Advanced Program</Text>
+          <View style={{ width: 28 }} />
         </View>
 
         <View style={styles.summaryBar}>
@@ -157,7 +196,8 @@ const AdvancedProgram: FC = () => {
           <View style={styles.summaryItemRight}>
             <Text style={styles.summaryText}>Scheduled</Text>
             <Text style={styles.summaryValueScheduled}>
-              {calendarData.filter(d => d.schedule !== 'NONE').length}
+              {/* Only count days with an actual schedule type */}
+              {calendarData.filter(d => d.month === 'current' && d.schedule !== 'NONE').length}
             </Text>
           </View>
         </View>
@@ -166,61 +206,101 @@ const AdvancedProgram: FC = () => {
           <View style={styles.warningBox}>
             <Text style={styles.warningIcon}>⚠️</Text>
             <Text style={styles.warningText}>
-              You have {unscheduledWeekdays} weekdays with no scheduled visits. Please complete your schedule.
+              You have **{unscheduledWeekdays}** weekdays with no scheduled visits. Please complete your schedule.
             </Text>
           </View>
         )}
 
         <View style={styles.calendarContainer}>
           <View style={styles.calendarGrid}>
-            {['M','T','W','T','F','S','S'].map(day => (
-              <Text key={day} style={styles.dayLabel}>{day}</Text>
+            {/* Renders M, T, W, T, F, S, S header */}
+            {weekDays.map((day, idx) => (
+              <Text key={`weekday-${idx}`} style={styles.dayLabel}>{day}</Text>
             ))}
           </View>
           <View style={styles.calendarGrid}>
+            {/* Renders day cells, aligned with Monday start */}
             {calendarData.map((day, idx) => (
-              <DayCell key={idx} day={day} onPress={() => onDayPress(day.date)} />
+              <DayCell
+                key={`${day.year}-${day.monthIndex}-${day.date}-${day.month}-${idx}`}
+                day={day}
+                onPress={day.date === 0 ? undefined : () => onDayPress(day.date)}
+              />
             ))}
           </View>
         </View>
 
-        <Pressable style={styles.submitButton} onPress={() => console.log('Submit Pressed')}>
-          <Text style={styles.submitButtonText}>Submit Monthly Schedule</Text>
+        <Pressable style={[styles.submitButton, { backgroundColor: '#1976D2' }]} onPress={saveScheduleToBackend}>
+          <Text style={[styles.submitButtonText, { color: '#fff' }]}>Save</Text>
         </Pressable>
 
-        <View style={styles.footerBranding}>
-          <Text style={{ color: '#555', fontSize: 12 }}>Made with <Text style={styles.vLogo}>V</Text></Text>
-        </View>
+        <Pressable
+          style={[
+            styles.submitButton,
+            {
+              backgroundColor: unscheduledWeekdays === 0 ? '#388E3C' : '#A0A0A0',
+              opacity: unscheduledWeekdays === 0 ? 1 : 0.6,
+            },
+          ]}
+          disabled={unscheduledWeekdays > 0}
+          onPress={async () => {
+             const nextMonthName = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+               .toLocaleString('default', { month: 'long' });
+               
+             const payloads = scheduledEvents
+               .filter(event => {
+                 const eventMonthName = new Date(new Date().getFullYear(), new Date().getMonth() + 1, Number(event.date))
+                                      .toLocaleString('default', { month: 'long' });
+                 return eventMonthName === nextMonthName;
+               })
+               .map(event => ({
+                 visit_date: event.date,
+                 month: nextMonthName,
+                 isa_id: 13,
+                 location_id: 9,
+                 duty: event.duty,
+               }));
+            try {
+              for (const payload of payloads) {
+                await axios.post('http://172.20.10.2:5000/api/submitMonthlySchedule', payload);
+              }
+
+              alert('Monthly schedule submitted successfully!');
+            } catch (err) {
+              console.error(err);
+              alert('Failed to submit monthly schedule.');
+            }
+          }}
+        >
+          <Text style={[styles.submitButtonText, { color: '#fff' }]}>Submit Monthly Schedule</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-// --- Styles ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  container: { flex: 1, backgroundColor: '#ffffffff' },
   scrollContent: { paddingBottom: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: '#333' },
-  headerTitle: { fontSize: 18, fontWeight: '500', color: '#E0E0E0', marginLeft: 15 },
-  summaryBar: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#1E1E1E', padding: 15, margin: 15, borderRadius: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', backgroundColor: "#1976D2", justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 15, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: '#333' },
+  headerTitle: { fontSize: 18, fontWeight: '500', color: '#ffffffff', textAlign: 'center', flex: 1 },
+  summaryBar: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#dae1ebff', padding: 15, margin: 15, borderRadius: 12 },
   summaryItem: { flex: 3, paddingRight: 10 },
   summaryItemRight: { flex: 1, alignItems: 'flex-end' },
-  summaryText: { fontSize: 14, color: '#A0A0A0' },
-  submitDate: { fontWeight: '600', color: '#E0E0E0', fontSize: 15 },
+  summaryText: { fontSize: 14, color: '#555454ff' },
+  submitDate: { fontWeight: '600', color: '#393052ff', fontSize: 15 },
   summaryValueScheduled: { fontSize: 24, fontWeight: '700', color: '#66BB6A', marginTop: 5 },
-  warningBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#383120', padding: 12, marginHorizontal: 15, borderRadius: 8, borderLeftWidth: 5, borderLeftColor: '#FFC107', marginTop: 10 },
+  warningBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0e5a6ff', padding: 12, marginHorizontal: 15, borderRadius: 8, borderLeftWidth: 5, borderLeftColor: '#FFC107', marginTop: 10 },
   warningIcon: { fontSize: 20, marginRight: 10 },
-  warningText: { flex: 1, fontSize: 14, color: '#FFC107' },
-  calendarContainer: { margin: 15, padding: 15, backgroundColor: '#1E1E1E', borderRadius: 12, marginTop: 10 },
+  warningText: { flex: 1, fontSize: 14, color: '#000000ff' },
+  calendarContainer: { margin: 15, padding: 15, backgroundColor: '#ffffffff', borderRadius: 12, marginTop: 10 },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 },
-  dayLabel: { width: `${100/7}%`, textAlign: 'center', fontWeight: '500', color: '#A0A0A0', fontSize: 14, paddingVertical: 5 },
-  dayCell: { width: `${100/7}%`, alignItems: 'center', justifyContent: 'center', aspectRatio: 1, paddingVertical: 4 },
+  dayLabel: { width: `${100 / 7}%`, textAlign: 'center', fontWeight: '500', color: '#585757ff', fontSize: 14, paddingVertical: 5 },
+  dayCell: { width: `${100 / 7}%`, alignItems: 'center', justifyContent: 'center', aspectRatio: 1, paddingVertical: 4 },
   dayCircle: { width: 35, height: 35, borderRadius: 17.5, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   dayText: { fontSize: 15, fontWeight: '600' },
-  submitButton: { marginHorizontal: 15, marginTop: 30, padding: 18, backgroundColor: '#A0A0A0', borderRadius: 12 },
-  submitButtonText: { textAlign: 'center', color: '#333', fontSize: 18, fontWeight: '700' },
-  footerBranding: { textAlign: 'center', fontSize: 12, color: '#555', marginTop: 40, paddingBottom: 20 },
-  vLogo: { color: '#6A1B9A', fontWeight: 'bold', fontSize: 14 },
+  submitButton: { marginHorizontal: 15, marginTop: 10, padding: 18, backgroundColor: '#A0A0A0', borderRadius: 12 },
+  submitButtonText: { textAlign: 'center', color: '#ffffffff', fontSize: 18, fontWeight: '700' }
 });
 
 export default AdvancedProgram;

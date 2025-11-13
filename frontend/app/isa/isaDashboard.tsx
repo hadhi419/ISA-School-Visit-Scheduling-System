@@ -1,5 +1,4 @@
-// Dashboard.tsx
-import { Button, Icon } from '@rneui/themed'; // Requires @rneui/themed and @rneui/base
+import { Button, Icon } from '@rneui/themed';
 import { router } from 'expo-router';
 import { FC } from 'react';
 import { Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -8,130 +7,82 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
-// --- 1. Inline Types ---
+
 interface Visit {
     id: string;
     location: string;
     time: string;
-    image: string; // URL of the location image
+    image: string; 
 }
 
 interface VisitCardProps extends Visit {}
 
 interface DashboardProps {}
-// -----------------------
 
-// --- 2. Styles (Inline) ---
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 50, // For notch/status bar clearance
-        paddingBottom: 15,
-        backgroundColor: '#121212',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#E0E0E0',
-    },
-    sectionTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#E0E0E0',
-        marginTop: 20,
-        marginBottom: 15,
-        paddingHorizontal: 16,
-    },
-    visitsCarousel: {
-        paddingLeft: 16,
-    },
-    visitCard: {
-        width: CARD_WIDTH,
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
-        marginRight: 15,
-        overflow: 'hidden',
-        // Shadow styling for iOS
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.5,
-        shadowRadius: 5,
-        // Shadow styling for Android
-        elevation: 8,
-    },
-    cardImage: {
-        width: '100%',
-        height: 180,
-        backgroundColor: '#333',
-    },
-    cardContent: {
-        padding: 15,
-    },
-    cardLocation: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#E0E0E0',
-        marginBottom: 5,
-    },
-    cardTime: {
-        fontSize: 14,
-        color: '#A0A0A0',
-        marginBottom: 15,
-    },
-    programActions: {
-        paddingHorizontal: 16,
-        marginTop: 30,
-        gap: 15,
-    },
-    programBtn: {
-        width: '100%',
-        paddingVertical: 20,
-        borderRadius: 12,
-        elevation: 5,
-    },
-    programBtnTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-    },
-    advancedProgram: {
-        backgroundColor: '#FFC107', // Yellow/Gold
-    },
-    amendedProgram: {
-        backgroundColor: '#66BB6A', // Teal/Green
-    },
-    darkText: {
-        color: '#333',
-    },
-    footerBranding: {
-        textAlign: 'center',
-        fontSize: 12,
-        color: '#555',
-        marginTop: 40,
-        paddingBottom: 20,
-    },
-    vLogo: {
-        color: '#6A1B9A',
-        fontWeight: 'bold',
-        fontSize: 14,
-    }
-});
-// ----------------------------------------
+  container: { flex: 1, backgroundColor: '#ffffffff' },
+  scrollContent: { paddingBottom: 20 },
 
-// --- 3. Placeholder Data ---
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#1976D2', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 16, 
+    paddingTop: 15, 
+    paddingBottom: 15, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#333' 
+  },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: '500', 
+    color: '#ffffffff', 
+    textAlign: 'center', 
+    flex: 1 
+  },
+
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: '#555454ff', 
+    marginTop: 20, 
+    marginBottom: 10, 
+    paddingHorizontal: 16 
+  },
+
+  visitsCarousel: { paddingLeft: 16 },
+  visitCard: { 
+    width: CARD_WIDTH, 
+    backgroundColor: '#ffffffff', 
+    borderRadius: 12, 
+    marginRight: 15, 
+    overflow: 'hidden', 
+    elevation: 5,
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 3 }, 
+    shadowOpacity: 0.3, 
+    shadowRadius: 4 
+  },
+  cardImage: { width: '100%', height: 180, backgroundColor: '#ccc' },
+  cardContent: { padding: 12 },
+  cardLocation: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 4 },
+  cardTime: { fontSize: 14, color: '#555', marginBottom: 10 },
+
+  programActions: { paddingHorizontal: 16, marginTop: 20, gap: 12 },
+  programBtn: { paddingVertical: 18, borderRadius: 12, elevation: 3 },
+  advancedProgram: { backgroundColor: '#d2c319ff' },
+  amendedProgram: { backgroundColor: '#068a74ff' },
+  programBtnTitle: { fontSize: 16, fontWeight: '700', color: '#ffffffff' },
+
+darkText: { color: '#ffffffff' }
+});
 const VISITS_DATA: Visit[] = [
     { id: '1', location: 'Sundharapuram GTMS', time: 'Mon, 10th Nov, 10:00 AM', image: 'https://via.placeholder.com/320x180/4C72B0/FFFFFF?text=Sundharapuram' },
     { id: '2', location: 'Kanagapuram School', time: 'Wed, 12th Nov, 11:30 AM', image: 'https://via.placeholder.com/320x180/66BB6A/FFFFFF?text=Kanagapuram' },
     { id: '3', location: 'New Location Site', time: 'Fri, 14th Nov, 2:00 PM', image: 'https://via.placeholder.com/320x180/FFC107/FFFFFF?text=New+Site' },
 ];
 
-// --- 4. Visit Card Component ---
 const VisitCard: FC<VisitCardProps> = ({ location, time, image }) => (
     <View style={styles.visitCard}>
         <Image source={{ uri: image }} style={styles.cardImage} />
@@ -151,13 +102,11 @@ const VisitCard: FC<VisitCardProps> = ({ location, time, image }) => (
     </View>
 );
 
-// --- 5. Main Dashboard Component ---
 const Dashboard: FC<DashboardProps> = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView style={styles.container}>
                 
-                {/* Header */}
                 <View style={styles.header}>
                     <Icon name="menu" type="material" color="#E0E0E0" size={28} />
                     <Text style={styles.headerTitle}>Good Morning, Alex</Text>
@@ -166,7 +115,6 @@ const Dashboard: FC<DashboardProps> = () => {
 
                 <Text style={styles.sectionTitle}>Your Upcoming Visits</Text>
 
-                {/* Visits Carousel (FlatList) */}
                 <FlatList<Visit>
                     data={VISITS_DATA}
                     renderItem={({ item }) => <VisitCard {...item} />}
@@ -177,7 +125,6 @@ const Dashboard: FC<DashboardProps> = () => {
                     pagingEnabled
                 />
 
-                {/* Program Action Buttons */}
                 <View style={styles.programActions}>
                     <Button
                         title="Advanced Program"
@@ -193,12 +140,7 @@ const Dashboard: FC<DashboardProps> = () => {
                     />
                 </View>
 
-                {/* Footer Branding */}
-                <View style={styles.footerBranding}>
-                    <Text style={{ color: '#555', fontSize: 12 }}>
-                        Made with <Text style={styles.vLogo}>V</Text>
-                    </Text>
-                </View>
+
 
             </ScrollView>
         </SafeAreaView>

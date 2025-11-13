@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
@@ -12,13 +14,25 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>('');
 
   // Fake login function (replace with API call)
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter both email and password');
       return;
     }
 
-    // Example role assignment (replace with real API response)
+   try {
+    const response = await axios.post('http://172.16.30.146:5000/api/auth/login', {
+      email,
+      password,
+    });
+
+    const { token } = response.data;
+
+    // Save token locally
+    await AsyncStorage.setItem('token', token);
+
+    // Decode the token to get role or user info (optional)
+    // For simplicity, here we just check the email
     let role: 'admin' | 'isa' | 'zde';
     if (email.includes('admin')) role = 'admin';
     else if (email.includes('isa')) role = 'isa';
@@ -38,6 +52,10 @@ const Login: React.FC = () => {
       default:
         Alert.alert('Error', 'Invalid user role');
     }
+  } catch (err: any) {
+    console.log(err.response?.data || err.message);
+    Alert.alert('Login Failed', err.response?.data?.error || 'Something went wrong');
+  }
   };
 
   return (

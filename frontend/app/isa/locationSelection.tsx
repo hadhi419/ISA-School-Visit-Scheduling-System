@@ -1,62 +1,74 @@
+import { Icon } from '@rneui/base';
+import axios from 'axios';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { ScheduleType, useSchedule } from './context/ScheduleContext';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
-type Props = {
-  date: string;
-  duty: 'HNST' | 'EXAM' | 'DEV' | 'EVAL';
-};
+// ⚙️ Update if you're testing on a physical device
+const API_URL = "http://172.16.30.146:5000/api/locations";
 
 const LocationSelection = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const date = searchParams.get('date') ?? '';
+  const dutyP = searchParams.get('duty') ?? '';
 
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { addEvent } = useSchedule();
 
-    const searchParams = new URLSearchParams(window.location.search);
-    const date = searchParams.get('date') ?? '';
-    const dutyP = searchParams.get('duty') ?? '';
-    console.log(searchParams.get('duty'));
-    console.log(searchParams.get('date'));
+  // 🔹 Fetch locations using Axios
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const res = await axios.get(API_URL);
+        const fetched = res.data.locations?.map((loc: any) => loc.name) || [];
+        setLocations(fetched);
+      } catch (err) {
+        console.error(err);
+        Alert.alert("Error", "Failed to fetch locations from server");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-    const { addEvent } = useSchedule();
-
-
-    const sampleLocations = [
-  'Kidachchurai Karubippankul',
-  'Tharanikkulam Ganesh Vidyalaya',
-  'Parannaddakal GTMS',
-  'Maravankulam Barathidasan School',
-  'Omanthi Central College',
-  'Kankesanthurai Hindu College',
-  'Chavakachcheri Hindu College',
-  'Point Pedro Central College',
-];
-
+    fetchLocations();
+  }, []);
 
   const handleChoose = () => {
     if (!selectedLocation) return;
 
-    
-    addEvent({ date, duty: dutyP as ScheduleType , location: selectedLocation });
-        console.log('✅ Event added:', { date, dutyP, location: selectedLocation });
+    const month = new Date().toLocaleString('default', { month: 'long' });
 
-        router.navigate('/isa/advancedProgram');
-      };
+    addEvent({ date, month, duty: dutyP as ScheduleType, location: selectedLocation });
+
+    console.log('✅ Event added:', { date, dutyP, location: selectedLocation });
+    router.navigate('/isa/advancedProgram');
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1976D2" />
+        <Text>Loading locations...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Select Location</Text>
+                      <Icon name="arrow-back" type="material" color="#E0E0E0" size={28} onPress={() => router.back()} />
+                      <Text style={styles.headerTitle}>Select Location</Text>
+                      <View style={{ width: 28 }} />
       </View>
-
       {/* Location List */}
-      <FlatList
-        data={sampleLocations}
-        keyExtractor={(item) => item}
+     <FlatList
+        data={locations}
+        keyExtractor={(item, index) => item + index}
+        contentContainerStyle={{ alignItems: 'center', paddingVertical: 10 }}  // 👈 Add this line
         renderItem={({ item }) => (
           <Pressable
             style={[
@@ -85,26 +97,31 @@ const LocationSelection = () => {
       >
         <Text style={styles.chooseButtonText}>Choose</Text>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default LocationSelection;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 50, paddingHorizontal: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  container: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+  header: { flexDirection: 'row', alignItems: 'center', backgroundColor: "#1976D2", justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 15, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: '#333' },
+  headerTitle: { fontSize: 18, fontWeight: '500', color: '#ffffffff', textAlign: 'center', flex: 1 },
   backButton: { marginRight: 15 },
   backIcon: { fontSize: 24, fontWeight: 'bold' },
-  headerTitle: { fontSize: 18, fontWeight: '600' },
   locationItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#eee',
-  },
+  width: 320, // or any fixed pixel width you like
+  padding: 15,
+  borderBottomWidth: 1,
+  borderBottomColor: '#ddd',
+  borderRadius: 8,
+  marginBottom: 8,
+  marginTop: 8,
+  backgroundColor: '#eee'
+},
   selectedLocationItem: { backgroundColor: '#1976D2' },
   locationText: { fontSize: 16, color: '#000' },
   chooseButton: {
@@ -115,4 +132,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   chooseButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

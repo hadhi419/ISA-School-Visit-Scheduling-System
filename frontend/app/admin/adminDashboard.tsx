@@ -1,161 +1,127 @@
-// Dashboard.tsx
-import { Button } from '@rneui/themed'; // Requires @rneui/themed and @rneui/base
-import { FC } from 'react';
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import { Button, Icon } from "@rneui/themed";
+import { router } from "expo-router";
+import React, { FC } from "react";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
+const { width } = Dimensions.get("window");
+const CARD_WIDTH = width * 0.9; // slightly wider for nicer look
 
-// --- 1. Inline Types ---
-interface Visit {
-    id: string;
-    location: string;
-    time: string;
-    image: string; // URL of the location image
-}
-
-interface VisitCardProps extends Visit {}
-
-interface DashboardProps {}
-// -----------------------
-
-// --- 2. Styles (Inline) ---
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 50, // For notch/status bar clearance
-        paddingBottom: 15,
-        backgroundColor: '#121212',
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#E0E0E0',
-    },
-    sectionTitle: {
-        fontSize: 24,
-        fontWeight: '700',
-        color: '#E0E0E0',
-        marginTop: 20,
-        marginBottom: 15,
-        paddingHorizontal: 16,
-    },
-    visitsCarousel: {
-        paddingLeft: 16,
-    },
-    visitCard: {
-        width: CARD_WIDTH,
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
-        marginRight: 15,
-        overflow: 'hidden',
-        // Shadow styling for iOS
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.5,
-        shadowRadius: 5,
-        // Shadow styling for Android
-        elevation: 8,
-    },
-    cardImage: {
-        width: '100%',
-        height: 180,
-        backgroundColor: '#333',
-    },
-    cardContent: {
-        padding: 15,
-    },
-    cardLocation: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#E0E0E0',
-        marginBottom: 5,
-    },
-    cardTime: {
-        fontSize: 14,
-        color: '#A0A0A0',
-        marginBottom: 15,
-    },
-    programActions: {
-        paddingHorizontal: 16,
-        marginTop: 30,
-        gap: 15,
-    },
-    programBtn: {
-        width: '100%',
-        paddingVertical: 20,
-        borderRadius: 12,
-        elevation: 5,
-    },
-    programBtnTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-    },
-    advancedProgram: {
-        backgroundColor: '#FFC107', // Yellow/Gold
-    },
-    amendedProgram: {
-        backgroundColor: '#66BB6A', // Teal/Green
-    },
-    darkText: {
-        color: '#333',
-    },
-    footerBranding: {
-        textAlign: 'center',
-        fontSize: 12,
-        color: '#555',
-        marginTop: 40,
-        paddingBottom: 20,
-    },
-    vLogo: {
-        color: '#6A1B9A',
-        fontWeight: 'bold',
-        fontSize: 14,
-    }
-});
-// ----------------------------------------
-
-// --- 3. Placeholder Data ---
-const VISITS_DATA: Visit[] = [
-    { id: '1', location: 'Sundharapuram GTMS', time: 'Mon, 10th Nov, 10:00 AM', image: 'https://via.placeholder.com/320x180/4C72B0/FFFFFF?text=Sundharapuram' },
-    { id: '2', location: 'Kanagapuram School', time: 'Wed, 12th Nov, 11:30 AM', image: 'https://via.placeholder.com/320x180/66BB6A/FFFFFF?text=Kanagapuram' },
-    { id: '3', location: 'New Location Site', time: 'Fri, 14th Nov, 2:00 PM', image: 'https://via.placeholder.com/320x180/FFC107/FFFFFF?text=New+Site' },
-];
-
-// --- 4. Visit Card Component ---
-const VisitCard: FC<VisitCardProps> = ({ location, time, image }) => (
-    <View style={styles.visitCard}>
-        <Image source={{ uri: image }} style={styles.cardImage} />
-        <View style={styles.cardContent}>
-            <Text style={styles.cardLocation}>{location}</Text>
-            <Text style={styles.cardTime}>{time}</Text>
-            <Button
-                title="View Details"
-                buttonStyle={{
-                    backgroundColor: '#4C72B0',
-                    borderRadius: 8,
-                }}
-                titleStyle={{ fontSize: 16, fontWeight: '600' }}
-                onPress={() => console.log(`Viewing details for ${location}`)}
-            />
+const AdminDashboard: FC = () => {
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Icon name="menu" type="material" color="#fff" size={28} />
+          <Text style={styles.headerTitle}>Admin Dashboard</Text>
+          <Icon name="person" type="material" color="#fff" size={28} />
         </View>
-    </View>
-);
 
-// --- 5. Main Dashboard Component ---
-const Dashboard: FC<DashboardProps> = () => {
-    return (
-        <View>
-            <Text>Welcome, Admin</Text>
+        {/* Section: Management */}
+        <Text style={styles.sectionTitle}>Management</Text>
+
+        <View style={styles.cardContainer}>
+          {/* Manage Users */}
+          <View style={styles.card}>
+            <Icon name="people" type="material" color="#42A5F5" size={40} />
+            <Text style={styles.cardTitle}>Manage Users</Text>
+            <Text style={styles.cardDescription}>
+              Add, edit, or remove registered users in the system.
+            </Text>
+            <View style={styles.cardActions}>
+              <Button
+                title="Add User"
+                onPress={() => router.push("/admin/addUser")}
+                buttonStyle={[styles.actionButton, { backgroundColor: "#42A5F5" }]}
+                containerStyle={styles.buttonContainer}
+              />
+              <Button
+                title="View Users"
+                onPress={() => router.push("/admin/usersList")}
+                buttonStyle={[styles.actionButton, { backgroundColor: "#1E88E5" }]}
+                containerStyle={styles.buttonContainer}
+              />
+            </View>
+          </View>
+
+          {/* Manage Locations */}
+          <View style={styles.card}>
+            <Icon name="place" type="material" color="#66BB6A" size={40} />
+            <Text style={styles.cardTitle}>Manage Locations</Text>
+            <Text style={styles.cardDescription}>
+              Add or update available school and visit locations.
+            </Text>
+            <View style={styles.cardActions}>
+              <Button
+                title="Add Location"
+                onPress={() => router.push("/admin/addLocation")}
+                buttonStyle={[styles.actionButton, { backgroundColor: "#66BB6A" }]}
+                containerStyle={styles.buttonContainer}
+              />
+              <Button
+                title="View Locations"
+                onPress={() => router.push("/admin/locationsList")}
+                buttonStyle={[styles.actionButton, { backgroundColor: "#43A047" }]}
+                containerStyle={styles.buttonContainer}
+              />
+            </View>
+          </View>
         </View>
-    )
+      </ScrollView>
+    </SafeAreaView>
+  );
 };
 
-export default Dashboard;
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#f9f9f9" },
+  scrollContent: { paddingBottom: 30 },
+
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#1976D2",
+    paddingHorizontal: 16,
+    paddingTop: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  headerTitle: { fontSize: 18, fontWeight: "500", color: "#fff", flex: 1, textAlign: "center" },
+
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 16,
+  },
+
+  cardContainer: { paddingHorizontal: 16, gap: 20 },
+
+  card: {
+    width: CARD_WIDTH,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+    marginBottom: 20,
+  },
+
+  cardTitle: { fontSize: 18, fontWeight: "600", color: "#333", marginTop: 12 },
+  cardDescription: { fontSize: 14, color: "#666", marginVertical: 12 },
+
+  cardActions: { flexDirection: "row", justifyContent: "space-between" },
+  actionButton: { borderRadius: 12, paddingVertical: 12, height:70 },
+  buttonContainer: { flex: 1, marginHorizontal: 5 },
+
+  footer: { color: "#777", textAlign: "center", marginTop: 30, fontSize: 13 },
+});
+
+export default AdminDashboard;

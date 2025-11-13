@@ -1,15 +1,15 @@
+import { Icon } from '@rneui/themed';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Mock back arrow
 const BackIcon = () => (
     <Pressable onPress={() => router.back()} style={styles.backButton}>
         <Text style={styles.backIcon}>←</Text>
     </Pressable>
 );
 
-// Map user-facing labels to ScheduleType
 const dutyLabelToType: Record<string, 'HNST' | 'EXAM' | 'DEV' | 'EVAL'> = {
     'HNST Visit': 'HNST',
     'Dev. Meeting': 'DEV',
@@ -19,7 +19,7 @@ const dutyLabelToType: Record<string, 'HNST' | 'EXAM' | 'DEV' | 'EVAL'> = {
 
 const DutySelection = () => {
     const params = useLocalSearchParams();
-    const date = params.date ?? '21';
+    const date = params.date ?? '';
     console.log("Date from params:", date);
 
     const duties = [
@@ -27,24 +27,27 @@ const DutySelection = () => {
         { label: 'Dev. Meeting', color: '#FFC107', textColor: '#000000' },
         { label: 'In. Evaluation', color: '#4CAF50', textColor: '#FFFFFF' },
         { label: 'Exam Duty', color: '#8E24AA', textColor: '#FFFFFF' },
+        { label: 'Holiday', color: '#e00303ff', textColor: '#FFFFFF' },
     ];
 
     const handleDutyPress = (dutyLabel: string) => {
-        const dutyType = dutyLabelToType[dutyLabel] || 'HNST'; // fallback if undefined
+        const dutyType = dutyLabelToType[dutyLabel] || 'HNST'; 
         console.log("Selected duty:", dutyType);
 
         router.push({
             pathname: '/isa/locationSelection',
-            params: { date, duty: dutyType } // pass ScheduleType directly
+            params: { date, duty: dutyType }
         });
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <BackIcon />
-                <Text style={styles.headerTitle}>Select Duty</Text>
+                      <Icon name="arrow-back" type="material" color="#E0E0E0" size={28} onPress={() => router.back()} />
+                      <Text style={styles.headerTitle}>Select Duty</Text>
+                      <View style={{ width: 28 }} />
             </View>
+            
 
             <View style={styles.buttonContainer}>
                 {duties.map((duty, index) => (
@@ -64,29 +67,16 @@ const DutySelection = () => {
                 ))}
             </View>
 
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>
-                    Made with <Text style={styles.vLogo}>V</Text>
-                </Text>
-            </View>
-        </View>
+        </SafeAreaView>
     );
 };
-
-// --- Stylesheet ---
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
     },
-    header: {
-        backgroundColor: '#1976D2',
-        paddingTop: 50,
-        paddingHorizontal: 15,
-        paddingBottom: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
+    header: { flexDirection: 'row', alignItems: 'center', backgroundColor: "#1976D2", justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 15, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: '#333' },
+    headerTitle: { fontSize: 18, fontWeight: '500', color: '#ffffffff', textAlign: 'center', flex: 1 },
     backButton: {
         paddingRight: 15,
     },
@@ -95,11 +85,6 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: 'bold',
         transform: [{ scaleX: -1 }],
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#FFFFFF',
     },
     buttonContainer: {
         flex: 1,
@@ -132,11 +117,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#555',
     },
-    vLogo: {
-        color: '#8E24AA',
-        fontWeight: '900',
-        fontSize: 14,
-    }
+
 });
 
 export default DutySelection;
