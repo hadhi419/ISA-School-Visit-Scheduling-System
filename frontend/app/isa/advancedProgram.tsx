@@ -128,7 +128,7 @@ const AdvancedProgram: FC = () => {
           }));
 
       for (const payload of payloads) {
-        await axios.post('http://172.16.30.146:5000/api/visits', payload);
+        await axios.post('http://localhost:5000/api/visits', payload);
       }
 
       alert('✅ Schedule saved to the database!');
@@ -262,7 +262,7 @@ const AdvancedProgram: FC = () => {
                }));
             try {
               for (const payload of payloads) {
-                await axios.post('http://172.20.10.2:5000/api/submitMonthlySchedule', payload);
+                await axios.post('http://localhost:5000/api/submitMonthlySchedule', payload);
               }
 
               alert('Monthly schedule submitted successfully!');
@@ -274,6 +274,32 @@ const AdvancedProgram: FC = () => {
         >
           <Text style={[styles.submitButtonText, { color: '#fff' }]}>Submit Monthly Schedule</Text>
         </Pressable>
+
+         {/* Footer Legend */}
+                    <View style={styles.footerLegend}>
+                      <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#4C72B0' }]} />
+                        <Text style={styles.legendText}>HNST Visit</Text>
+                      </View>
+                      <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#6A1B9A' }]} />
+                        <Text style={styles.legendText}>Exam Duty</Text>
+                      </View>
+                      <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#FFC107' }]} />
+                        <Text style={styles.legendText}>Dev. Meeting</Text>
+                      </View>
+                       <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#f10a06ff' }]} />
+                        <Text style={styles.legendText}>Holidays</Text>
+                      </View>
+                      <View style={styles.legendItem}>
+                        <View style={[styles.legendDot, { backgroundColor: '#66BB6A' }]} />
+                        <Text style={styles.legendText}>In. Evaluation</Text>
+                      </View>
+                    </View>
+
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -300,7 +326,44 @@ const styles = StyleSheet.create({
   dayCircle: { width: 35, height: 35, borderRadius: 17.5, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   dayText: { fontSize: 15, fontWeight: '600' },
   submitButton: { marginHorizontal: 15, marginTop: 10, padding: 18, backgroundColor: '#A0A0A0', borderRadius: 12 },
-  submitButtonText: { textAlign: 'center', color: '#ffffffff', fontSize: 18, fontWeight: '700' }
+  submitButtonText: { textAlign: 'center', color: '#ffffffff', fontSize: 18, fontWeight: '700' },
+  footerBranding: { textAlign: 'center', fontSize: 12, color: '#555', marginTop: 40, paddingBottom: 20 },
+  vLogo: { color: '#6A1B9A', fontWeight: 'bold', fontSize: 14 },
+  footerLegend: {
+    // 1. Set to row direction
+    flexDirection: 'row',
+    // 2. THIS IS THE KEY FIX: Allow items to wrap
+    flexWrap: 'wrap', 
+    // Add margin/padding to center it nicely
+    marginHorizontal: 15,
+    marginTop: 30, 
+    paddingBottom: 20,
+    justifyContent: 'flex-start', // Align items to the left
+  },
+  
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    // 3. THIS IS THE KEY FIX: Set width to force two columns
+    width: '50%', // Each item takes exactly 50% of the container width
+    paddingVertical: 5, // Adds spacing between rows
+  },
+  
+  legendDot: { 
+    width: 14, // Increased size for better visibility
+    height: 14, 
+    borderRadius: 7, 
+    borderWidth: 2, // Added border for the "dot with a hole" look
+    borderColor: 'currentColor', // Will be overridden by backgroundColor for the fill
+    marginRight: 8, 
+  },
+  
+  legendText: { 
+    color: '#090707ff', 
+    fontSize: 14, 
+  },
+
+
 });
 
 export default AdvancedProgram;

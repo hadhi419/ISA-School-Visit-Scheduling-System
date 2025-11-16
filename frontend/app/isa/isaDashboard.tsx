@@ -136,7 +136,7 @@ const Dashboard: FC<DashboardProps> = () => {
                         title="Amended Program"
                         buttonStyle={[styles.programBtn, styles.amendedProgram]}
                         titleStyle={[styles.programBtnTitle, styles.darkText]}
-                        onPress={() => console.log('Amended Program pressed')}
+                        onPress={() => router.push("/isa/amendedProgram")}
                     />
                 </View>
 
