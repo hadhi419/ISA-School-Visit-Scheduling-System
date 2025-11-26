@@ -77,7 +77,6 @@ const Login: React.FC = () => {
       />
 
       <Button text="Login" onPress={handleLogin} />
-      
     </View>
   );
 };

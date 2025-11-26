@@ -5,7 +5,7 @@ import db from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
-import visitsRoutes from "./routes/visits.js";
+import visitsRoutes from "./routes/visitRoutes.js";
 
 
 

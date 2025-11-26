@@ -6,7 +6,6 @@ import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
-// ⚙️ Update if you're testing on a physical device
 const API_URL = "http://localhost:5000/api/locations";
 
 const LocationSelection = () => {
@@ -19,7 +18,6 @@ const LocationSelection = () => {
   const [loading, setLoading] = useState(true);
   const { addEvent } = useSchedule();
 
-  // 🔹 Fetch locations using Axios
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -64,11 +62,10 @@ const LocationSelection = () => {
                       <Text style={styles.headerTitle}>Select Location</Text>
                       <View style={{ width: 28 }} />
       </View>
-      {/* Location List */}
      <FlatList
         data={locations}
         keyExtractor={(item, index) => item + index}
-        contentContainerStyle={{ alignItems: 'center', paddingVertical: 10 }}  // 👈 Add this line
+        contentContainerStyle={{ alignItems: 'center', paddingVertical: 10 }}  
         renderItem={({ item }) => (
           <Pressable
             style={[
@@ -89,7 +86,6 @@ const LocationSelection = () => {
         )}
       />
 
-      {/* Choose Button */}
       <Pressable
         style={[styles.chooseButton, !selectedLocation && { opacity: 0.5 }]}
         onPress={handleChoose}
@@ -113,7 +109,7 @@ const styles = StyleSheet.create({
   backButton: { marginRight: 15 },
   backIcon: { fontSize: 24, fontWeight: 'bold' },
   locationItem: {
-  width: 320, // or any fixed pixel width you like
+  width: 320,
   padding: 15,
   borderBottomWidth: 1,
   borderBottomColor: '#ddd',

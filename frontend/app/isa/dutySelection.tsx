@@ -3,67 +3,71 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSchedule, ScheduleType, ScheduledEvent } from '../isa/context/ScheduleContext'; 
+import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
+const BackIcon = () => (
+    <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Text style={styles.backIcon}>←</Text>
+    </Pressable>
+);
 
-const dutyLabelToType: Record<string, "HNST" | "EXAM" | "DEV" | "EVAL" | "NONE" | "HOLIDAY"> = {
+const dutyLabelToType: Record<string, 'HNST' | 'EXAM' | 'DEV' | 'EVAL' | 'HOLI'> = {
     'HNST Visit': 'HNST',
     'Dev. Meeting': 'DEV',
     'In. Evaluation': 'EVAL',
     'Exam Duty': 'EXAM',
-    'Holiday':'HOLIDAY',
+    'Holiday': 'HOLI',
 };
 
 const DutySelection = () => {
-    const { addScheduleEvent } = useSchedule(); 
-    
     const params = useLocalSearchParams();
-    const { date: dateParam, month: monthParam } = params;
-    const date = dateParam?.toString() ?? '';
-    const month = monthParam?.toString() ?? '';
+    const date = params.date ?? '';
+    console.log("Date from params:", date);
+
+    const { addEvent } = useSchedule();
 
     const duties = [
         { label: 'HNST Visit', color: '#1976D2', textColor: '#FFFFFF' },
         { label: 'Dev. Meeting', color: '#FFC107', textColor: '#000000' },
         { label: 'In. Evaluation', color: '#4CAF50', textColor: '#FFFFFF' },
         { label: 'Exam Duty', color: '#8E24AA', textColor: '#FFFFFF' },
-        { label: 'Holiday', color: '#e00303ff', textColor: '#FFFFFF' }, 
+        { label: 'Holiday', color: '#e00303ff', textColor: '#FFFFFF' },
     ];
 
     const handleDutyPress = (dutyLabel: string) => {
-        
-        if (dutyLabel === 'Holiday') {
-            const dutyType: ScheduleType = 'HOLIDAY'; 
+        const dutyType = dutyLabelToType[dutyLabel] || 'HNST';
 
-            const holidayEvent: ScheduledEvent = {
-                date: date,
-                duty: dutyType,
-            };
-            
-            // 💡 Key Action: Update the global state
-            addScheduleEvent(holidayEvent);
-            
-            // Navigate back to AdvancedProgram
-            router.back(); 
-            return;
+        const month = new Date().toLocaleString('default', { month: 'long' });
+
+
+        if(dutyType=="HOLI")
+        {
+            console.log("holidasrggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggy");
+            const searchParams = new URLSearchParams(window.location.search);
+            const date = searchParams.get('date') ?? '';
+            addEvent({ date, month, duty: dutyType as ScheduleType, location: "none" });
+
+                console.log()
+                console.log('✅ Event added:', { date, dutyType, location: "none" });
+                return router.navigate('/isa/advancedProgram');;
         }
-
-        const dutyType = dutyLabelToType[dutyLabel] || 'HNST'; 
+        console.log("Selected duty:", dutyType);
 
         router.push({
             pathname: '/isa/locationSelection',
-            params: { date, month, duty: dutyType }
+            params: { date, duty: dutyType }
         });
     };
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Icon name="arrow-back" type="material" color="#E0E0E0" size={28} onPress={() => router.back()} />
-                <Text style={styles.headerTitle}>Select Duty</Text>
-                <View style={{ width: 28 }} />
+                      <Icon name="arrow-back" type="material" color="#E0E0E0" size={28} onPress={() => router.back()} />
+                      <Text style={styles.headerTitle}>Select Duty</Text>
+                      <View style={{ width: 28 }} />
             </View>
             
+
             <View style={styles.buttonContainer}>
                 {duties.map((duty, index) => (
                     <Pressable
@@ -81,11 +85,10 @@ const DutySelection = () => {
                     </Pressable>
                 ))}
             </View>
+
         </SafeAreaView>
     );
 };
-
-// ... (styles remain the same)
 const styles = StyleSheet.create({
     container: {
         flex: 1,

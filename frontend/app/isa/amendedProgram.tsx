@@ -1,122 +1,183 @@
-// AmendedProgram.tsx
+import { useFocusEffect } from '@react-navigation/native';
 import { Icon } from '@rneui/themed';
+import axios from 'axios';
 import { router } from 'expo-router';
-import React, { FC, useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScheduleType } from '../isa/context/ScheduleContext'; // Assuming this ScheduleType is available
+import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
-// Re-using the CalendarDay interface for structure
 interface CalendarDay {
   date: number;
   month: 'prev' | 'current' | 'next';
   schedule: ScheduleType;
   year: number;
   monthIndex: number;
-  isCompleted: boolean; 
 }
 
-// Mock Data for Amended Program 
-const mockAmendedEvents: { [date: number]: { duty: ScheduleType; isCompleted: boolean } } = {
-  1: { duty: 'HOLIDAY', isCompleted: false }, // Red (Scheduled/Holiday)
-  2: { duty: 'HNST', isCompleted: true }, // Green (Completed)
-  3: { duty: 'HNST', isCompleted: true }, // Green (Completed)
-  4: { duty: 'HNST', isCompleted: true }, // Green (Completed)
-  23: { duty: 'HOLIDAY', isCompleted: false }, // Red (Scheduled/Holiday)
-};
-
-const getAmendedCalendar = (): CalendarDay[] => {
+const getCurrentMonthCalendar = (scheduledEvents?: { [date: number]: ScheduleType }): CalendarDay[] => {
   const today = new Date();
-  const targetMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Using current month for simplicity
-  const year = targetMonth.getFullYear();
-  const month = targetMonth.getMonth();
+  const nextMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const year = nextMonth.getFullYear();
+  const month = nextMonth.getMonth();
 
-  const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const prevMonthLastDay = new Date(year, month, 0).getDate();
-  const startWeekDay = (firstDay.getDay() + 6) % 7;
+  
+  const firstDay = new Date(year, month, 1).getDay(); 
+  
+  const firstDayOfWeek = (firstDay - 1 + 7) % 7; 
 
   const days: CalendarDay[] = [];
 
-  // Previous month padding
-  for (let i = startWeekDay; i > 0; i--) {
-    days.push({ date: prevMonthLastDay - i + 1, month: 'prev', schedule: 'NONE', year, monthIndex: month - 1, isCompleted: false });
-  }
-
-  // Current month
-  for (let i = 1; i <= lastDay.getDate(); i++) {
-    const event = mockAmendedEvents[i];
+  for (let i = 0; i < firstDayOfWeek; i++) {
     days.push({
-      date: i,
-      month: 'current',
-      schedule: event?.duty || 'NONE',
+      date: 0,
+      month: 'prev',
+      schedule: 'NONE',
       year,
       monthIndex: month,
-      isCompleted: event?.isCompleted || false,
     });
   }
 
-  // Next month padding
-  let nextDate = 1;
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    const dayObj = new Date(year, month, i);
+    const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6; 
+
+    days.push({
+      date: i,
+      month: 'current',
+      schedule: isWeekend ? 'NONE' : scheduledEvents?.[i] || 'NONE',
+      year,
+      monthIndex: month,
+    });
+  }
+
   while (days.length % 7 !== 0) {
-    days.push({ date: nextDate++, month: 'next', schedule: 'NONE', year, monthIndex: month + 1, isCompleted: false });
+    days.push({
+      date: 0,
+      month: 'next',
+      schedule: 'NONE',
+      year,
+      monthIndex: month,
+    });
   }
 
   return days;
 };
 
-// --- AmendedDayCell Component ---
-const AmendedDayCell: FC<{ day: CalendarDay }> = ({ day }) => {
-  const isCurrentMonth = day.month === 'current';
-  const isScheduled = day.schedule !== 'NONE';
-  
-  let borderColor = 'transparent';
-  let textColor = '#A0A0A0';
-  let opacity = 0.3;
+const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({ day, onPress }) => {
+  if (day.date === 0) return <View style={styles.dayCell} />;
 
-  if (isCurrentMonth) {
-    opacity = 1;
-    if (day.isCompleted) {
-      // Completed - Green circle (as per image)
-      borderColor = '#006c05ff'; 
-      textColor = '#E0E0E0';
-    } else if (isScheduled) {
-      // Scheduled/Not Completed - Red circle (as per image)
-      borderColor = '#c40000ff'; 
-      textColor = '#E0E0E0';
-    } else {
-      // Unscheduled/Empty - Grey text
-      textColor = '#A0A0A0';
-    }
-  }
+  const dayObj = new Date(day.year, day.monthIndex, day.date);
+  const isWeekend = day.month === 'current' && (dayObj.getDay() === 0 || dayObj.getDay() === 6);
+
+  const scheduleColors: Record<ScheduleType | 'NONE', { border: string; background?: string; text: string }> = {
+    HNST: { border: '#4C72B0', text: '#464545ff' },
+    EXAM: { border: '#6A1B9A', text: '#464545ff' },
+    EVAL: { border: '#66BB6A', text: '#464545ff' },
+    HOLIDAY: { border: '#EF5350', text: '#464545ff' },
+    DEV: { border: '#FFC107', background: '#FFC107', text: '#333' },
+    NONE: { border: 'transparent', text: isWeekend ? '#b1aeaeff' : '#464545ff' },
+  };
+
+  const color = scheduleColors[day.schedule] || scheduleColors['NONE'];
 
   return (
-    <View style={styles.dayCell}>
+    <Pressable
+      style={styles.dayCell}
+      disabled={isWeekend}
+      android_ripple={{ color: '#ccc' }}
+      onPress={onPress}
+    >
       <View
         style={[
           styles.dayCircle,
           {
-            borderColor: borderColor,
-            borderWidth: isScheduled ? 2 : 0, // Only show border if scheduled
-            opacity: opacity,
+            borderColor: color.border,
+            backgroundColor: color.background || 'transparent',
           },
         ]}
       >
-        <Text style={[styles.dayText, { color: textColor }]}>{day.date}</Text>
+        <Text style={[styles.dayText, { color: color.text }]}>{day.date}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
-// --- Main Component ---
-const AmendedProgram: FC = () => {
-  const calendarData = useMemo(() => getAmendedCalendar(), []);
+
+
+const AmmendedProgram: FC = () => {
+  const { scheduledEvents, fetchMonthVisitsApproved } = useSchedule();
+
+  const saveScheduleToBackend = async () => {
+    try {
+      const currentMonthName = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+          .toLocaleString('default', { month: 'long' });
+
+      const payloads = scheduledEvents
+          .filter(event => {
+            const eventMonthName = new Date(new Date().getFullYear(), new Date().getMonth() + 1, Number(event.date))
+                                      .toLocaleString('default', { month: 'long' });
+            return eventMonthName === currentMonthName;
+          })
+          .map(event => ({
+            visit_date: event.date,
+            month: currentMonthName,             isa_id: 13,
+            location_id: 9,
+            duty: event.duty,
+          }));
+
+      for (const payload of payloads) {
+        await axios.post('http://localhost:5000/api/visits', payload);
+      }
+
+      alert('✅ Schedule saved to the database!');
+      fetchMonthVisitsApproved(currentMonthName);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save schedule.');
+    }
+  };
+
+  const monthToFetch = useMemo(() => {
+    return new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toLocaleString('default', { month: 'long' });
+  }, []);
+
+  useEffect(() => {
+    fetchMonthVisitsApproved(monthToFetch);
+  }, [fetchMonthVisitsApproved, monthToFetch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchMonthVisitsApproved(monthToFetch);
+    }, [fetchMonthVisitsApproved, monthToFetch])
+  );
+
+  const scheduledEventsObj = useMemo(() => {
+    return scheduledEvents.reduce((acc, event) => {
+      acc[Number(event.date)] = event.duty;
+      return acc;
+    }, {} as { [date: number]: ScheduleType });
+  }, [scheduledEvents]);
+
+  const calendarData = useMemo(() => getCurrentMonthCalendar(scheduledEventsObj), [scheduledEventsObj]);
 
   const monthTitle = useMemo(() => {
-    const today = new Date();
-    const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    return currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const nextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1);
+    return nextMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
   }, []);
+
+  const unscheduledWeekdays = calendarData.filter(
+    d => d.month === 'current' && d.schedule === 'NONE' &&
+          ![0, 6].includes(new Date(d.year, d.monthIndex, d.date).getDay())
+  ).length;
+
+  const onDayPress = (dayDate: number) => {
+    router.push({ pathname: '/isa/submitReport', params: { date: dayDate.toString(), month: monthToFetch } }); // Added month param for better context management
+  };
+
+  const weekDays = ['M','T','W','T','F','S','S'];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -124,69 +185,59 @@ const AmendedProgram: FC = () => {
         <View style={styles.header}>
           <Icon name="arrow-back" type="material" color="#E0E0E0" size={28} onPress={() => router.back()} />
           <Text style={styles.headerTitle}>Amended Program</Text>
+          <View style={{ width: 28 }} />
         </View>
+
+       
 
         <View style={styles.calendarContainer}>
-            {/* Calendar Header with Arrows and Month */}
-            <View style={styles.monthHeader}>
-                <Pressable><Icon name="arrow-back-ios" type="material" color="#E0E0E0" size={20} /></Pressable>
-                <Text style={styles.monthTitle}>{monthTitle}</Text>
-                <Pressable><Icon name="arrow-forward-ios" type="material" color="#E0E0E0" size={20} /></Pressable>
-            </View>
-
-            {/* Day Labels */}
-            <View style={styles.calendarGrid}>
-              {['M','T','W','T','F','S','S'].map(day => (
-                <Text key={day} style={styles.dayLabel}>{day}</Text>
-              ))}
-            </View>
-            
-            {/* Calendar Days */}
-            <View style={styles.calendarGrid}>
-              {calendarData.map((day, idx) => (
-                <AmendedDayCell key={idx} day={day} />
-              ))}
-            </View>
-        </View>
-
-        {/* Footer Legend */}
-        <View style={styles.footerLegend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#c40000ff' }]} />
-            <Text style={styles.legendText}>Scheduled</Text>
+          <View style={styles.calendarGrid}>
+            {/* Renders M, T, W, T, F, S, S header */}
+            {weekDays.map((day, idx) => (
+              <Text key={`weekday-${idx}`} style={styles.dayLabel}>{day}</Text>
+            ))}
           </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#006c05ff' }]} />
-            <Text style={styles.legendText}>Completed</Text>
+          <View style={styles.calendarGrid}>
+            {/* Renders day cells, aligned with Monday start */}
+            {calendarData.map((day, idx) => (
+              <DayCell
+                key={`${day.year}-${day.monthIndex}-${day.date}-${day.month}-${idx}`}
+                day={day}
+                onPress={day.date === 0 ? undefined : () => onDayPress(day.date)}
+              />
+            ))}
           </View>
         </View>
 
+       
+        
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-// --- Styles ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+  container: { flex: 1, backgroundColor: '#ffffffff' },
   scrollContent: { paddingBottom: 20 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 50, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: '#333' },
-  headerTitle: { fontSize: 18, fontWeight: '500', color: '#E0E0E0', marginLeft: 15 },
-  
-  monthHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  monthTitle: { fontSize: 18, fontWeight: '700', color: '#E0E0E0' },
-
-  calendarContainer: { margin: 15, padding: 15, backgroundColor: '#1E1E1E', borderRadius: 12, marginTop: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', backgroundColor: "#1976D2", justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 15, paddingBottom: 15, borderBottomWidth: 1, borderBottomColor: '#333', marginBottom:"30%" },
+  headerTitle: { fontSize: 18, fontWeight: '500', color: '#ffffffff', textAlign: 'center', flex: 1 },
+  summaryBar: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#dae1ebff', padding: 15, margin: 15, borderRadius: 12 },
+  summaryItem: { flex: 3, paddingRight: 10 },
+  summaryItemRight: { flex: 1, alignItems: 'flex-end' },
+  summaryText: { fontSize: 14, color: '#555454ff' },
+  submitDate: { fontWeight: '600', color: '#393052ff', fontSize: 15 },
+  summaryValueScheduled: { fontSize: 24, fontWeight: '700', color: '#66BB6A', marginTop: 5 },
+  warningBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0e5a6ff', padding: 12, marginHorizontal: 15, borderRadius: 8, borderLeftWidth: 5, borderLeftColor: '#FFC107', marginTop: 10 },
+  warningIcon: { fontSize: 20, marginRight: 10 },
+  warningText: { flex: 1, fontSize: 14, color: '#000000ff' },
+  calendarContainer: { margin: 15, padding: 15, backgroundColor: '#ffffffff', borderRadius: 12, marginTop: 10 },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 },
-  dayLabel: { width: `${100/7}%`, textAlign: 'center', fontWeight: '500', color: '#A0A0A0', fontSize: 14, paddingVertical: 5 },
-  dayCell: { width: `${100/7}%`, alignItems: 'center', justifyContent: 'center', aspectRatio: 1, paddingVertical: 4 },
+  dayLabel: { width: `${100 / 7}%`, textAlign: 'center', fontWeight: '500', color: '#585757ff', fontSize: 14, paddingVertical: 5 },
+  dayCell: { width: `${100 / 7}%`, alignItems: 'center', justifyContent: 'center', aspectRatio: 1, paddingVertical: 4 },
   dayCircle: { width: 35, height: 35, borderRadius: 17.5, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   dayText: { fontSize: 15, fontWeight: '600' },
-  
-  footerLegend: { flexDirection: 'row', justifyContent: 'center', marginTop: 40, paddingBottom: 20 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 15 },
-  legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
-  legendText: { color: '#E0E0E0', fontSize: 14 },
+  submitButton: { marginHorizontal: 15, marginTop: 10, padding: 18, backgroundColor: '#A0A0A0', borderRadius: 12 },
+  submitButtonText: { textAlign: 'center', color: '#ffffffff', fontSize: 18, fontWeight: '700' }
 });
 
-export default AmendedProgram;
+export default AmmendedProgram;

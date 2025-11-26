@@ -1,10 +1,11 @@
-import { Stack } from "expo-router";
-import { ScheduleProvider } from "../isa/context/ScheduleContext";
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+import { ScheduleProvider } from '../isa/context/ScheduleContext';
 
-export default function RootLayout() {
+export default function Layout() {
   return (
     <ScheduleProvider>
-      <Stack />
+      <Stack screenOptions={{ headerShown: false }} />
     </ScheduleProvider>
   );
 }
