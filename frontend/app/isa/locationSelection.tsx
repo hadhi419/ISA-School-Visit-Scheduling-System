@@ -6,15 +6,15 @@ import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
-const API_URL = "http://localhost:5000/api/locations";
+const API_URL = "http://172.20.10.2:5000/api/locations";
 
 const LocationSelection = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const date = searchParams.get('date') ?? '';
   const dutyP = searchParams.get('duty') ?? '';
 
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [locations, setLocations] = useState<string[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+  const [locations, setLocations] = useState<{ id: string, name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const { addEvent } = useSchedule();
 
@@ -22,8 +22,17 @@ const LocationSelection = () => {
     const fetchLocations = async () => {
       try {
         const res = await axios.get(API_URL);
-        const fetched = res.data.locations?.map((loc: any) => loc.name) || [];
-        setLocations(fetched);
+        const fetched = res.data.locations?.map((loc: any) => ({
+        id: loc.id,      // or loc._id depending on your backend
+        name: loc.name
+      })) || [];
+      setLocations(fetched);
+      console.log("debugging");
+
+      console.log(locations);
+
+            console.log("debugging");
+
       } catch (err) {
         console.error(err);
         Alert.alert("Error", "Failed to fetch locations from server");
@@ -36,15 +45,20 @@ const LocationSelection = () => {
   }, []);
 
   const handleChoose = () => {
-    if (!selectedLocation) return;
+  if (!selectedLocationId) return;
 
-    const month = new Date().toLocaleString('default', { month: 'long' });
+  const month = new Date().toLocaleString('default', { month: 'long' });
+  addEvent({ 
+  date, 
+  month, 
+  duty: dutyP as ScheduleType, 
+  location: selectedLocationId.toString()
+});
 
-    addEvent({ date, month, duty: dutyP as ScheduleType, location: selectedLocation });
 
-    console.log('✅ Event added:', { date, dutyP, location: selectedLocation });
-    router.navigate('/isa/advancedProgram');
-  };
+  router.navigate('/isa/advancedProgram');
+};
+
 
   if (loading) {
     return (
@@ -64,32 +78,31 @@ const LocationSelection = () => {
       </View>
      <FlatList
         data={locations}
-        keyExtractor={(item, index) => item + index}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={{ alignItems: 'center', paddingVertical: 10 }}  
         renderItem={({ item }) => (
           <Pressable
             style={[
-              styles.locationItem,
-              selectedLocation === item && styles.selectedLocationItem,
+              styles.locationItem, 
+              selectedLocationId === Number(item.id) && styles.selectedLocationItem
             ]}
-            onPress={() => setSelectedLocation(item)}
+            onPress={() => setSelectedLocationId(Number(item.id))}
           >
-            <Text
-              style={[
-                styles.locationText,
-                selectedLocation === item && { color: '#fff' },
-              ]}
-            >
-              {item}
+            <Text style={[
+              styles.locationText,
+              selectedLocationId === Number(item.id) && { color: '#fff' }
+            ]}>
+              {item.name}
             </Text>
           </Pressable>
         )}
+
       />
 
       <Pressable
-        style={[styles.chooseButton, !selectedLocation && { opacity: 0.5 }]}
+        style={[styles.chooseButton, !selectedLocationId && { opacity: 0.5 }]}
         onPress={handleChoose}
-        disabled={!selectedLocation}
+        disabled={!selectedLocationId}
       >
         <Text style={styles.chooseButtonText}>Choose</Text>
       </Pressable>

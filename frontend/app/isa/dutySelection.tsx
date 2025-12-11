@@ -42,7 +42,7 @@ const DutySelection = () => {
 
         if(dutyType=="HOLI")
         {
-            console.log("holidasrggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggy");
+            console.log("Holiday");
             const searchParams = new URLSearchParams(window.location.search);
             const date = searchParams.get('date') ?? '';
             addEvent({ date, month, duty: dutyType as ScheduleType, location: "none" });

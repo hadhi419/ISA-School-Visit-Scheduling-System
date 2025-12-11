@@ -6,6 +6,7 @@ import db from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import locationRoutes from "./routes/locationRoutes.js";
 import visitsRoutes from "./routes/visitRoutes.js";
+import approvalRoutes from './routes/approvalRoutes.js'
 
 
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/visits", visitsRoutes);
+app.use("/api/approvals", approvalRoutes);
 
 
 import bcrypt from "bcryptjs";
