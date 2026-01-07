@@ -34,7 +34,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const fetchMonthVisits = async (month: string) => {
     try {
       console.log(`📡 Fetching all visit data for ${month}...`);
-      const response = await axios.get(`http://172.20.10.2:5000/api/visits/month/${month}/5`);
+      const response = await axios.get(`http://localhost:5000/api/visits/month/${month}/5`);
       const visits = response.data.visits;
 
       if (Array.isArray(visits)) {
@@ -62,7 +62,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const fetchMonthVisitsApproved = async (month: string) => {
     try {
       console.log(`📡 Fetching approved visit data for ${month}...`);
-      const response = await axios.get(`http://172.20.10.2:5000/api/visits/approved/month/${month}`);
+      const response = await axios.get(`http://localhost:5000/api/visits/approved/month/${month}`);
       const visits = response.data.visits;
 
       if (Array.isArray(visits)) {

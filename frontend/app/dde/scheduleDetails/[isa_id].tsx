@@ -15,7 +15,7 @@ interface VisitDetail {
   }[];
 }
 
-const ZDE_USER_ID = 6; // Replace with actual logged-in ZDE id
+const DDE_USER_ID = 6; // Replace with actual logged-in ZDE id
 
 const ScheduleDetailPage = ({ route }: any) => {
   const router = useRouter();
@@ -53,17 +53,18 @@ const ScheduleDetailPage = ({ route }: any) => {
     if (!detail) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/approvals/zde/approve/${isa_id}`, {
+      const res = await fetch(`http://localhost:5000/api/approvals/dde/approve/${isa_id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved_by: ZDE_USER_ID }),
+        body: JSON.stringify({ approved_by: DDE_USER_ID }),
       });
       const data = await res.json();
       if (data.success) {
-        Alert.alert('Success', 'Schedule approved and copied to visit plan.');
-        router.replace("/zde/zdeDashboard");
+        Alert.alert('Success', 'Schedule approved');
+        router.replace("/dde/ddeDashboard");
       } else {
         Alert.alert('Error', data.message || 'Failed to approve schedule.');
+        
       }
     } catch (err) {
       console.error(err);
@@ -77,10 +78,10 @@ const ScheduleDetailPage = ({ route }: any) => {
     if (!detail) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/approvals/zde/reject/${isa_id}`, {
+      const res = await fetch(`http://localhost:5000/api/approvals/dde/reject/${isa_id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved_by: ZDE_USER_ID, comment: 'Please revise the schedule' }),
+        body: JSON.stringify({ approved_by: DDE_USER_ID, comment: 'Please revise the schedule' }),
       });
       const data = await res.json();
       if (data.success) {

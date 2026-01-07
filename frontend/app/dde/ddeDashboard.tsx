@@ -26,9 +26,9 @@ interface VisitResponseItem {
 }
 
 const getStatusProps = (status: string) => {
-  if (status === 'DDE_APPROVED') {
+  if (status === 'PENDING') {
     return { icon: 'hourglass', color: '#ff9800', label: 'Pending Approval' };
-  } else if (status === 'ZDE_APPROVED') {
+  } else if (status === 'DDE_APPROVED') {
     return { icon: 'check-circle', color: '#38c172', label: 'Approved' };
   } else {
     return { icon: 'pencil', color: '#f5c407', label: 'In Process' };
@@ -54,6 +54,7 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   const router = useRouter();
 
   const { status, scheduleSubmitted, isa_name, isa_id } = visit;
+  console.log(status);
   const { icon, color, label } = getStatusProps(status);
 
   // Only Pending Approval cards are clickable
@@ -124,7 +125,7 @@ const HigherOfficialDashboard = () => {
         {/* BLUE HEADER */}
         <View style={styles.header}>
           <MaterialCommunityIcons name="menu" size={28} color="#eee" />
-          <Text style={styles.headerTitle}>Welcome, ZDE</Text>
+          <Text style={styles.headerTitle}>Welcome, DDE</Text>
           <MaterialCommunityIcons name="account-circle" size={28} color="#eee" />
         </View>
 

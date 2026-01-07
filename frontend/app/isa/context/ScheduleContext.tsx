@@ -39,7 +39,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchMonthVisits = useCallback(async (monthName: string) => {
         try {
-            const response = await axios.get(`http://172.20.10.2:5000/api/visits/month/${monthName}/5`);
+            const response = await axios.get(`http://localhost:5000/api/visits/month/${monthName}/5`);
             const remoteEvents: ScheduledEvent[] = response.data.visits.map((item: any) => ({
                 date: item.visit_date.toString(),
                 duty: item.duty as ScheduleType,
@@ -62,7 +62,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchMonthVisitsApproved = useCallback(async (monthName: string) => {
         try {
-            const response = await axios.get(`http://172.20.10.2:5000/api/visits/approved/month/${monthName}/5`);
+            const response = await axios.get(`http://localhost:5000/api/visits/approved/month/${monthName}/5`);
             const remoteEvents: ScheduledEvent[] = response.data.visits.map((item: any) => ({
                 date: item.visit_date.toString(),
                 duty: item.duty as ScheduleType,

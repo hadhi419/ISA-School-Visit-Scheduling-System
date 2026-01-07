@@ -160,7 +160,7 @@ const AdvancedProgram: FC = () => {
       });
       const uniquePayloads = Array.from(payloadMap.values());
       if (uniquePayloads.length === 0) return alert('No new visits to save.');
-      await axios.post('http://172.20.10.2:5000/api/visits', uniquePayloads);
+      await axios.post('http://localhost:5000/api/visits', uniquePayloads);
       alert('✅ Schedule saved to the database!');
       fetchMonthVisits(nextMonthName);
     } catch (err) {
@@ -252,7 +252,7 @@ const AdvancedProgram: FC = () => {
           onPress={async () => {
             const nextMonthName = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleString('default', { month: 'long' });
             try {
-              await axios.post('http://172.20.10.2:5000/api/visits/submit', { month: nextMonthName, isa_id: 5 });
+              await axios.post('http://localhost:5000/api/visits/submit', { month: nextMonthName, isa_id: 5 });
               alert('Monthly schedule submitted successfully!');
             } catch (err) {
               console.error(err);

@@ -6,7 +6,7 @@ import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
-const API_URL = "http://172.20.10.2:5000/api/locations";
+const API_URL = "http://localhost:5000/api/locations";
 
 const LocationSelection = () => {
   const searchParams = new URLSearchParams(window.location.search);

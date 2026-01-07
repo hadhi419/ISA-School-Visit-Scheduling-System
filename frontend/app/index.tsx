@@ -21,7 +21,7 @@ const Login: React.FC = () => {
     }
 
    try {
-    const response = await axios.post('http://172.20.10.2:5000/api/auth/login', {
+    const response = await axios.post('http://localhost:5000/api/auth/login', {
       email,
       password,
     });
@@ -33,9 +33,10 @@ const Login: React.FC = () => {
 
     // Decode the token to get role or user info (optional)
     // For simplicity, here we just check the email
-    let role: 'admin' | 'isa' | 'zde';
+    let role: 'admin' | 'isa' |'dde' | 'zde';
     if (email.includes('admin')) role = 'admin';
     else if (email.includes('isa')) role = 'isa';
+    else if (email.includes('dde')) role = 'dde';
     else role = 'zde';
 
     // Navigate based on role
@@ -49,6 +50,9 @@ const Login: React.FC = () => {
       case 'zde':
         router.replace('/zde/zdeDashboard');
         break;
+      case 'dde':
+      router.replace('/dde/ddeDashboard');
+      break;
       default:
         Alert.alert('Error', 'Invalid user role');
     }

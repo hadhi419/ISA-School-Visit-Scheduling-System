@@ -1,4 +1,4 @@
-import { getSubmittedVisitsSummaryService, getVisitDetailService, zdeApproveScheduleService, zdeRejectScheduleService } from "../models/approvalModel.js";
+import { getSubmittedVisitsSummaryService, getVisitDetailService, zdeApproveScheduleService, zdeRejectScheduleService,ddeApproveScheduleService, ddeRejectScheduleService } from "../models/approvalModel.js";
 
 export const fetchSubmittedVisits = async (req, res) => {
   try {
@@ -70,6 +70,51 @@ export const zdeRejectSchedule = async (req, res) => {
     const comment = req.body.comment || '';
 
     const updated = await zdeRejectScheduleService(isa_id, approved_by, comment);
+
+    res.json({
+      success: true,
+      message: "Revision requested successfully.",
+      updated,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
+export const ddeApproveSchedule = async (req, res) => {
+
+  console.log("Debugging");
+ 
+  
+  try {
+    const { isa_id } = req.params;
+    const approved_by = req.body.approved_by; // ZDE user id
+
+    const result = await ddeApproveScheduleService(isa_id, approved_by);
+
+     console.log(result);
+
+    res.json({
+      success: true,
+      message: "Schedule approved by DDE",
+      data: result,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const ddeRejectSchedule = async (req, res) => {
+  try {
+    const { isa_id } = req.params;
+    const approved_by = req.body.approved_by; 
+    const comment = req.body.comment || '';
+
+    const updated = await ddeRejectScheduleService(isa_id, approved_by, comment);
 
     res.json({
       success: true,
