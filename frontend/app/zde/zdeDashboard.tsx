@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import api from '../../api/axiosInstance';
 
 import {
   Image,
@@ -10,11 +11,13 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 
 // Images
-const SUPERVISOR_IMAGE = { uri: 'https://randomuser.me/api/portraits/men/75.jpg' };
+const SUPERVISOR_IMAGE = {
+  uri: 'https://randomuser.me/api/portraits/men/75.jpg',
+};
 
 const FOOTER_LOGO = { uri: 'https://via.placeholder.com/20' };
 
@@ -35,9 +38,13 @@ const getStatusProps = (status: string) => {
   }
 };
 
-
-
-const StatusItem = ({ label, isSuccess }: { label: string; isSuccess: boolean }) => (
+const StatusItem = ({
+  label,
+  isSuccess,
+}: {
+  label: string;
+  isSuccess: boolean;
+}) => (
   <View style={styles.statusItem}>
     <MaterialCommunityIcons
       name={isSuccess ? 'check-circle' : 'close-circle'}
@@ -48,7 +55,6 @@ const StatusItem = ({ label, isSuccess }: { label: string; isSuccess: boolean })
     <Text style={styles.statusText}>{label}</Text>
   </View>
 );
-
 
 const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   const router = useRouter();
@@ -65,9 +71,9 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   };
 
   return (
-    <TouchableOpacity 
-      onPress={handleCardPress} 
-      activeOpacity={isClickable ? 0.8 : 1} 
+    <TouchableOpacity
+      onPress={handleCardPress}
+      activeOpacity={isClickable ? 0.8 : 1}
     >
       <View style={[styles.card, !isClickable && { opacity: 0.5 }]}>
         <View style={styles.cardHeader}>
@@ -76,9 +82,13 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
             <Text style={styles.nameText}>{isa_name}</Text>
             <Text style={styles.isaText}>ISA</Text>
           </View>
-          <View style={[styles.statusBubble, { backgroundColor: color + '22' }]}>
+          <View
+            style={[styles.statusBubble, { backgroundColor: color + '22' }]}
+          >
             <MaterialCommunityIcons name={icon} size={16} color={color} />
-            <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>{label}</Text>
+            <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>
+              {label}
+            </Text>
           </View>
         </View>
         <View style={styles.statusRow}>
@@ -93,24 +103,22 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
 };
 
 const HigherOfficialDashboard = () => {
- const currentMonth = useMemo(() => {
+  const currentMonth = useMemo(() => {
     const date = new Date();
     date.setMonth(date.getMonth() + 1); // Go to next month
     return date.toLocaleString('default', { month: 'long' });
   }, []);
-
 
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/approvals?month=February");
-        const json = await res.json();
-        console.log("Loaded data:", json);
-        setVisits(json.visits);
+        const res = await api.get('/approvals?month=February');
+        console.log('Loaded data:', res);
+        setVisits(res.data.visits);
       } catch (err) {
-        console.error("Error loading data", err);
+        console.error('Error loading data', err);
       }
     };
 
@@ -120,18 +128,23 @@ const HigherOfficialDashboard = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
         {/* BLUE HEADER */}
         <View style={styles.header}>
           <MaterialCommunityIcons name="menu" size={28} color="#eee" />
           <Text style={styles.headerTitle}>Welcome, ZDE</Text>
-          <MaterialCommunityIcons name="account-circle" size={28} color="#eee" />
+          <MaterialCommunityIcons
+            name="account-circle"
+            size={28}
+            color="#eee"
+          />
         </View>
 
-        <Text style={styles.sectionTitle}>ISA Monthly Visit Status ({currentMonth})</Text>
+        <Text style={styles.sectionTitle}>
+          ISA Monthly Visit Status ({currentMonth})
+        </Text>
 
         <View style={styles.cardsContainer}>
-          {visits.map(v => (
+          {visits.map((v) => (
             <EmployeeStatusCard key={v.isa_id} visit={v} />
           ))}
         </View>
@@ -139,7 +152,6 @@ const HigherOfficialDashboard = () => {
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>View Reports</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -157,14 +169,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#333'
+    borderBottomColor: '#333',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '500',
     color: '#fff',
     textAlign: 'center',
-    flex: 1
+    flex: 1,
   },
 
   sectionTitle: {
@@ -173,7 +185,7 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 20,
     marginBottom: 10,
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
   },
 
   cardsContainer: { paddingHorizontal: 16 },
@@ -187,19 +199,19 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
-    shadowRadius: 4
+    shadowRadius: 4,
   },
 
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12
+    marginBottom: 12,
   },
   cardProfileImage: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    marginRight: 12
+    marginRight: 12,
   },
 
   nameText: { fontSize: 16, fontWeight: '600', color: '#333' },
@@ -210,7 +222,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 20
+    borderRadius: 20,
   },
   statusLabel: { fontSize: 14, fontWeight: '700' },
 
@@ -224,18 +236,23 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 20,
-    elevation: 3
+    elevation: 3,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
 
   footer: {
     marginTop: 25,
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   footerText: { fontSize: 12, color: '#888', marginRight: 6 },
-  logo: { width: 20, height: 20 }
+  logo: { width: 20, height: 20 },
 });
 
 export default HigherOfficialDashboard;

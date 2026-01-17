@@ -1,11 +1,15 @@
 // app/_layout.tsx
+import { AuthProvider } from '@/AuthContext';
+import { ScheduleProvider } from '@/isa/context/ScheduleContext';
 import { Stack } from 'expo-router';
-import { ScheduleProvider } from '../isa/context/ScheduleContext';
+import React from 'react';
 
-export default function Layout() {
+export default function RootLayout() {
   return (
-    <ScheduleProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </ScheduleProvider>
+    <AuthProvider>
+      <ScheduleProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </ScheduleProvider>
+    </AuthProvider>
   );
 }

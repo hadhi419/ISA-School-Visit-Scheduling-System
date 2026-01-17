@@ -1,16 +1,25 @@
 import { Icon } from '@rneui/base';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import api from '../../../api/axiosInstance';
 
 interface VisitDetail {
   isa_id: number;
   isa_name: string;
-  schedule: { 
+  schedule: {
     visit_id: number;
-    date: string; 
-    duty: string; 
+    date: string;
+    duty: string;
     location: string;
   }[];
 }
@@ -28,8 +37,8 @@ const ScheduleDetailPage = ({ route }: any) => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/approvals/visitDetail/${isa_id}`);
-        const json = await res.json();
+        const res = await api.get(`/approvals/visitDetail/${isa_id}`);
+        const json = res.data as VisitDetail;
 
         // Ensure visit_id exists
         json.schedule = json.schedule.map((item: any, index: number) => ({
@@ -53,18 +62,17 @@ const ScheduleDetailPage = ({ route }: any) => {
     if (!detail) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/approvals/dde/approve/${isa_id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved_by: DDE_USER_ID }),
+      const res = await api.post(`/approvals/dde/approve/${isa_id}`, {
+        approved_by: DDE_USER_ID,
       });
-      const data = await res.json();
+
+      const data = await res.data;
+
       if (data.success) {
         Alert.alert('Success', 'Schedule approved');
-        router.replace("/dde/ddeDashboard");
+        router.replace('/dde/ddeDashboard');
       } else {
         Alert.alert('Error', data.message || 'Failed to approve schedule.');
-        
       }
     } catch (err) {
       console.error(err);
@@ -78,12 +86,13 @@ const ScheduleDetailPage = ({ route }: any) => {
     if (!detail) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/approvals/dde/reject/${isa_id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approved_by: DDE_USER_ID, comment: 'Please revise the schedule' }),
+      const res = await api.post(`approvals/dde/reject/${isa_id}`, {
+        body: JSON.stringify({
+          approved_by: DDE_USER_ID,
+          comment: 'Please revise the schedule',
+        }),
       });
-      const data = await res.json();
+      const data = await res.data;
       if (data.success) {
         Alert.alert('Success', 'Revision requested successfully.');
       } else {
@@ -97,12 +106,13 @@ const ScheduleDetailPage = ({ route }: any) => {
     }
   };
 
-  if (loading) return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#1976D2" />
-      <Text>Loading schedule...</Text>
-    </View>
-  );
+  if (loading)
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1976D2" />
+        <Text>Loading schedule...</Text>
+      </View>
+    );
 
   if (!detail) return <Text style={{ padding: 16 }}>No schedule found</Text>;
 
@@ -110,12 +120,12 @@ const ScheduleDetailPage = ({ route }: any) => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Icon 
-          name="arrow-back" 
-          type="material" 
-          color="#fff" 
-          size={28} 
-          onPress={() => router.replace("/zde/zdeDashboard")} 
+        <Icon
+          name="arrow-back"
+          type="material"
+          color="#fff"
+          size={28}
+          onPress={() => router.replace('/dde/ddeDashboard')}
         />
         <Text style={styles.headerTitle}>Schedule for {detail.isa_name}</Text>
         <View style={{ width: 28 }} />
@@ -137,16 +147,16 @@ const ScheduleDetailPage = ({ route }: any) => {
       />
 
       {/* Action Buttons */}
-      <Pressable 
-        style={[styles.button, styles.approve]} 
+      <Pressable
+        style={[styles.button, styles.approve]}
         onPress={handleApprove}
         disabled={actionLoading}
       >
         <Text style={styles.buttonText}>Approve Monthly Schedule</Text>
       </Pressable>
 
-      <Pressable 
-        style={[styles.button, styles.request]} 
+      <Pressable
+        style={[styles.button, styles.request]}
         onPress={handleRequestRevision}
         disabled={actionLoading}
       >
@@ -160,8 +170,21 @@ export default ScheduleDetailPage;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9f9f9' },
-  header: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1976D2', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 15 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff', textAlign: 'center', flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1976D2',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
+    flex: 1,
+  },
 
   card: {
     backgroundColor: '#fff',
@@ -178,7 +201,13 @@ const styles = StyleSheet.create({
   cardDuty: { fontSize: 15, marginBottom: 4 },
   cardLocation: { fontSize: 15, color: '#555' },
 
-  button: { padding: 16, borderRadius: 12, marginHorizontal: 16, marginTop: 20, alignItems: 'center' },
+  button: {
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 20,
+    alignItems: 'center',
+  },
   approve: { backgroundColor: '#38c172' },
   request: { backgroundColor: '#e3922fff' },
   buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },

@@ -18,9 +18,16 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.3",
+    "multer": "^2.0.2",
     "mysql2": "^3.15.3",
     "nodemon": "^3.1.11",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.7.4"
   }
 }
