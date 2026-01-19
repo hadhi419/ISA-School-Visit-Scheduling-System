@@ -58,6 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const decoded = jwtDecode<JWTPayload>(token);
 
     setRole(decoded.role);
+    setId(decoded.id);
+    setName(decoded.name);
     setLoading(false);
   };
 
@@ -67,6 +69,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     await AsyncStorage.removeItem('token');
     setRole(null);
+    setId(null);
+    setName(null);
 
     setLoading(false);
   };

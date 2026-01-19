@@ -86,7 +86,11 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
           <View
             style={[styles.statusBubble, { backgroundColor: color + '22' }]}
           >
-            <MaterialCommunityIcons name={icon} size={16} color={color} />
+            <MaterialCommunityIcons
+              name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
+              size={16}
+              color={color}
+            />
             <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>
               {label}
             </Text>

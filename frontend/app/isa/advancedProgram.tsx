@@ -4,6 +4,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -140,8 +142,7 @@ const DayCell: FC<{
         </View>
       </Pressable>
 
-      {/* 🔹 POPUP OVERLAY */}
-      {showPopup && (
+      {/* {showPopup && (
         <Pressable
           style={styles.popupOverlay}
           onPress={() => setShowPopup(false)}
@@ -187,7 +188,7 @@ const DayCell: FC<{
             </View>
           </View>
         </Pressable>
-      )}
+      )} */}
     </View>
   );
 };
@@ -204,6 +205,8 @@ const AdvancedProgram: FC = () => {
   const [scheduledEvents, setRemoteData] = useState<ScheduledEvent[]>([]);
 
   const [canEdit, setCanEdit] = useState(false);
+
+  const [showPicker, setShowPicker] = useState(false);
 
   const monthToFetch = useMemo(
     () =>
@@ -255,39 +258,63 @@ const AdvancedProgram: FC = () => {
   //   }, [setRemoteData, skipFetch])
   // );
 
+  const fetchData = async () => {
+    const nextMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + 1,
+      1
+    ).toLocaleString('default', { month: 'long' });
+
+    const response = await api.get(`/visits/month/${nextMonth}/${id}`);
+    const canEditResponse = await api.get(
+      `/visits/month/${nextMonth}/${id}/edit-permission`
+    );
+
+    console.log('Haaaaaaaaaadhi', response.data);
+
+    const canEditValue = canEditResponse.data.canEdit as boolean;
+    setCanEdit(canEditValue);
+
+    console.log('Can Edit Response:', canEditResponse.data);
+
+    const remoteEvents: ScheduledEvent[] = response.data.visits.map(
+      (item: any) => ({
+        date: item.visit_date.toString(),
+        duty: item.duty as ScheduleType,
+        location: item.location_name,
+      })
+    );
+
+    console.log('Remoooote', remoteEvents);
+
+    setRemoteData(remoteEvents);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const nextMonth = new Date(
+    fetchData();
+  }, [setRemoteData]);
+
+  const handleSubmitSchedule = async () => {
+    {
+      const nextMonthName = new Date(
         new Date().getFullYear(),
         new Date().getMonth() + 1,
         1
       ).toLocaleString('default', { month: 'long' });
+      try {
+        await api.post('visits/submit', {
+          month: nextMonthName,
+          isa_id: id,
+        });
+        alert('Monthly schedule submitted successfully!');
+      } catch (err) {
+        console.error(err);
+        alert('Failed to submit monthly schedule.');
+      }
 
-      const response = await api.get(`/visits/month/${nextMonth}/${id}`);
-      const canEditResponse = await api.get(
-        `/visits/month/${nextMonth}/${id}/edit-permission`
-      );
-
-      const canEditValue = canEditResponse.data.canEdit as boolean;
-      setCanEdit(canEditValue);
-
-      console.log('Can Edit Response:', canEditResponse.data);
-
-      const remoteEvents: ScheduledEvent[] = response.data.visits.map(
-        (item: any) => ({
-          date: item.visit_date.toString(),
-          duty: item.duty as ScheduleType,
-          location: item.location_name,
-        })
-      );
-
-      console.log('Remoooote', remoteEvents);
-
-      setRemoteData(remoteEvents);
-    };
-
-    fetchData();
-  }, [setRemoteData]);
+      fetchData();
+    }
+  };
 
   // ✅ Preserve location in scheduledEventsObj
   const scheduledEventsObj = useMemo(() => {
@@ -405,40 +432,55 @@ const AdvancedProgram: FC = () => {
 
   var dataToBeShownInCard;
   if (selectedDuty == 'ALL' || selectedDuty == undefined) {
-    dataToBeShownInCard = calendarData;
+    dataToBeShownInCard = scheduledEvents.map((event) => ({
+      date: Number(event.date),
+      month: 'current',
+      schedule: event.duty,
+      location: event.location?.toString(),
+      year: new Date().getFullYear(),
+      monthIndex: new Date().getMonth() + 1, // next month
+    }));
   } else {
-    dataToBeShownInCard = calendarData.filter(
-      (day) => day.schedule === selectedDuty
-    );
+    dataToBeShownInCard = scheduledEvents
+      .filter((event) => event.duty === selectedDuty)
+      .map((event) => ({
+        date: Number(event.date),
+        month: 'current',
+        schedule: event.duty,
+        location: event.location?.toString(),
+        year: new Date().getFullYear(),
+        monthIndex: new Date().getMonth() + 1,
+      }));
   }
+
   console.log('Data to be shown in card view:', dataToBeShownInCard);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+      <View style={styles.header}>
+        <Icon
+          name="arrow-back"
+          type="material"
+          color="#E0E0E0"
+          size={28}
+          onPress={() => router.push('/isa/isaDashboard')}
+        />
+        <Text style={styles.headerTitle}>Advanced Program</Text>
+        <Pressable
+          onPress={() =>
+            setViewMode(viewMode === 'calendar' ? 'card' : 'calendar')
+          }
+        >
           <Icon
-            name="arrow-back"
+            name={viewMode === 'calendar' ? 'view-list' : 'calendar-today'}
             type="material"
-            color="#E0E0E0"
+            color="#fff"
             size={28}
-            onPress={() => router.push('/isa/isaDashboard')}
           />
-          <Text style={styles.headerTitle}>Advanced Program</Text>
-          <Pressable
-            onPress={() =>
-              setViewMode(viewMode === 'calendar' ? 'card' : 'calendar')
-            }
-          >
-            <Icon
-              name={viewMode === 'calendar' ? 'view-list' : 'calendar-today'}
-              type="material"
-              color="#fff"
-              size={28}
-            />
-          </Pressable>
-        </View>
+        </Pressable>
+      </View>
 
+      {viewMode == 'calendar' && (
         <View style={styles.summaryBar}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryText}>{monthTitle} Schedule</Text>
@@ -455,19 +497,35 @@ const AdvancedProgram: FC = () => {
             </Text>
           </View>
         </View>
+      )}
 
-        {unscheduledWeekdays > 0 && (
-          <View style={styles.warningBox}>
-            <Text style={styles.warningIcon}>⚠️</Text>
-            <Text style={styles.warningText}>
-              You have **{unscheduledWeekdays}** weekdays with no scheduled
-              visits. Please complete your schedule.
-            </Text>
-          </View>
-        )}
+      {!canEdit && (
+        <View style={styles.warningBoxSubmitted}>
+          {/* <View style={styles.summaryItem}> */}
+          <Text style={styles.warningIcon}>✅</Text>
+          <Text style={styles.warningText}>
+            Schedule already has been submitted for {monthTitle} and You are not
+            allowed edit
+          </Text>
+          {/*<Text style={styles.submitDate}>Submit by 25th</Text>*/}
+          {/* </View> */}
+        </View>
+      )}
 
-        {viewMode === 'calendar' ? (
+      {unscheduledWeekdays > 0 && (
+        <View style={styles.warningBox}>
+          <Text style={styles.warningIcon}>⚠️</Text>
+          <Text style={styles.warningText}>
+            You have **{unscheduledWeekdays}** weekdays with no scheduled
+            visits. Please complete your schedule.
+          </Text>
+        </View>
+      )}
+
+      {viewMode === 'calendar' ? (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.calendarContainer}>
+            <Text style={styles.monthTitle}>{monthToFetch}</Text>
             <View style={styles.calendarGrid}>
               {weekDays.map((day, idx) => (
                 <Text key={`weekday-${idx}`} style={styles.dayLabel}>
@@ -494,140 +552,184 @@ const AdvancedProgram: FC = () => {
                 />
               ))}
             </View>
-          </View>
-        ) : (
-          <>
-            <View style={styles.filterContainer}>
-              <Text style={styles.filterLabel}>Filter by Duty</Text>
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={selectedDuty}
-                  onValueChange={(value) =>
-                    setSelectedDuty(value as ScheduleType | 'ALL')
-                  }
-                  dropdownIconColor="#1976D2"
-                  style={styles.pickerStyle}
-                >
-                  <Picker.Item label="All Duties" value="ALL" />
-                  <Picker.Item label="HNST" value="HNST" />
-                  <Picker.Item label="DEV" value="DEV" />
-                  <Picker.Item label="EVAL" value="EVAL" />
-                  <Picker.Item label="EXAM" value="EXAM" />
-                  <Picker.Item label="HOLI" value="HOLI" />
-                </Picker>
-              </View>
-            </View>
-
-            <FlatList
-              data={dataToBeShownInCard}
-              keyExtractor={(item, idx) =>
-                `${item.year}-${item.monthIndex}-${item.date}-${idx}`
-              }
-              contentContainerStyle={{
-                paddingHorizontal: 16,
-                paddingBottom: 20,
-              }}
-              renderItem={({ item }) => {
-                const isWeekend =
-                  new Date(item.year, item.monthIndex, item.date).getDay() ===
-                    0 ||
-                  new Date(item.year, item.monthIndex, item.date).getDay() ===
-                    6;
-                const isHoliday = item.schedule === 'HOLI';
-                const isNonHoliday = item.schedule !== 'NONE' && !isHoliday;
-
-                const cardStyle = [
-                  styles.card,
+            {canEdit && (
+              <Pressable
+                style={[
+                  styles.submitButton,
                   {
-                    backgroundColor: DUTY_COLORS[item.schedule].bg, // highlight non-holiday days
-                    borderWidth: isNonHoliday ? 1 : 0,
-                    borderColor: DUTY_COLORS[item.schedule].border,
+                    backgroundColor:
+                      unscheduledWeekdays === 0 ? '#388E3C' : '#A0A0A0',
+                    opacity: unscheduledWeekdays === 0 ? 1 : 0.6,
                   },
-                ];
-                var textColor;
-                var BackgroundColor;
+                ]}
+                disabled={unscheduledWeekdays > 0}
+                onPress={handleSubmitSchedule}
+              >
+                <Text style={styles.submitButtonText}>Submit Schedule</Text>
+              </Pressable>
+            )}
+          </View>
+        </ScrollView>
+      ) : (
+        <>
+          <View style={styles.filterContainer}>
+            <Text style={styles.filterLabel}>Filter by Duty</Text>
+            {Platform.OS === 'ios' ? (
+              <>
+                <Pressable
+                  style={{
+                    borderWidth: 2,
+                    borderColor: '#1976D2',
+                    borderRadius: 8,
+                    padding: 14,
+                  }}
+                  onPress={() => setShowPicker(true)}
+                >
+                  <Text>
+                    {selectedDuty ? selectedDuty : '-- Select Duty --'}
+                  </Text>
+                </Pressable>
 
-                if (isWeekend) {
-                  textColor = '#b5b5b5';
-                  BackgroundColor = '#fff4f4';
-                } else {
-                  textColor = DUTY_COLORS[item.schedule].text;
-                  BackgroundColor = DUTY_COLORS[item.schedule].bg;
-                }
-
-                return (
-                  <Pressable
-                    disabled={isWeekend || !canEdit}
-                    style={[cardStyle, { backgroundColor: BackgroundColor }]}
-                    onPress={() => onDayPress(item.date, 'false')}
+                <Modal visible={showPicker} transparent animationType="slide">
+                  <View
+                    style={{
+                      flex: 1,
+                      justifyContent: 'flex-end',
+                      backgroundColor: 'rgba(0,0,0,0.3)',
+                    }}
                   >
-                    <Text style={[styles.cardDate, { color: textColor }]}>
-                      {item.date} {isWeekend ? 'Holiday' : ''}
-                    </Text>
-                    <Text style={[styles.cardDuty, { color: textColor }]}>
-                      Duty: {item.schedule}
-                    </Text>
-                    <Text style={[styles.cardDuty, { color: textColor }]}>
-                      Location: {item.location || 'Not Set'}
-                    </Text>
-                    {isHoliday && (
-                      <Text
-                        style={{
-                          color: '#888',
-                          fontStyle: 'italic',
-                          marginTop: 4,
+                    <View style={{ backgroundColor: '#fff' }}>
+                      <Picker
+                        selectedValue={selectedDuty ?? ''}
+                        onValueChange={(value) => setSelectedDuty(value)}
+                        style={{ width: '100%', height: 150 }}
+                        itemStyle={{
+                          color: '#000',
+                          fontSize: 16,
                         }}
                       >
-                        Holiday
-                      </Text>
-                    )}
-                  </Pressable>
-                );
-              }}
-            />
-          </>
-        )}
+                        <Picker.Item label="-- Select Duty --" value="" />
+                        {['HNST', 'DEV', 'EVAL', 'EXAM', 'HOLI', 'ALL'].map(
+                          (duty) => (
+                            <Picker.Item key={duty} label={duty} value={duty} />
+                          )
+                        )}
+                      </Picker>
+                      <Pressable
+                        style={{
+                          padding: 14,
+                          alignItems: 'center',
+                          borderTopWidth: 1,
+                          borderColor: '#ddd',
+                        }}
+                        onPress={() => setShowPicker(false)}
+                      >
+                        <Text style={{ color: '#1976D2', fontWeight: '600' }}>
+                          Done
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+              </>
+            ) : (
+              <View
+                style={{
+                  borderWidth: 2,
+                  borderColor: '#1976D2',
+                  borderRadius: 8,
+                }}
+              >
+                <Picker
+                  selectedValue={selectedDuty}
+                  onValueChange={(value) => setSelectedDuty(value)}
+                >
+                  <Picker.Item label="-- Select Duty --" value="" />
+                  {['HNST', 'DEV', 'EVAL', 'EXAM', 'HOLI', 'ALL'].map(
+                    (duty) => (
+                      <Picker.Item key={duty} label={duty} value={duty} />
+                    )
+                  )}
+                </Picker>
+              </View>
+            )}
+          </View>
+          <FlatList
+            style={{ flex: 1 }}
+            data={dataToBeShownInCard}
+            keyExtractor={(item, idx) =>
+              `${item.year}-${item.monthIndex}-${item.date}-${idx}`
+            }
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingBottom: 20,
+            }}
+            renderItem={({ item }) => {
+              const isWeekend =
+                new Date(item.year, item.monthIndex, item.date).getDay() ===
+                  0 ||
+                new Date(item.year, item.monthIndex, item.date).getDay() === 6;
+              const isHoliday = item.schedule === 'HOLI';
+              const isNonHoliday = item.schedule !== 'NONE' && !isHoliday;
 
-        <Pressable
+              const cardStyle = [
+                styles.card,
+                {
+                  backgroundColor: DUTY_COLORS[item.schedule].bg, // highlight non-holiday days
+                  borderWidth: isNonHoliday ? 1 : 0,
+                  borderColor: DUTY_COLORS[item.schedule].border,
+                },
+              ];
+              var textColor;
+              var BackgroundColor;
+
+              if (isWeekend) {
+                textColor = '#b5b5b5';
+                BackgroundColor = '#fff4f4';
+              } else {
+                textColor = DUTY_COLORS[item.schedule].text;
+                BackgroundColor = DUTY_COLORS[item.schedule].bg;
+              }
+
+              return (
+                <Pressable
+                  disabled={isWeekend || !canEdit}
+                  style={[cardStyle, { backgroundColor: BackgroundColor }]}
+                  onPress={() => onDayPress(item.date, 'false')}
+                >
+                  <Text style={[styles.cardDate, { color: textColor }]}>
+                    {item.date} {isWeekend ? 'Holiday' : ''}
+                  </Text>
+                  <Text style={[styles.cardDuty, { color: textColor }]}>
+                    Duty: {item.schedule}
+                  </Text>
+                  <Text style={[styles.cardDuty, { color: textColor }]}>
+                    Location: {item.location || 'Not Set'}
+                  </Text>
+                  {isHoliday && (
+                    <Text
+                      style={{
+                        color: '#888',
+                        fontStyle: 'italic',
+                        marginTop: 4,
+                      }}
+                    >
+                      Holiday
+                    </Text>
+                  )}
+                </Pressable>
+              );
+            }}
+          />
+        </>
+      )}
+
+      {/* <Pressable
           style={[styles.submitButton, { backgroundColor: '#1976D2' }]}
           onPress={saveScheduleToBackend}
         >
           <Text style={[styles.submitButtonText, { color: '#fff' }]}>Save</Text>
-        </Pressable>
-
-        <Pressable
-          style={[
-            styles.submitButton,
-            {
-              backgroundColor:
-                unscheduledWeekdays === 0 ? '#388E3C' : '#A0A0A0',
-              opacity: unscheduledWeekdays === 0 ? 1 : 0.6,
-            },
-          ]}
-          disabled={unscheduledWeekdays > 0}
-          onPress={async () => {
-            const nextMonthName = new Date(
-              new Date().getFullYear(),
-              new Date().getMonth() + 1,
-              1
-            ).toLocaleString('default', { month: 'long' });
-            try {
-              await api.post('visits/submit', {
-                month: nextMonthName,
-                isa_id: id,
-              });
-              alert('Monthly schedule submitted successfully!');
-            } catch (err) {
-              console.error(err);
-              alert('Failed to submit monthly schedule.');
-            }
-          }}
-        >
-          <Text style={[styles.submitButtonText, { color: '#fff' }]}>
-            Submit Monthly Schedule
-          </Text>
-        </Pressable>
-      </ScrollView>
+        </Pressable> */}
     </SafeAreaView>
   );
 };
@@ -670,6 +772,15 @@ const styles = StyleSheet.create({
     color: '#66BB6A',
     marginTop: 5,
   },
+  cannotEditBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffa87a',
+    padding: 15,
+    margin: 15,
+    borderRadius: 12,
+  },
+  cannotEditText: { fontSize: 14, color: '#ffffff' },
   warningBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -679,7 +790,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderLeftWidth: 5,
     borderLeftColor: '#FFC107',
-    marginTop: 10,
+    marginTop: 5,
+  },
+  warningBoxSubmitted: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#b2f0a6',
+    padding: 12,
+    marginHorizontal: 15,
+    borderRadius: 8,
+    borderLeftWidth: 5,
+    borderLeftColor: '#28ff07',
+    marginTop: 5,
   },
   warningIcon: { fontSize: 20, marginRight: 10 },
   warningText: { flex: 1, fontSize: 14, color: '#000' },
@@ -714,16 +836,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  monthTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#000',
+    textAlign: 'center',
+    flex: 1,
+    marginBottom: 15,
+  },
   dayText: { fontSize: 15, fontWeight: '600' },
   submitButton: {
     marginHorizontal: 15,
     marginTop: 10,
-    padding: 18,
+    padding: 14,
     borderRadius: 12,
   },
   submitButtonText: {
     textAlign: 'center',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '700',
     color: '#fff',
   },

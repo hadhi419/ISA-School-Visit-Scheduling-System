@@ -4,6 +4,9 @@ import {
   fetchAllVisits,
   submitMonthlyVisits,
   checkMonthlyEditPermission,
+  deleteVisit,
+  getVisitsByIsa,
+  getVisitsByLocation,
 } from '../controllers/visitController.js';
 
 import { authenticate } from '../middleware/authMiddleware.js';
@@ -16,6 +19,8 @@ router.use(authenticate);
 // POST /api/visits
 router.post('/', authorizeRoles('ISA'), postMultipleVisits);
 
+router.post('/delete', authorizeRoles('ISA'), deleteVisit);
+
 // GET /api/visits/month/:month/:isa_id
 router.get('/month/:month/:isa_id', authorizeRoles('ISA'), fetchAllVisits);
 
@@ -27,5 +32,15 @@ router.get(
 
 // POST /api/visits/submit
 router.post('/submit', authorizeRoles('ISA'), submitMonthlyVisits);
+
+// ISA monitoring route
+router.get('/isa', authorizeRoles('ZDE', 'DDE', 'ADE'), getVisitsByIsa);
+
+// Location monitoring route
+router.get(
+  '/location',
+  authorizeRoles('ZDE', 'DDE', 'ADE'),
+  getVisitsByLocation
+);
 
 export default router;

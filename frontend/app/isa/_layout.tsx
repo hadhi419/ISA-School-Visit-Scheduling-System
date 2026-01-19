@@ -25,5 +25,5 @@ export default function ISALayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <Stack>{children}</Stack>;
+  return <Stack screenOptions={{ headerShown: false }}>{children}</Stack>;
 }

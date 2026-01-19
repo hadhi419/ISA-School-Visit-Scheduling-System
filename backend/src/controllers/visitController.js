@@ -2,12 +2,28 @@ import {
   postVisits,
   fetchVisits,
   checkEditPermissionForMonth,
+  deleteVisits,
+  fetchVisitsByIsa,
+  fetchVisitsByLocation,
 } from '../models/visitModel.js';
 
 export const postMultipleVisits = async (req, res) => {
   try {
     const visitsArray = req.body;
     const message = await postVisits(visitsArray);
+    res.json({ message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteVisit = async (req, res) => {
+  try {
+    console.log(req.body);
+    const { visit_date, month, isa_id } = req.body;
+    //console.log(visit_date, month, isa_id);
+    const message = await deleteVisits(visit_date, month, isa_id);
+    console.log('Routerrr', message);
     res.json({ message });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -61,5 +77,39 @@ export const checkMonthlyEditPermission = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Controller for ISA Monitoring
+export const getVisitsByIsa = async (req, res) => {
+  try {
+    const { isa_id, month, day } = req.query;
+
+    const visits = await fetchVisitsByIsa(
+      isa_id ? Number(isa_id) : null,
+      month && month !== 'null' ? month : null, // convert "null" string to real null
+      day && day !== 'null' ? Number(day) : null
+    );
+
+    res.json({ success: true, data: visits });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Controller for Location Monitoring
+export const getVisitsByLocation = async (req, res) => {
+  try {
+    const { location_id, month, day } = req.query;
+    const visits = await fetchVisitsByLocation(
+      location_id ? Number(location_id) : null,
+      month && month !== 'null' ? month : null, // convert "null" string to real null
+      day && day !== 'null' ? Number(day) : null
+    );
+    res.json({ success: true, data: visits });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };

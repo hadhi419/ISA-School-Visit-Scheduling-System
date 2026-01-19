@@ -4,6 +4,7 @@ import { useSearchParams } from 'expo-router/build/hooks';
 import React, { FC, useEffect, useState } from 'react';
 import {
   Alert,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -44,6 +45,10 @@ const MonitoringReportForm: FC = () => {
   const [locations, setLocations] = useState<{ id: number; name: string }[]>(
     []
   );
+
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [showDutyPicker, setShowDutyPicker] = useState(false);
+
   const [actualDuty, setActualDuty] = useState<
     'HNST' | 'EXAM' | 'DEV' | 'EVAL' | 'HOLI' | null
   >(null);
@@ -265,52 +270,152 @@ const MonitoringReportForm: FC = () => {
         </Pressable>
 
         {/* Show dropdown if changed */}
+        {/* ---------- Show dropdown if changed ---------- */}
         {locationChanged && (
           <View style={{ marginVertical: 10 }}>
             {/* Select New Location */}
             <Text style={styles.filterLabel}>Select New Location:</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={actualLocationId}
-                onValueChange={(itemValue) => setActualLocationId(itemValue)}
-                style={styles.pickerStyle}
-              >
-                <Picker.Item label="Select location" value={null} />
-                {locations.map((loc) => (
-                  <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
-                ))}
-              </Picker>
-            </View>
 
-            {/* <View style={styles.filterContainer}>
-                          <Text style={styles.filterLabel}>Filter by Duty</Text>
-                          <View style={styles.pickerWrapper}></View> */}
+            {Platform.OS === 'ios' ? (
+              <>
+                <Pressable
+                  style={styles.iosPickerButton}
+                  onPress={() => setShowLocationPicker(true)}
+                >
+                  <Text style={styles.iosPickerText}>
+                    {actualLocationId
+                      ? locations.find((l) => l.id === actualLocationId)?.name
+                      : '-- Select Location --'}
+                  </Text>
+                </Pressable>
+
+                <Modal
+                  visible={showLocationPicker}
+                  transparent
+                  animationType="slide"
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <Picker
+                        itemStyle={{
+                          color: '#000',
+                          fontSize: 16,
+                        }}
+                        selectedValue={actualLocationId ?? -1}
+                        onValueChange={(value) => {
+                          if (value !== -1) setActualLocationId(value);
+                        }}
+                      >
+                        <Picker.Item label="-- Select Location --" value={-1} />
+                        {locations.map((loc) => (
+                          <Picker.Item
+                            key={loc.id}
+                            label={loc.name}
+                            value={loc.id}
+                          />
+                        ))}
+                      </Picker>
+
+                      <Pressable
+                        style={styles.doneButton}
+                        onPress={() => setShowLocationPicker(false)}
+                      >
+                        <Text style={styles.doneText}>Done</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+              </>
+            ) : (
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={actualLocationId}
+                  onValueChange={(value) => setActualLocationId(value)}
+                >
+                  <Picker.Item label="-- Select Location --" value={null} />
+                  {locations.map((loc) => (
+                    <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
+                  ))}
+                </Picker>
+              </View>
+            )}
 
             {/* Select New Duty */}
             <Text style={styles.filterLabel}>Select New Duty:</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={actualDuty}
-                onValueChange={(itemValue) => setActualDuty(itemValue)}
-                style={styles.pickerStyle}
-              >
-                <Picker.Item label="Select duty" value={null} />
-                <Picker.Item label="HNST" value="HNST" />
-                <Picker.Item label="EXAM" value="EXAM" />
-                <Picker.Item label="DEV" value="DEV" />
-                <Picker.Item label="EVAL" value="EVAL" />
-                <Picker.Item label="HOLI" value="HOLI" />
-              </Picker>
-            </View>
 
-            <Text style={styles.sectionTitle}>Reason for location change</Text>
-            <TextInput
-              style={[styles.textArea, { height: 100 }]}
-              placeholder="Enter your observations..."
-              value={locationChangeReason}
-              onChangeText={setLocationChangeReason}
-              multiline
-            />
+            {Platform.OS === 'ios' ? (
+              <>
+                <Pressable
+                  style={styles.iosPickerButton}
+                  onPress={() => setShowDutyPicker(true)}
+                >
+                  <Text style={styles.iosPickerText}>
+                    {actualDuty || '-- Select Duty --'}
+                  </Text>
+                </Pressable>
+
+                <Modal
+                  visible={showDutyPicker}
+                  transparent
+                  animationType="slide"
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <Picker
+                        itemStyle={{
+                          color: '#000',
+                          fontSize: 16,
+                        }}
+                        selectedValue={actualDuty ?? ''}
+                        onValueChange={(value) =>
+                          setActualDuty(
+                            value as
+                              | 'HNST'
+                              | 'EXAM'
+                              | 'DEV'
+                              | 'EVAL'
+                              | 'HOLI'
+                              | null
+                          )
+                        }
+                      >
+                        <Picker.Item label="-- Select Duty --" value="" />
+                        <Picker.Item label="HNST" value="HNST" />
+                        <Picker.Item label="EXAM" value="EXAM" />
+                        <Picker.Item label="DEV" value="DEV" />
+                        <Picker.Item label="EVAL" value="EVAL" />
+                        <Picker.Item label="HOLI" value="HOLI" />
+                      </Picker>
+
+                      <Pressable
+                        style={styles.doneButton}
+                        onPress={() => setShowDutyPicker(false)}
+                      >
+                        <Text style={styles.doneText}>Done</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+              </>
+            ) : (
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={actualDuty}
+                  onValueChange={(value) =>
+                    setActualDuty(
+                      value as 'HNST' | 'EXAM' | 'DEV' | 'EVAL' | 'HOLI' | null
+                    )
+                  }
+                >
+                  <Picker.Item label="-- Select Duty --" value={null} />
+                  <Picker.Item label="HNST" value="HNST" />
+                  <Picker.Item label="EXAM" value="EXAM" />
+                  <Picker.Item label="DEV" value="DEV" />
+                  <Picker.Item label="EVAL" value="EVAL" />
+                  <Picker.Item label="HOLI" value="HOLI" />
+                </Picker>
+              </View>
+            )}
           </View>
         )}
 
@@ -490,6 +595,37 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingHorizontal: 0,
     paddingVertical: 0,
+  },
+
+  iosPickerButton: {
+    borderWidth: 2,
+    borderColor: '#1976D2',
+    borderRadius: 8,
+    padding: 14,
+  },
+  iosPickerText: {
+    fontSize: 16,
+    color: '#000000',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(60, 60, 60, 0.3)',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+  },
+  doneButton: {
+    alignItems: 'center',
+    padding: 14,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+  doneText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1976D2',
   },
 });
 

@@ -125,6 +125,14 @@ const HigherOfficialDashboard = () => {
     loadData();
   }, []);
 
+  const router = useRouter();
+  const handleMonitorLocationsPress = () => {
+    router.push('/zde/locationMonitoring');
+  };
+  const hadndleMonitorISAPress = () => {
+    router.push('/zde/isaMonitoring');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -150,7 +158,15 @@ const HigherOfficialDashboard = () => {
         </View>
 
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>View Reports</Text>
+          <Text style={styles.buttonText} onPress={handleMonitorLocationsPress}>
+            Monitor Locations
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText} onPress={hadndleMonitorISAPress}>
+            Monitor ISAs
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

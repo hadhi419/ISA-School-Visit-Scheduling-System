@@ -15,10 +15,13 @@ export const submitVisitReport = async ({
   actual_duty = null,
 }) => {
   // Get planned location
-  const [[visit]] = await db.query(
-    `SELECT location_id FROM visits WHERE id = ?`,
+  const [rows] = await db.query(
+    `SELECT location_id, duty FROM visits WHERE id = ?`,
     [visit_id]
   );
+
+  const visit = rows[0]; // the first row
+  console.log(visit.location_id, visit.duty);
 
   // Decide whether location really changed
   const isLocationChanged =
@@ -38,9 +41,9 @@ export const submitVisitReport = async ({
     [
       report_text,
       status,
-      isLocationChanged ? actual_location_id : null,
+      isLocationChanged ? actual_location_id : visit.location_id,
       isLocationChanged ? location_change_reason : null,
-      isLocationChanged ? actual_duty : 'DEV',
+      isLocationChanged ? actual_duty : visit.duty,
       visit_id,
     ]
   );

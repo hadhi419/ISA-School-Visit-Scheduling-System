@@ -6,6 +6,7 @@ import {
   adeRejectSchedule,
   ddeApproveSchedule,
   ddeRejectSchedule,
+  getLatestRejectionForISA,
 } from '../controllers/approvalController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -41,5 +42,11 @@ router.post('/dde/reject/:isa_id', authorizeRoles('DDE'), ddeRejectSchedule);
 
 router.post('/ade/approve/:isa_id', authorizeRoles('ADE'), adeApproveSchedule);
 router.post('/ade/reject/:isa_id', authorizeRoles('ADE'), adeRejectSchedule);
+
+router.get(
+  '/rejections/latest/:isa_id',
+  authorizeRoles('ISA'),
+  getLatestRejectionForISA
+);
 
 export default router;

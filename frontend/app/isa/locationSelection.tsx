@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
+import { useAuth } from '@/AuthContext';
 import api from '../../api/axiosInstance';
 
 const API_URL = '/locations';
@@ -34,6 +35,8 @@ const LocationSelection = () => {
   );
   const [loading, setLoading] = useState(true);
   const { addEvent } = useSchedule();
+
+  const { id } = useAuth();
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -79,7 +82,7 @@ const LocationSelection = () => {
         {
           visit_date: date,
           month,
-          isa_id: 5,
+          isa_id: id,
           location_id: selectedLocationId,
           duty: dutyP as ScheduleType,
           report_text: null,
@@ -92,7 +95,7 @@ const LocationSelection = () => {
         {
           visit_date: date,
           month,
-          isa_id: 5,
+          isa_id: id,
           location_id: selectedLocationId,
           duty: dutyP as ScheduleType,
           report_text: null,

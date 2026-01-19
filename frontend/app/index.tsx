@@ -38,6 +38,10 @@ const Login: React.FC = () => {
       const userRole = decoded.role;
       await AsyncStorage.setItem('token', token);
       // Navigate first based on decoded token
+
+      // Update context state
+      await login(token);
+
       switch (userRole) {
         case 'ADMIN':
           router.replace('/admin/adminDashboard');
@@ -58,9 +62,6 @@ const Login: React.FC = () => {
           Alert.alert('Error', 'Invalid user role');
           return;
       }
-
-      // Update context state
-      await login(token);
     } catch (err: any) {
       console.log(err.response?.data || err.message);
       Alert.alert(

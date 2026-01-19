@@ -47,6 +47,9 @@ export const getSubmittedVisitsSummaryService = async (month) => {
 
 export const getVisitDetailService = async (isa_id) => {
   try {
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const month = nextMonth.toLocaleString('default', { month: 'long' });
     const [rows] = await db.query(
       `
       SELECT 
@@ -57,9 +60,10 @@ export const getVisitDetailService = async (isa_id) => {
       FROM visits v
       LEFT JOIN locations l ON v.location_id = l.id
       WHERE v.isa_id = ?
+      AND v.month = ?
       ORDER BY CAST(v.visit_date AS UNSIGNED) ASC
     `,
-      [isa_id]
+      [isa_id, month]
     );
 
     const [userRows] = await db.query(
@@ -165,9 +169,13 @@ export const ddeRejectScheduleService = async (
 
 export const adeRejectScheduleService = async (
   isa_id,
-  approved_by,
+  approved_by = 9,
   comment = ''
 ) => {
+  console.log(comment);
+  console.log(isa_id);
+  console.log(approved_by);
+
   const [updateResult] = await db.query(
     `
     UPDATE visits
@@ -183,12 +191,15 @@ export const adeRejectScheduleService = async (
     [isa_id]
   );
 
+  //onsole.log(rejectedVisits);
+
   for (const visit of rejectedVisits) {
-    await db.query(
+    const [row] = await db.query(
       `INSERT INTO approval_logs (visit_id, approved_by, role, status, comment, approved_at)
        VALUES (?, ?, 'ADE', 'REJECTED', ?, NOW())`,
       [visit.visit_id, approved_by, comment]
     );
+    //console.log(row);
   }
 
   return updateResult.affectedRows;
@@ -196,6 +207,7 @@ export const adeRejectScheduleService = async (
 
 export const adeApproveScheduleService = async (isa_id, approved_by) => {
   try {
+    console.log(approved_by);
     // 1. Update visits table: mark as ADE_APPROVED
     await db.query(
       `UPDATE visits
@@ -241,4 +253,24 @@ export const adeApproveScheduleService = async (isa_id, approved_by) => {
     console.error(err);
     throw err;
   }
+};
+
+export const getLatestRejectionForISAService = async (isa_id) => {
+  const [rows] = await db.query(
+    `
+    SELECT 
+      al.comment,
+      al.role,
+      al.approved_at
+    FROM approval_logs al
+    JOIN visits v ON v.id = al.visit_id
+    WHERE v.isa_id = ?
+      AND al.status = 'REJECTED'
+    ORDER BY al.approved_at DESC
+    LIMIT 1
+    `,
+    [isa_id]
+  );
+
+  return rows[0] || null;
 };

@@ -1,3 +1,4 @@
+import { useAuth } from '@/AuthContext';
 import { Icon } from '@rneui/base';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -5,9 +6,11 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,7 +27,7 @@ interface VisitDetail {
   }[];
 }
 
-const DDE_USER_ID = 6; // Replace with actual logged-in ZDE id
+//const DDE_USER_ID = 6;
 
 const ScheduleDetailPage = ({ route }: any) => {
   const router = useRouter();
@@ -34,13 +37,17 @@ const ScheduleDetailPage = ({ route }: any) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [comment, setComment] = useState('');
+
+  const { id } = useAuth();
+
   useEffect(() => {
     const fetchDetail = async () => {
       try {
         const res = await api.get(`/approvals/visitDetail/${isa_id}`);
         const json = res.data as VisitDetail;
 
-        // Ensure visit_id exists
         json.schedule = json.schedule.map((item: any, index: number) => ({
           visit_id: item.visit_id ?? index + 1,
           date: item.date,
@@ -55,52 +62,46 @@ const ScheduleDetailPage = ({ route }: any) => {
         setLoading(false);
       }
     };
+
     fetchDetail();
   }, [isa_id]);
 
   const handleApprove = async () => {
-    if (!detail) return;
     setActionLoading(true);
     try {
       const res = await api.post(`/approvals/dde/approve/${isa_id}`, {
-        approved_by: DDE_USER_ID,
+        approved_by: id,
       });
 
-      const data = await res.data;
-
-      if (data.success) {
+      if (res.data.success) {
         Alert.alert('Success', 'Schedule approved');
         router.replace('/dde/ddeDashboard');
       } else {
-        Alert.alert('Error', data.message || 'Failed to approve schedule.');
+        Alert.alert('Error', res.data.message);
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Server error while approving schedule.');
+      Alert.alert('Error', 'Server error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleRequestRevision = async () => {
-    if (!detail) return;
+  const handleRequestRevisionWithComment = async (commentText: string) => {
     setActionLoading(true);
     try {
-      const res = await api.post(`approvals/dde/reject/${isa_id}`, {
-        body: JSON.stringify({
-          approved_by: DDE_USER_ID,
-          comment: 'Please revise the schedule',
-        }),
+      const res = await api.post(`/approvals/dde/reject/${isa_id}`, {
+        approved_by: id,
+        comment: commentText,
       });
-      const data = await res.data;
-      if (data.success) {
-        Alert.alert('Success', 'Revision requested successfully.');
+
+      if (res.data.success) {
+        Alert.alert('Success', 'Revision requested successfully');
+        router.replace('/dde/ddeDashboard');
       } else {
-        Alert.alert('Error', data.message || 'Failed to request revisions.');
+        Alert.alert('Error', res.data.message);
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Server error while requesting revisions.');
+      Alert.alert('Error', 'Server error');
     } finally {
       setActionLoading(false);
     }
@@ -114,55 +115,98 @@ const ScheduleDetailPage = ({ route }: any) => {
       </View>
     );
 
-  if (!detail) return <Text style={{ padding: 16 }}>No schedule found</Text>;
+  if (!detail) return <Text>No schedule found</Text>;
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Icon
-          name="arrow-back"
-          type="material"
-          color="#fff"
-          size={28}
-          onPress={() => router.replace('/dde/ddeDashboard')}
-        />
-        <Text style={styles.headerTitle}>Schedule for {detail.isa_name}</Text>
-        <View style={{ width: 28 }} />
-      </View>
+    <>
+      {/* Comment Modal */}
+      <Modal visible={showCommentModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Request Revision</Text>
 
-      {/* Cards */}
-      <FlatList
-        data={detail.schedule}
-        keyExtractor={(item) => item.visit_id.toString()}
-        contentContainerStyle={{ paddingVertical: 10, paddingHorizontal: 16 }}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.cardDate}>Visit ID: {item.visit_id}</Text>
-            <Text style={styles.cardDate}>Date: {item.date}</Text>
-            <Text style={styles.cardDuty}>Duty: {item.duty}</Text>
-            <Text style={styles.cardLocation}>Location: {item.location}</Text>
+            <TextInput
+              placeholder="Enter revision comment..."
+              value={comment}
+              onChangeText={setComment}
+              multiline
+              style={styles.commentInput}
+            />
+
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalBtn, styles.closeBtn]}
+                onPress={() => {
+                  setShowCommentModal(false);
+                  setComment('');
+                }}
+              >
+                <Text style={styles.modalBtnText}>Close</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.modalBtn, styles.sendBtn]}
+                onPress={() => {
+                  if (!comment.trim()) {
+                    Alert.alert('Error', 'Please enter a comment');
+                    return;
+                  }
+                  setShowCommentModal(false);
+                  handleRequestRevisionWithComment(comment);
+                  setComment('');
+                }}
+              >
+                <Text style={styles.modalBtnText}>Ask Revision</Text>
+              </Pressable>
+            </View>
           </View>
-        )}
-      />
+        </View>
+      </Modal>
 
-      {/* Action Buttons */}
-      <Pressable
-        style={[styles.button, styles.approve]}
-        onPress={handleApprove}
-        disabled={actionLoading}
-      >
-        <Text style={styles.buttonText}>Approve Monthly Schedule</Text>
-      </Pressable>
+      {/* Main Screen */}
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Icon
+            name="arrow-back"
+            type="material"
+            color="#fff"
+            size={28}
+            onPress={() => router.replace('/dde/ddeDashboard')}
+          />
+          <Text style={styles.headerTitle}>Schedule for {detail.isa_name}</Text>
+          <View style={{ width: 28 }} />
+        </View>
 
-      <Pressable
-        style={[styles.button, styles.request]}
-        onPress={handleRequestRevision}
-        disabled={actionLoading}
-      >
-        <Text style={styles.buttonText}>Request Revisions</Text>
-      </Pressable>
-    </SafeAreaView>
+        <FlatList
+          data={detail.schedule}
+          keyExtractor={(item) => item.visit_id.toString()}
+          contentContainerStyle={{ padding: 16 }}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <Text style={styles.cardDate}>Date: {item.date}</Text>
+              <Text>Duty: {item.duty}</Text>
+              <Text>Location: {item.location}</Text>
+            </View>
+          )}
+        />
+
+        <Pressable
+          style={[styles.button, styles.approve]}
+          onPress={handleApprove}
+          disabled={actionLoading}
+        >
+          <Text style={styles.buttonText}>Approve Monthly Schedule</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, styles.request]}
+          onPress={() => setShowCommentModal(true)}
+          disabled={actionLoading}
+        >
+          <Text style={styles.buttonText}>Request Revisions</Text>
+        </Pressable>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -213,4 +257,62 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  modalBox: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+
+  commentInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+
+  modalBtn: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  closeBtn: {
+    backgroundColor: '#9e9e9e',
+    marginRight: 8,
+  },
+
+  sendBtn: {
+    backgroundColor: '#e3922fff',
+    marginLeft: 8,
+  },
+
+  modalBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
 });

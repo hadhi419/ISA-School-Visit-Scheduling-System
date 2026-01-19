@@ -145,6 +145,22 @@ export const submitVisits = async (month, isa_id) => {
   }
 };
 
+export const deleteVisits = async (date, month, isa_id) => {
+  try {
+    console.log(date, month, isa_id);
+    const [result] = await db.query(
+      `delete from visits 
+       WHERE visit_date = ? AND month = ? AND isa_id = ?`,
+      [date, month, isa_id]
+    );
+    console.log(result.warningStatus);
+    return `${result.affectedRows} visit(s) deleted successfully`;
+  } catch (err) {
+    console.error('erroooorrr', err);
+    return err;
+  }
+};
+
 export const checkEditPermissionForMonth = async (month, isa_id) => {
   try {
     const [rows] = await db.query(
@@ -153,7 +169,7 @@ export const checkEditPermissionForMonth = async (month, isa_id) => {
       FROM visits
       WHERE month = ?
         AND isa_id = ?
-        AND status NOT IN ('IN_PROCESS', 'PENDING')
+        AND status NOT IN ('IN_PROCESS','ADE_REJECTED','DDE_REJECTED')
       `,
       [month, isa_id]
     );
@@ -163,5 +179,60 @@ export const checkEditPermissionForMonth = async (month, isa_id) => {
   } catch (err) {
     console.error(err);
     throw err;
+  }
+};
+
+export const fetchVisitsByIsa = async (isa_id, month, day) => {
+  try {
+    const query = `
+      SELECT v.id, v.visit_date AS date, 
+             l.name AS location, v.duty, v.status
+      FROM visits v
+      LEFT JOIN locations l ON v.location_id = l.id
+      WHERE (? IS NULL OR v.isa_id = ?)
+        AND (? IS NULL OR v.month = ?)
+        AND (? IS NULL OR v.visit_date = ?)
+        AND v.duty NOT IN ('HOLI')
+      ORDER BY v.visit_date ASC
+    `;
+    const [rows] = await db.execute(query, [
+      isa_id || null,
+      isa_id || null,
+      month || null,
+      month || null,
+      day || null,
+      day || null,
+    ]);
+    return rows;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+// Fetch visits filtered by Location
+export const fetchVisitsByLocation = async (location_id, month, day) => {
+  try {
+    const query = `
+      SELECT v.id, v.visit_date AS date,
+             u.full_name AS isa_name, v.duty, v.status
+      FROM visits v
+      LEFT JOIN users u ON v.isa_id = u.id AND u.role = 'ISA'
+      WHERE (? IS NULL OR v.location_id = ?)
+        AND (? IS NULL OR v.month = ?)
+        AND (? IS NULL OR V.visit_date = ?)
+        AND v.duty NOT IN ('HOLI')
+      ORDER BY v.visit_date ASC
+    `;
+    const [rows] = await db.execute(query, [
+      location_id || null,
+      location_id || null,
+      month || null,
+      month || null,
+      day || null,
+      day || null,
+    ]);
+    return rows;
+  } catch (err) {
+    throw new Error(err);
   }
 };

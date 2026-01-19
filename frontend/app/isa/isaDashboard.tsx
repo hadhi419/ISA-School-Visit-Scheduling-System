@@ -1,9 +1,11 @@
+import api from '@/api/axiosInstance';
 import { useAuth } from '@/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button, Icon } from '@rneui/themed';
+import { Button } from '@rneui/themed';
 import { router } from 'expo-router';
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
+import { Modal, Pressable } from 'react-native';
+
 import {
   Dimensions,
   FlatList,
@@ -92,6 +94,26 @@ const styles = StyleSheet.create({
   programBtnTitle: { fontSize: 16, fontWeight: '700', color: '#ffffffff' },
 
   darkText: { color: '#ffffffff' },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffad8c',
+    padding: 12,
+    marginHorizontal: 3,
+    borderRadius: 8,
+    borderLeftWidth: 5,
+    borderLeftColor: '#ff7b29',
+    marginTop: 5,
+  },
+  warningIcon: { fontSize: 20, marginRight: 10 },
+  warningText: { flex: 1, fontSize: 14, color: '#000', textAlign: 'center' },
+  calendarContainer: {
+    margin: 15,
+    padding: 15,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginTop: 10,
+  },
 });
 const VISITS_DATA: Visit[] = [
   {
@@ -115,14 +137,16 @@ const VISITS_DATA: Visit[] = [
   },
 ];
 
-const handleLogout = async () => {
-  try {
-    await AsyncStorage.removeItem('token'); // Clear the token
-    router.replace('/'); // Redirect to root page
-  } catch (err) {
-    console.error('Error during logout', err);
-  }
-};
+// const handleLogout = async (logout: () => Promise<void>) => {
+//   try {
+//     //await AsyncStorage.removeItem('token'); // Clear the token
+
+//     logout();
+//     router.replace('/'); // Redirect to root page
+//   } catch (err) {
+//     console.error('Error during logout', err);
+//   }
+// };
 
 const VisitCard: FC<VisitCardProps> = ({ location, time, image }) => (
   <View style={styles.visitCard}>
@@ -144,18 +168,52 @@ const VisitCard: FC<VisitCardProps> = ({ location, time, image }) => (
 );
 
 const Dashboard: FC<DashboardProps> = () => {
-  const { name } = useAuth();
+  const [notification, setNotification] = useState<string>('');
+  const [showPopup, setShowPopup] = useState(false);
+
+  const { name, logout } = useAuth();
   console.log('ISA Dashboard - User Name:', name);
+
+  //const [Notifications, setNotifications] = useState<string>('');
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await api.get('/approvals/rejections/latest/5');
+        setNotification(response.data?.rejection?.comment || '');
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Icon name="menu" type="material" color="#E0E0E0" size={28} />
-          <Text style={styles.headerTitle}>Good Morning, {name}</Text>
-          <TouchableOpacity onPress={handleLogout}>
+          {/* <Icon name="menu" type="material" color="#E0E0E0" size={28} /> */}
+          <TouchableOpacity
+            onPress={() => {
+              logout();
+              router.replace('/');
+            }}
+          >
             <MaterialCommunityIcons name="logout" size={28} color="#eee" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Good Morning, {name}</Text>
+
+          {notification.length > 0 && (
+            <TouchableOpacity onPress={() => setShowPopup(true)}>
+              <MaterialCommunityIcons
+                name="bell-alert"
+                size={26}
+                color={notification.length > 0 ? '#ffea00' : '#eee'}
+                style={{ marginRight: 10 }}
+              />
+            </TouchableOpacity>
+          )}
 
           {/* <Icon name="person" type="material" color="#E0E0E0" size={28} /> */}
         </View>
@@ -187,8 +245,85 @@ const Dashboard: FC<DashboardProps> = () => {
           />
         </View>
       </ScrollView>
+      <Modal visible={showPopup} transparent animationType="fade">
+        <View style={popupStyles.overlay}>
+          <View style={popupStyles.popup}>
+            <Text style={popupStyles.title}>Schedule Rejected</Text>
+
+            <Text style={popupStyles.message}>{notification}</Text>
+
+            <View style={popupStyles.actions}>
+              <Pressable
+                style={popupStyles.editBtn}
+                onPress={() => {
+                  setShowPopup(false);
+                  router.push('/isa/advancedProgram');
+                }}
+              >
+                <Text style={popupStyles.btnText}>Edit Schedule</Text>
+              </Pressable>
+
+              <Pressable
+                style={popupStyles.closeBtn}
+                onPress={() => setShowPopup(false)}
+              >
+                <Text style={popupStyles.btnText}>Close</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 export default Dashboard;
+
+const popupStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popup: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 20,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#d32f2f',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 15,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  editBtn: {
+    backgroundColor: '#1976D2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  closeBtn: {
+    backgroundColor: '#9e9e9e',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+});

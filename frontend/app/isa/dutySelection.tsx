@@ -1,3 +1,5 @@
+import { useAuth } from '@/AuthContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Icon } from '@rneui/themed';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -25,7 +27,10 @@ const dutyLabelToType: Record<
 
 const DutySelection = () => {
   const params = useLocalSearchParams();
+  //console.log(params.date);
   const date = params.date ?? '';
+
+  const { id } = useAuth();
 
   const edit = params.edit === 'true'; // now edit is a proper boolean
 
@@ -43,6 +48,41 @@ const DutySelection = () => {
     { label: 'Holiday', color: '#e00303ff', textColor: '#FFFFFF' },
   ];
 
+  const handleDeletePress = async () => {
+    //console.log('Holiday');
+
+    const date = params.date ?? '';
+    console.log(date);
+
+    const today = new Date();
+    const nextMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      today.getDate()
+    );
+    const month = nextMonth.toLocaleString('default', { month: 'long' });
+
+    const payload = {
+      visit_date: date,
+      month,
+      isa_id: 5,
+    };
+    console.log('Payload for delete:', payload);
+
+    const res = await api.post('visits/delete', payload);
+    //console.log();
+    // console.log('✅ Event added:', { date, dutyType, location: 'none' });
+    //console.log(res.data.message.message);
+
+    if (
+      res.data.message.message ==
+      'Cannot delete or update a parent row: a foreign key constraint fails (`isa_school_visit_management`.`approval_logs`, CONSTRAINT `approval_logs_ibfk_1` FOREIGN KEY (`visit_id`) REFERENCES `visits` (`id`))'
+    ) {
+      alert('Cannot delete a schedule that was submitted');
+    }
+    return router.navigate('/isa/advancedProgram');
+  };
+
   const handleDutyPress = async (dutyLabel: string) => {
     const dutyType = dutyLabelToType[dutyLabel] || 'HNST';
 
@@ -50,8 +90,9 @@ const DutySelection = () => {
 
     if (dutyType == 'HOLI') {
       //console.log('Holiday');
-      const searchParams = new URLSearchParams(window.location.search);
-      const date = searchParams.get('date') ?? '';
+      const searchParams = params;
+      const date = searchParams.date ?? '';
+      console.log('srgserehtshtsh', date);
 
       const today = new Date();
       const nextMonth = new Date(
@@ -65,7 +106,7 @@ const DutySelection = () => {
         {
           visit_date: date,
           month,
-          isa_id: 5,
+          isa_id: id,
           location_id: null,
           duty: 'HOLI',
           report_text: null,
@@ -116,6 +157,12 @@ const DutySelection = () => {
             </Text>
           </Pressable>
         ))}
+        <Pressable
+          style={styles.deleteButton}
+          onPress={() => handleDeletePress()}
+        >
+          <MaterialCommunityIcons name={'delete'} size={40} color="#fd6e00" />
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -159,6 +206,16 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   dutyButton: {
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  deleteButton: {
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',

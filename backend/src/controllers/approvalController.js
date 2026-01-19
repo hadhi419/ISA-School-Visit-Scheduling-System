@@ -4,6 +4,7 @@ import {
   adeApproveScheduleService,
   adeRejectScheduleService,
   ddeApproveScheduleService,
+  getLatestRejectionForISAService,
   ddeRejectScheduleService,
 } from '../models/approvalModel.js';
 
@@ -91,6 +92,7 @@ export const ddeRejectSchedule = async (req, res) => {
 
 export const adeApproveSchedule = async (req, res) => {
   console.log('Debugging');
+  console.log(req.body);
 
   try {
     const { isa_id } = req.params;
@@ -113,9 +115,13 @@ export const adeApproveSchedule = async (req, res) => {
 
 export const adeRejectSchedule = async (req, res) => {
   try {
+    //console.log('Debugging adeRejectSchedule');
+    // console.log(req.body);
     const { isa_id } = req.params;
     const approved_by = req.body.approved_by;
     const comment = req.body.comment || '';
+    //console.log(comment);
+    //console.log(approved_by);
 
     const updated = await adeRejectScheduleService(
       isa_id,
@@ -131,5 +137,16 @@ export const adeRejectSchedule = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const getLatestRejectionForISA = async (req, res) => {
+  const { isa_id } = req.params;
+
+  try {
+    const rejection = await getLatestRejectionForISAService(isa_id);
+    res.json({ rejection });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch rejection info' });
   }
 };
