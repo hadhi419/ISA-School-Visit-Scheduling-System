@@ -171,15 +171,19 @@ const Dashboard: FC<DashboardProps> = () => {
   const [notification, setNotification] = useState<string>('');
   const [showPopup, setShowPopup] = useState(false);
 
-  const { name, logout } = useAuth();
+  const { name, logout, id, isLoggedIn } = useAuth();
   console.log('ISA Dashboard - User Name:', name);
 
   //const [Notifications, setNotifications] = useState<string>('');
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
+
     const fetchNotifications = async () => {
       try {
-        const response = await api.get('/approvals/rejections/latest/5');
+        const response = await api.get(`/approvals/rejections/latest/${id}`);
         setNotification(response.data?.rejection?.comment || '');
       } catch (error) {
         console.error('Error fetching notifications:', error);

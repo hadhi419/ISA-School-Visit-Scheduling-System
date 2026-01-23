@@ -1,9 +1,9 @@
 import ProtectedLayout from '@/components/layouts/ProtectedLayout';
 import { Slot } from 'expo-router';
 
-export default function ADELayout() {
+export default function ZDELayout() {
   return (
-    <ProtectedLayout allowedRoles={['ADE']}>
+    <ProtectedLayout allowedRoles={['ZDE', 'ADE', 'DDE']}>
       <Slot />
     </ProtectedLayout>
   );

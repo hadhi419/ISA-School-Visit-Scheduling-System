@@ -14,6 +14,15 @@ export const submitVisitReport = async ({
   location_change_reason = null,
   actual_duty = null,
 }) => {
+  if (isNaN(actual_location_id)) {
+    console.log(actual_location_id);
+    const [rows] = await db.query(`SELECT id from locations where name = ?`, [
+      actual_location_id,
+    ]);
+    actual_location_id = rows[0].id;
+  }
+
+  console.log('Hehe hooo', actual_location_id);
   // Get planned location
   const [rows] = await db.query(
     `SELECT location_id, duty FROM visits WHERE id = ?`,

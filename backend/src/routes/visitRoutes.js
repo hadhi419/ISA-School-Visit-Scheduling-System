@@ -7,6 +7,7 @@ import {
   deleteVisit,
   getVisitsByIsa,
   getVisitsByLocation,
+  getISAs,
 } from '../controllers/visitController.js';
 
 import { authenticate } from '../middleware/authMiddleware.js';
@@ -35,6 +36,9 @@ router.post('/submit', authorizeRoles('ISA'), submitMonthlyVisits);
 
 // ISA monitoring route
 router.get('/isa', authorizeRoles('ZDE', 'DDE', 'ADE'), getVisitsByIsa);
+
+// ISA Fetching route
+router.get('/isaDetails', authorizeRoles('ZDE', 'DDE', 'ADE'), getISAs);
 
 // Location monitoring route
 router.get(

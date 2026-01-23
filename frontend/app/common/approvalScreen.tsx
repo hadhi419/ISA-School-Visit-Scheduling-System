@@ -1,10 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
+
 import api from '../../api/axiosInstance';
 
-import { useAuth } from '@/AuthContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Image,
   SafeAreaView,
@@ -15,6 +15,9 @@ import {
   View,
 } from 'react-native';
 
+import { Icon } from '@rneui/themed';
+
+import { useAuth } from '@/AuthContext';
 // Images
 const SUPERVISOR_IMAGE = {
   uri: 'https://randomuser.me/api/portraits/men/75.jpg',
@@ -29,10 +32,15 @@ interface VisitResponseItem {
   scheduleSubmitted: boolean;
 }
 
-const getStatusProps = (status: string) => {
-  if (status === 'ADE_APPROVED') {
+const getStatusProps = (status: string, role: string) => {
+  console.log(role, status);
+  if (status === 'PENDING') {
     return { icon: 'hourglass', color: '#ff9800', label: 'Pending Approval' };
-  } else if (status === 'DDE_APPROVED') {
+  } else if (
+    (role === 'ADE' && status === 'DDE_APPROVED') ||
+    (role === 'ADE' && status === 'ADE_APPROVED') ||
+    (role === 'DDE' && status === 'DDE_APPROVED')
+  ) {
     return { icon: 'check-circle', color: '#38c172', label: 'Approved' };
   } else {
     return { icon: 'pencil', color: '#f5c407', label: 'In Process' };
@@ -58,19 +66,28 @@ const StatusItem = ({
 );
 
 const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
+  const router = useRouter();
+
+  const { id, name, role, isLoggedIn } = useAuth();
+  if (!role) {
+    return;
+  }
+
   const { status, scheduleSubmitted, isa_name, isa_id } = visit;
-  console.log(status);
-  const { icon, color, label } = getStatusProps(status);
+  const { icon, color, label } = getStatusProps(status, role);
 
   // Only Pending Approval cards are clickable
   const isClickable = label === 'Pending Approval';
 
-  const router = useRouter();
-
   const handleCardPress = () => {
-    console.log(visit.isa_id);
     if (!isClickable) return;
-    router.push(`./scheduleDetails/${visit.isa_id}`);
+
+    //console.log('IDDDDDDDDDDD', visit.isa_id);
+    if(role==="DDA")
+    {
+      router.push('/dd')
+    }
+    router.push(`/`);
   };
 
   return (
@@ -88,11 +105,7 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
           <View
             style={[styles.statusBubble, { backgroundColor: color + '22' }]}
           >
-            <MaterialCommunityIcons
-              name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
-              size={16}
-              color={color}
-            />
+            <MaterialCommunityIcons name="abacus" size={16} color={color} />
             <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>
               {label}
             </Text>
@@ -109,7 +122,7 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   );
 };
 
-const HigherOfficialDashboard = () => {
+const ApprovalScreen = () => {
   const currentMonth = useMemo(() => {
     const date = new Date();
     date.setMonth(date.getMonth() + 1); // Go to next month
@@ -117,41 +130,6 @@ const HigherOfficialDashboard = () => {
   }, []);
 
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
-  const { isLoggedIn, name } = useAuth();
-
-  const router = useRouter();
-
-  const handleMonitorLocationsPress = () => {
-    router.push('/common/locationMonitoring');
-  };
-  const hadndleMonitorISAPress = () => {
-    router.push('/common/isaMonitoring');
-  };
-
-  const handlePrintDocument = () => {
-    router.push('/common/pdfGenerator');
-  };
-
-  const handleApprovalPress = () => {
-    router.push('/common/approvalScreen');
-  };
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.replace('/');
-    }
-    const loadData = async () => {
-      try {
-        const res = await api.get('/approvals?month=February');
-
-        setVisits(res.data.visits);
-      } catch (err) {
-        console.error('Error loading data', err);
-      }
-    };
-
-    loadData();
-  }, []);
 
   const handleLogout = async () => {
     try {
@@ -162,82 +140,48 @@ const HigherOfficialDashboard = () => {
     }
   };
 
+  const { id, name, role, isLoggedIn } = useAuth();
+
+  useEffect(() => {
+    console.log('Iddddddddddd', id);
+
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
+
+    const loadData = async () => {
+      try {
+        const res = await api.get('/approvals?month=February');
+        console.log('Loaded data:', res);
+        setVisits(res.data.visits);
+      } catch (err) {
+        console.error('Error loading data', err);
+      }
+    };
+
+    loadData();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* BLUE HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleLogout}>
-            <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-          </TouchableOpacity>
+          <Icon
+            name="arrow-back"
+            type="material"
+            color="#E0E0E0"
+            size={28}
+            onPress={() => router.back()}
+          />
           <Text style={styles.headerTitle}>Welcome, {name}</Text>
           {/* <MaterialCommunityIcons
             name="account-circle"
             size={28}
             color="#eee"
           /> */}
-          <MaterialCommunityIcons name="menu" size={28} color="#eee" />
-        </View>
-
-        <View style={styles.actionGrid}>
-          {/* <TouchableOpacity
-            style={styles.actionCard}
-            onPress={handleApprovalPress}
-          >
-            <MaterialCommunityIcons
-              name="calendar-account"
-              size={36}
-              color="#e9bf00"
-            />
-            <Text style={styles.actionTitle}>Approve Schedules</Text>
-            <Text style={styles.actionSub}>
-              Approve or ask Revisions on Schedules
-            </Text>
-          </TouchableOpacity> */}
-
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={handleMonitorLocationsPress}
-          >
-            <MaterialCommunityIcons
-              name="map-marker-radius"
-              size={36}
-              color="#1976D2"
-            />
-            <Text style={styles.actionTitle}>Monitor Locations</Text>
-            <Text style={styles.actionSub}>
-              View and track school visit locations
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={hadndleMonitorISAPress}
-          >
-            <MaterialCommunityIcons
-              name="account-group"
-              size={36}
-              color="#2e7d32"
-            />
-            <Text style={styles.actionTitle}>Monitor ISAs</Text>
-            <Text style={styles.actionSub}>
-              Review ISA assignments and progress
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionCard}
-            onPress={handlePrintDocument}
-          >
-            <MaterialCommunityIcons
-              name="file-pdf-box"
-              size={36}
-              color="#c62828"
-            />
-            <Text style={styles.actionTitle}>Generate Reports</Text>
-            <Text style={styles.actionSub}>
-              Download monthly ISA PDF reports
-            </Text>
+          <TouchableOpacity onPress={handleLogout}>
+            <MaterialCommunityIcons name="logout" size={28} color="#eee" />
           </TouchableOpacity>
         </View>
 
@@ -250,10 +194,6 @@ const HigherOfficialDashboard = () => {
             <EmployeeStatusCard key={v.isa_id} visit={v} />
           ))}
         </View>
-
-        {/* <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>View Reports</Text>
-        </TouchableOpacity> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -355,37 +295,6 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 12, color: '#888', marginRight: 6 },
   logo: { width: 20, height: 20 },
-  actionGrid: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-  },
-
-  actionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-  },
-
-  actionTitle: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-  },
-
-  actionSub: {
-    marginTop: 6,
-    fontSize: 13,
-    color: '#666',
-    textAlign: 'center',
-  },
 });
 
-export default HigherOfficialDashboard;
+export default ApprovalScreen;

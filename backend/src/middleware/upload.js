@@ -16,6 +16,8 @@ const fileFilter = (req, file, cb) => {
   const allowedTypes = [
     'image/jpeg',
     'image/png',
+    'image/heic', // ✅ iOS HEIC images
+    'image/heif', // ✅ some iOS HEIF images
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

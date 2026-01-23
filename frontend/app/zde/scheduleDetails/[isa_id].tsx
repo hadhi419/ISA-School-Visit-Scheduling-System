@@ -1,3 +1,4 @@
+import { useAuth } from '@/AuthContext';
 import { Icon } from '@rneui/base';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -35,7 +36,12 @@ const ScheduleDetailPage = ({ route }: any) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const { isLoggedIn } = useAuth();
+
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
     const fetchDetail = async () => {
       try {
         console.log('fetchinggg');

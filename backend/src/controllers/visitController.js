@@ -5,6 +5,7 @@ import {
   deleteVisits,
   fetchVisitsByIsa,
   fetchVisitsByLocation,
+  fetchISAs,
 } from '../models/visitModel.js';
 
 export const postMultipleVisits = async (req, res) => {
@@ -80,15 +81,25 @@ export const checkMonthlyEditPermission = async (req, res) => {
   }
 };
 
+export const getISAs = async (req, res) => {
+  try {
+    const isas = await fetchISAs();
+    res.json(isas);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // Controller for ISA Monitoring
 export const getVisitsByIsa = async (req, res) => {
   try {
-    const { isa_id, month, day } = req.query;
+    const { isa_id, date } = req.query;
+    console.log(date);
 
     const visits = await fetchVisitsByIsa(
       isa_id ? Number(isa_id) : null,
-      month && month !== 'null' ? month : null, // convert "null" string to real null
-      day && day !== 'null' ? Number(day) : null
+      date && date !== 'null' ? date : null
     );
 
     res.json({ success: true, data: visits });
@@ -101,11 +112,12 @@ export const getVisitsByIsa = async (req, res) => {
 // Controller for Location Monitoring
 export const getVisitsByLocation = async (req, res) => {
   try {
-    const { location_id, month, day } = req.query;
+    console.log(req.query);
+    const { location_id, date } = req.query;
     const visits = await fetchVisitsByLocation(
       location_id ? Number(location_id) : null,
-      month && month !== 'null' ? month : null, // convert "null" string to real null
-      day && day !== 'null' ? Number(day) : null
+
+      date && date !== 'null' ? date : null
     );
     res.json({ success: true, data: visits });
   } catch (err) {

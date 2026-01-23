@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Icon } from '@rneui/base';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useState } from 'react';
 import {
@@ -35,7 +35,7 @@ interface VisitDetail {
 
 const ScheduleDetailPage = ({ route }: any) => {
   const router = useRouter();
-  const isa_id = route?.params?.isa_id ?? 5;
+  const [isa_id, setisa_id] = useState<number | null>(null);
 
   const [detail, setDetail] = useState<VisitDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,9 +45,24 @@ const ScheduleDetailPage = ({ route }: any) => {
   const [comment, setComment] = useState('');
 
   const [user_Id, setUser_Id] = useState<number | null>(null);
-  const { id } = useAuth();
+  const { id, isLoggedIn } = useAuth();
+
+  const params = useLocalSearchParams();
+  const paramsId = params.isa_id;
 
   useEffect(() => {
+    if (paramsId) {
+      console.log('IDDDDDDDDDDDD', paramsId);
+      const parsed = parseInt(paramsId[0], 10);
+      setisa_id(parsed);
+    } else {
+      console.log('IDDDDDDDDDDDD', paramsId);
+    }
+
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
+
     const fetchDetail = async () => {
       try {
         const token = await AsyncStorage.getItem('token');

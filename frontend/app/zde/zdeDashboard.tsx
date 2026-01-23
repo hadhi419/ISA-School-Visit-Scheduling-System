@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../api/axiosInstance';
 
 import {
-  Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -13,6 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import { useAuth } from '@/AuthContext';
 
 // Images
 const SUPERVISOR_IMAGE = {
@@ -56,51 +57,51 @@ const StatusItem = ({
   </View>
 );
 
-const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
-  const router = useRouter();
+// const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
+//   const router = useRouter();
 
-  const { status, scheduleSubmitted, isa_name, isa_id } = visit;
-  const { icon, color, label } = getStatusProps(status);
+//   const { status, scheduleSubmitted, isa_name, isa_id } = visit;
+//   const { icon, color, label } = getStatusProps(status);
 
-  // Only Pending Approval cards are clickable
-  const isClickable = label === 'Pending Approval';
+//   // Only Pending Approval cards are clickable
+//   const isClickable = label === 'Pending Approval';
 
-  const handleCardPress = () => {
-    if (!isClickable) return;
-    router.push(`./scheduleDetails/${visit.isa_id}`);
-  };
+//   const handleCardPress = () => {
+//     if (!isClickable) return;
+//     router.push(`./scheduleDetails/${visit.isa_id}`);
+//   };
 
-  return (
-    <TouchableOpacity
-      onPress={handleCardPress}
-      activeOpacity={isClickable ? 0.8 : 1}
-    >
-      <View style={[styles.card, !isClickable && { opacity: 0.5 }]}>
-        <View style={styles.cardHeader}>
-          <Image source={SUPERVISOR_IMAGE} style={styles.cardProfileImage} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.nameText}>{isa_name}</Text>
-            <Text style={styles.isaText}>ISA</Text>
-          </View>
-          <View
-            style={[styles.statusBubble, { backgroundColor: color + '22' }]}
-          >
-            <MaterialCommunityIcons name={icon} size={16} color={color} />
-            <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>
-              {label}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.statusRow}>
-          <StatusItem
-            label={scheduleSubmitted ? 'Schedule Submitted' : 'No Schedule'}
-            isSuccess={scheduleSubmitted}
-          />
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-};
+//   return (
+//     <TouchableOpacity
+//       onPress={handleCardPress}
+//       activeOpacity={isClickable ? 0.8 : 1}
+//     >
+//       <View style={[styles.card, !isClickable && { opacity: 0.5 }]}>
+//         <View style={styles.cardHeader}>
+//           <Image source={SUPERVISOR_IMAGE} style={styles.cardProfileImage} />
+//           <View style={{ flex: 1 }}>
+//             <Text style={styles.nameText}>{isa_name}</Text>
+//             <Text style={styles.isaText}>ISA</Text>
+//           </View>
+//           <View
+//             style={[styles.statusBubble, { backgroundColor: color + '22' }]}
+//           >
+//             <MaterialCommunityIcons name="abacus" size={16} color={color} />
+//             <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>
+//               {label}
+//             </Text>
+//           </View>
+//         </View>
+//         <View style={styles.statusRow}>
+//           <StatusItem
+//             label={scheduleSubmitted ? 'Schedule Submitted' : 'No Schedule'}
+//             isSuccess={scheduleSubmitted}
+//           />
+//         </View>
+//       </View>
+//     </TouchableOpacity>
+//   );
+// };
 
 const HigherOfficialDashboard = () => {
   const currentMonth = useMemo(() => {
@@ -110,8 +111,12 @@ const HigherOfficialDashboard = () => {
   }, []);
 
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
+  const { id, isLoggedIn, logout } = useAuth();
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
     const loadData = async () => {
       try {
         const res = await api.get('/approvals?month=February');
@@ -123,14 +128,20 @@ const HigherOfficialDashboard = () => {
     };
 
     loadData();
+
+    console.log(id);
   }, []);
 
   const router = useRouter();
   const handleMonitorLocationsPress = () => {
-    router.push('/zde/locationMonitoring');
+    router.push('/common/locationMonitoring');
   };
   const hadndleMonitorISAPress = () => {
-    router.push('/zde/isaMonitoring');
+    router.push('/common/isaMonitoring');
+  };
+
+  const handlePrintDocument = () => {
+    router.push('/common/pdfGenerator');
   };
 
   return (
@@ -138,7 +149,15 @@ const HigherOfficialDashboard = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* BLUE HEADER */}
         <View style={styles.header}>
-          <MaterialCommunityIcons name="menu" size={28} color="#eee" />
+          <TouchableOpacity
+            onPress={() => {
+              logout();
+              router.replace('/');
+            }}
+          >
+            <MaterialCommunityIcons name="logout" size={28} color="#eee" />
+            
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Welcome, ZDE</Text>
           <MaterialCommunityIcons
             name="account-circle"
@@ -147,27 +166,62 @@ const HigherOfficialDashboard = () => {
           />
         </View>
 
-        <Text style={styles.sectionTitle}>
+        {/* <Text style={styles.sectionTitle}>
           ISA Monthly Visit Status ({currentMonth})
-        </Text>
+        </Text> */}
 
-        <View style={styles.cardsContainer}>
+        {/* <View style={styles.cardsContainer}>
           {visits.map((v) => (
             <EmployeeStatusCard key={v.isa_id} visit={v} />
           ))}
+        </View> */}
+
+        <View style={styles.actionGrid}>
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handleMonitorLocationsPress}
+          >
+            <MaterialCommunityIcons
+              name="map-marker-radius"
+              size={36}
+              color="#1976D2"
+            />
+            <Text style={styles.actionTitle}>Monitor Locations</Text>
+            <Text style={styles.actionSub}>
+              View and track school visit locations
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={hadndleMonitorISAPress}
+          >
+            <MaterialCommunityIcons
+              name="account-group"
+              size={36}
+              color="#2e7d32"
+            />
+            <Text style={styles.actionTitle}>Monitor ISAs</Text>
+            <Text style={styles.actionSub}>
+              Review ISA assignments and progress
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={handlePrintDocument}
+          >
+            <MaterialCommunityIcons
+              name="file-pdf-box"
+              size={36}
+              color="#c62828"
+            />
+            <Text style={styles.actionTitle}>Generate Reports</Text>
+            <Text style={styles.actionSub}>
+              Download monthly ISA PDF reports
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText} onPress={handleMonitorLocationsPress}>
-            Monitor Locations
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText} onPress={hadndleMonitorISAPress}>
-            Monitor ISAs
-          </Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -269,6 +323,38 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 12, color: '#888', marginRight: 6 },
   logo: { width: 20, height: 20 },
+
+  actionGrid: {
+    paddingHorizontal: 16,
+    marginTop: 24,
+  },
+
+  actionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
+
+  actionTitle: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+  },
+
+  actionSub: {
+    marginTop: 6,
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+  },
 });
 
 export default HigherOfficialDashboard;

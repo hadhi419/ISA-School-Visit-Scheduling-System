@@ -1,4 +1,5 @@
 // ScheduleContext.tsx
+import { useAuth } from '@/AuthContext';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import api from '../../api/axiosInstance';
 
@@ -33,6 +34,7 @@ const ScheduleContext = createContext<ScheduleContextType | undefined>(
 
 export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const [scheduledEvents, setScheduledEvents] = useState<ScheduledEvent[]>([]);
+  const { id } = useAuth();
 
   const addEvent = (event: ScheduledEvent) => {
     setScheduledEvents((prev) => {
@@ -47,7 +49,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   const fetchMonthVisits = async (month: string) => {
     try {
       console.log(`📡 Fetching all visit data for ${month}...`);
-      const response = await api.get(`visits/month/${month}/5`);
+      const response = await api.get(`visits/month/${month}${id}`);
       const visits = response.data.visits;
 
       if (Array.isArray(visits)) {

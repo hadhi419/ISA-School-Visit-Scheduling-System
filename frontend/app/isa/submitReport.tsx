@@ -13,12 +13,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+import { useAuth } from '@/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api/axiosInstance';
 
 import { Picker } from '@react-native-picker/picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+
 /* ---------- Types ---------- */
 interface UploadedFile {
   id: number;
@@ -63,8 +66,14 @@ const MonitoringReportForm: FC = () => {
   const day = Number(params.get('date'));
   const locationParam = params.get('location');
   const id = Number(params.get('id'));
+  const duty = params.get('duty');
+
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
     setDate(`${year}-${month}-${day}`);
     setLocation(locationParam || '');
     setVisitId(id || null);
@@ -121,10 +130,11 @@ const MonitoringReportForm: FC = () => {
       if (result.canceled === false) {
         const file: UploadedFile = {
           id: Date.now(),
-          name: (result as any).name,
+          name: result.assets[0].name,
           type: 'document',
-          uri: (result as any).uri,
+          uri: result.assets[0].uri,
         };
+        //console.log('Fileee ', file);
 
         setUploadedFiles((prev) => [...prev, file]);
       } else {
@@ -141,8 +151,8 @@ const MonitoringReportForm: FC = () => {
 
   /* ---------- Submit Form ---------- */
   const submitReport = async () => {
-    if (!observations || !assessments) {
-      Alert.alert('Error', 'Observations and Assessments are required.');
+    if (!observations) {
+      Alert.alert('Error', 'Observations are required.');
       return;
     }
 
@@ -153,10 +163,17 @@ const MonitoringReportForm: FC = () => {
       formData.append('status', 'VISITED');
       formData.append(
         'actual_location_id',
-        actualLocationId ? actualLocationId.toString() : ''
+        actualLocationId
+          ? actualLocationId.toString()
+          : locationParam
+            ? locationParam.toString()
+            : ' '
       );
       formData.append('location_change_reason', 'Summaaaa');
-      formData.append('actual_duty', actualDuty || '');
+      formData.append(
+        'actual_duty',
+        actualDuty ? actualDuty : duty ? duty : ' '
+      );
 
       // Append files
       for (const file of uploadedFiles) {
@@ -170,8 +187,14 @@ const MonitoringReportForm: FC = () => {
           );
         } else {
           // Mobile: fetch the file and convert to blob
-          const blob = await fetch(file.uri).then((res) => res.blob());
-          formData.append('files', blob, file.name); // Pass blob + filename
+
+          formData.append('files', {
+            uri: file.uri,
+            name: file.name,
+            type: file.type === 'photo' ? 'image/jpeg' : 'application/pdf',
+          } as any);
+
+          console.log('URIII', file.uri);
         }
       }
 
@@ -235,7 +258,10 @@ const MonitoringReportForm: FC = () => {
         {/* Details */}
         <View style={styles.detailCard}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Location :</Text>
+            <Text style={styles.detailLabel}>
+              {/* <MaterialIcons name="location-on"></MaterialIcons> */}
+              Location :
+            </Text>
             <Text style={styles.detailValue}>{location}</Text>
           </View>
           <View style={styles.detailRow}>
@@ -243,7 +269,6 @@ const MonitoringReportForm: FC = () => {
             <Text style={styles.detailValue}>{date}</Text>
           </View>
         </View>
-
         {/* Location Change Checkbox */}
         <Pressable
           style={{
@@ -268,7 +293,6 @@ const MonitoringReportForm: FC = () => {
             Location Changed?
           </Text>
         </Pressable>
-
         {/* Show dropdown if changed */}
         {/* ---------- Show dropdown if changed ---------- */}
         {locationChanged && (
@@ -418,7 +442,6 @@ const MonitoringReportForm: FC = () => {
             )}
           </View>
         )}
-
         {/* Observations */}
         <Text style={styles.sectionTitle}>Observations</Text>
         <TextInput
@@ -428,8 +451,7 @@ const MonitoringReportForm: FC = () => {
           onChangeText={setObservations}
           multiline
         />
-
-        {/* Assessments */}
+        {/* Assessments
         <Text style={styles.sectionTitle}>Assessments</Text>
         <TextInput
           style={[styles.textArea, { height: 100 }]}
@@ -437,8 +459,7 @@ const MonitoringReportForm: FC = () => {
           value={assessments}
           onChangeText={setAssessments}
           multiline
-        />
-
+        /> */}
         {/* Upload */}
         <Text style={styles.sectionTitle}>Supporting Evidence</Text>
         <Pressable
@@ -455,7 +476,6 @@ const MonitoringReportForm: FC = () => {
             Upload Photos
           </Text>
         </Pressable>
-
         <Pressable
           style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
           onPress={pickDocument}
@@ -470,14 +490,12 @@ const MonitoringReportForm: FC = () => {
             Upload Documents
           </Text>
         </Pressable>
-
         {/* File List */}
         <View style={styles.fileList}>
           {uploadedFiles.map((file) => (
             <FileItem key={file.id} file={file} onRemove={handleRemoveFile} />
           ))}
         </View>
-
         {/* Buttons */}
         <View style={styles.buttonGroup}>
           <Pressable

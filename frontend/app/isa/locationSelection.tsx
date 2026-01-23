@@ -36,9 +36,12 @@ const LocationSelection = () => {
   const [loading, setLoading] = useState(true);
   const { addEvent } = useSchedule();
 
-  const { id } = useAuth();
+  const { id, isLoggedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
     const fetchLocations = async () => {
       try {
         const res = await api.get(API_URL);

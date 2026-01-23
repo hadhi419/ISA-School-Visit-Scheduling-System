@@ -1,3 +1,4 @@
+import { useAuth } from '@/AuthContext';
 import { Icon } from '@rneui/themed';
 import { router, useFocusEffect } from 'expo-router';
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
@@ -99,11 +100,15 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({
 }) => {
   if (day.date === 0) return <View style={styles.dayCell} />;
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const dayObj = new Date(day.year, day.monthIndex, day.date);
   const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
   const isHoliday = day.schedule === 'HOLI';
   const isVisited = day.status === 'VISITED';
-  const isDisabled = isWeekend || isHoliday || isVisited;
+  const isFutureDate = dayObj > today;
+  const isDisabled = isWeekend || isHoliday || isVisited || isFutureDate;
 
   const scheduleColors: Record<
     ScheduleType | 'NONE',
@@ -136,12 +141,32 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({
         style={[
           styles.dayCircle,
           {
-            borderColor: color.border,
-            backgroundColor: color.background || 'transparent',
+            borderColor:
+              isFutureDate && !isWeekend
+                ? '#e0e0e0'
+                : isFutureDate && isWeekend
+                  ? 'transparent'
+                  : color.border,
+            backgroundColor:
+              isFutureDate && !isWeekend
+                ? '#e0e0e0'
+                : isFutureDate && isWeekend
+                  ? 'transparent'
+                  : color.background,
+            opacity: isDisabled ? 40 : 100,
           },
         ]}
       >
-        <Text style={[styles.dayText, { color: color.text }]}>{day.date}</Text>
+        <Text
+          style={[
+            styles.dayText,
+            {
+              color: isFutureDate && !isWeekend ? '#ffffff' : color.text,
+            },
+          ]}
+        >
+          {day.date}
+        </Text>
       </View>
     </Pressable>
   );
@@ -151,6 +176,9 @@ const AmmendedProgram: FC = () => {
   const [scheduledEvents, setRemoteData] = useState<ScheduledEvent[]>([]);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
     const fetchData = async () => {
       const nextMonth = new Date(
         new Date().getFullYear(),
@@ -158,7 +186,7 @@ const AmmendedProgram: FC = () => {
         1
       ).toLocaleString('default', { month: 'long' });
 
-      const response = await api.get(`/visits/month/${nextMonth}/5`);
+      const response = await api.get(`/visits/month/${nextMonth}/${id}`);
       console.log(response);
       const remoteEvents: ScheduledEvent[] = response.data.visits.map(
         (item: any) => ({
@@ -187,7 +215,7 @@ const AmmendedProgram: FC = () => {
         ).toLocaleString('default', { month: 'long' });
 
         try {
-          const response = await api.get(`/visits/month/${nextMonth}/5`);
+          const response = await api.get(`/visits/month/${nextMonth}/${id}`);
           const remoteEvents: ScheduledEvent[] = response.data.visits.map(
             (item: any) => ({
               id: item.id,
@@ -208,6 +236,7 @@ const AmmendedProgram: FC = () => {
     }, [])
   );
 
+  const { id, isLoggedIn } = useAuth();
   const monthToFetch = useMemo(() => {
     return new Date(
       new Date().getFullYear(),
@@ -243,7 +272,30 @@ const AmmendedProgram: FC = () => {
     [scheduledEventsObj]
   );
 
-  const onDayPress = (dayDate: number, location: string, id: number) => {
+  const pendingReportsCount = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return calendarData.filter((day) => {
+      if (day.date === 0) return false;
+
+      const dayObj = new Date(day.year, day.monthIndex, day.date);
+      dayObj.setHours(0, 0, 0, 0);
+
+      const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
+      const isHoliday = day.schedule === 'HOLI';
+      const isVisited = day.status === 'VISITED';
+
+      return dayObj <= today && !isWeekend && !isHoliday && !isVisited;
+    }).length;
+  }, [calendarData]);
+
+  const onDayPress = (
+    dayDate: number,
+    location: string,
+    id: number,
+    duty: ScheduleType
+  ) => {
     const current_year = new Date().getFullYear();
     console.log(location);
 
@@ -255,6 +307,7 @@ const AmmendedProgram: FC = () => {
         date: dayDate.toString(),
         month: monthToFetch,
         location: location,
+        duty: duty,
       },
     });
   };
@@ -263,18 +316,28 @@ const AmmendedProgram: FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Icon
+          name="arrow-back"
+          type="material"
+          color="#E0E0E0"
+          size={28}
+          onPress={() => router.back()}
+        />
+        <Text style={styles.headerTitle}>Amended Program</Text>
+        <View style={{ width: 28 }} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Icon
-            name="arrow-back"
-            type="material"
-            color="#E0E0E0"
-            size={28}
-            onPress={() => router.back()}
-          />
-          <Text style={styles.headerTitle}>Amended Program</Text>
-          <View style={{ width: 28 }} />
-        </View>
+        {pendingReportsCount > 0 && (
+          <View style={styles.warningBox}>
+            <Text style={styles.warningIcon}>📄</Text>
+            <Text style={styles.warningText}>
+              You have{' '}
+              <Text style={{ fontWeight: '700' }}>{pendingReportsCount}</Text>{' '}
+              report(s to submit up to today.
+            </Text>
+          </View>
+        )}
 
         <Text style={styles.monthTitle}>{monthToFetch}</Text>
 
@@ -294,7 +357,8 @@ const AmmendedProgram: FC = () => {
                 onPress={
                   day.date === 0
                     ? undefined
-                    : () => onDayPress(day.date, day.location, day.id)
+                    : () =>
+                        onDayPress(day.date, day.location, day.id, day.schedule)
                 }
               />
             ))}
@@ -317,7 +381,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
-    marginBottom: '30%',
+    marginBottom: '0%',
   },
   headerTitle: {
     fontSize: 18,
@@ -365,6 +429,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dayText: { fontSize: 15, fontWeight: '600' },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f2e5e3',
+    padding: 12,
+    marginHorizontal: 15,
+    borderRadius: 8,
+    borderLeftWidth: 5,
+    borderLeftColor: '#E53935',
+    marginTop: '10%',
+    marginBottom: '10%',
+  },
+
+  warningIcon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+
+  warningText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#000',
+  },
 });
 
 export default AmmendedProgram;

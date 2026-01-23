@@ -11,11 +11,13 @@ import {
   StyleSheet,
   Text,
   View,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScheduleType } from '../../isa/context/ScheduleContext';
 
 import { useAuth } from '@/AuthContext';
+import { MaterialIcons } from '@expo/vector-icons';
 import api from '../../api/axiosInstance';
 
 interface DayCellProps {
@@ -93,15 +95,27 @@ const getNextMonthCalendar = (scheduledEvents?: {
 const DayCell: FC<{
   day: CalendarDay;
   canEdit: boolean;
-  onPress?: () => void;
-  onEditPress?: (dayDate: number, isEdit: string) => void;
-}> = ({ day, canEdit, onPress, onEditPress }) => {
+  onEditPress?: (dayDate: number) => void;
+}> = ({ day, canEdit, onEditPress }) => {
+  const [showPopup, setShowPopup] = useState(false);
+
   if (day.date === 0) return <View style={styles.dayCell} />;
 
-  const [showPopup, setShowPopup] = useState(false);
   const dayObj = new Date(day.year, day.monthIndex, day.date);
-  const isWeekend =
-    day.month === 'current' && (dayObj.getDay() === 0 || dayObj.getDay() === 6);
+  const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
+  const isDisabled = !canEdit || isWeekend;
+
+  const hasDuty = day.schedule !== 'NONE';
+
+  const handlePress = () => {
+    if (!canEdit) return;
+
+    if (hasDuty) {
+      setShowPopup(true); // Show popup if duty exists
+    } else {
+      onEditPress?.(day.date); // Directly navigate if no duty
+    }
+  };
 
   const scheduleColors: Record<
     ScheduleType | 'NONE',
@@ -112,21 +126,13 @@ const DayCell: FC<{
     EVAL: { border: '#66BB6A', text: '#464545ff' },
     HOLI: { border: '#EF5350', text: '#464545ff' },
     DEV: { border: '#FFC107', background: '#FFC107', text: '#333' },
-    NONE: {
-      border: 'transparent',
-      text: isWeekend ? '#b1aeaeff' : '#464545ff',
-    },
+    NONE: { border: 'transparent', text: '#464545ff' },
   };
-
   const color = scheduleColors[day.schedule] || scheduleColors.NONE;
 
   return (
     <View style={styles.dayCell}>
-      <Pressable
-        disabled={isWeekend || !canEdit}
-        onPress={onPress}
-        onLongPress={() => setShowPopup(true)}
-      >
+      <Pressable onPress={handlePress} disabled={isDisabled}>
         <View
           style={[
             styles.dayCircle,
@@ -136,65 +142,84 @@ const DayCell: FC<{
             },
           ]}
         >
-          <Text style={[styles.dayText, { color: color.text }]}>
+          <Text
+            style={[
+              styles.dayText,
+              { color: isDisabled ? '#adaaaa' : color.text },
+            ]}
+          >
             {day.date}
           </Text>
         </View>
       </Pressable>
 
-      {/* {showPopup && (
-        <Pressable
-          style={styles.popupOverlay}
-          onPress={() => setShowPopup(false)}
+      {/* Popup for days with duty */}
+      {showPopup && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={showPopup}
+          onRequestClose={() => setShowPopup(false)}
         >
-          <View style={styles.popupCard}>
-            <Text style={styles.popupTitle}>
-              {day.date} {dayObj.toLocaleString('default', { month: 'long' })}
-            </Text>
-
-            <View style={styles.popupInfoRow}>
-              <Text style={styles.popupLabel}>Duty:</Text>
-              <Text style={styles.popupValue}>
-                {day.schedule !== 'NONE' ? day.schedule : 'Not set'}
+          <Pressable
+            style={styles.popupOverlay}
+            onPress={() => setShowPopup(false)}
+          >
+            <View style={styles.popupCardApprovalStyle}>
+              <Text style={styles.popupTitle}>
+                {day.date}{' '}
+                {new Date(day.year, day.monthIndex, day.date).toLocaleString(
+                  'default',
+                  { month: 'long' }
+                )}
               </Text>
-            </View>
 
-            <View style={styles.popupInfoRow}>
-              <Text style={styles.popupLabel}>Location:</Text>
-              <Text style={styles.popupValue}>{day.location}</Text>
-            </View>
+              <View style={styles.popupInfoRow}>
+                <Text style={styles.popupLabel}>Duty:</Text>
+                <Text style={styles.popupValue}>{day.schedule}</Text>
+              </View>
 
-            <View style={styles.popupActions}>
-              <Pressable
-                style={[styles.popupButton, styles.popupEdit]}
-                onPress={() => {
-                  setShowPopup(false);
-                  onEditPress?.(day.date, 'true'); // existing edit flow
-                }}
-              >
-                <Text style={styles.popupButtonText}>Edit</Text>
-              </Pressable>
+              <View style={styles.popupInfoRow}>
+                <Text style={styles.popupLabel}>Location:</Text>
+                <Text style={styles.popupValue}>
+                  {day.location || 'Not set'}
+                </Text>
+              </View>
 
-              <Pressable
-                style={[styles.popupButton, styles.popupClear]}
-                onPress={() => {
-                  setShowPopup(false);
-                  //console.log('Clear pressed for day:', day.date);
-                  // Later: call context function to clear duty
-                }}
-              >
-                <Text style={styles.popupButtonText}>Clear</Text>
-              </Pressable>
+              <View style={styles.popupActionsApproval}>
+                <TouchableOpacity
+                  style={[
+                    styles.popupButtonApproval,
+                    { backgroundColor: '#aaa' },
+                  ]}
+                  onPress={() => setShowPopup(false)}
+                >
+                  <Text style={styles.popupButtonTextApproval}>Close</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.popupButtonApproval,
+                    { backgroundColor: '#1976D2' },
+                  ]}
+                  onPress={() => {
+                    setShowPopup(false);
+                    onEditPress?.(day.date); // Navigate to dutySelection
+                  }}
+                >
+                  <Text style={styles.popupButtonTextApproval}>Edit</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </Pressable>
-      )} */}
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 };
 
 const AdvancedProgram: FC = () => {
-  const { id, name } = useAuth();
+  const { id, name, isLoggedIn } = useAuth();
 
   const { fromLocationSelection } = useLocalSearchParams<{
     fromLocationSelection?: string;
@@ -292,6 +317,10 @@ const AdvancedProgram: FC = () => {
 
   useEffect(() => {
     fetchData();
+
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
   }, [setRemoteData]);
 
   const handleSubmitSchedule = async () => {
@@ -354,12 +383,14 @@ const AdvancedProgram: FC = () => {
       ![0, 6].includes(new Date(d.year, d.monthIndex, d.date).getDay())
   ).length;
 
-  const onDayPress = (dayDate: number, isEdit: string) => {
-    //console.log('edit pressed:', isEdit);
-
+  const onDayPress = (dayDate: number, editMode = false) => {
     router.push({
       pathname: '/isa/dutySelection',
-      params: { date: dayDate.toString(), month: monthToFetch, edit: isEdit },
+      params: {
+        date: dayDate.toString(),
+        month: monthToFetch,
+        edit: editMode ? 'true' : 'false', // Pass edit flag
+      },
     });
   };
 
@@ -537,18 +568,9 @@ const AdvancedProgram: FC = () => {
               {calendarData.map((day, idx) => (
                 <DayCell
                   key={`${day.year}-${day.monthIndex}-${day.date}-${day.month}-${idx}`}
-                  canEdit={canEdit}
                   day={day}
-                  onPress={
-                    day.date === 0
-                      ? undefined
-                      : () => onDayPress(day.date, 'false')
-                  }
-                  onEditPress={
-                    day.date === 0
-                      ? undefined
-                      : () => onDayPress(day.date, 'true')
-                  }
+                  canEdit={canEdit}
+                  onEditPress={(dayDate) => onDayPress(dayDate, true)} // <-- FIXED
                 />
               ))}
             </View>
@@ -695,18 +717,47 @@ const AdvancedProgram: FC = () => {
                 <Pressable
                   disabled={isWeekend || !canEdit}
                   style={[cardStyle, { backgroundColor: BackgroundColor }]}
-                  onPress={() => onDayPress(item.date, 'false')}
+                  onPress={() => onDayPress(item.date, false)}
                 >
-                  <Text style={[styles.cardDate, { color: textColor }]}>
-                    {item.date} {isWeekend ? 'Holiday' : ''}
-                  </Text>
-                  <Text style={[styles.cardDuty, { color: textColor }]}>
-                    Duty: {item.schedule}
-                  </Text>
-                  <Text style={[styles.cardDuty, { color: textColor }]}>
-                    Location: {item.location || 'Not Set'}
-                  </Text>
-                  {isHoliday && (
+                  <View style={{ flex: 2, flexDirection: 'row' }}>
+                    <View>
+                      <Text style={[styles.cardDate, { color: textColor }]}>
+                        {item.date}
+                      </Text>
+                      {/* <Text
+                        style={[
+                          styles.cardDate,
+                          
+                          {w
+                            color: textColor,
+                            fontSize: 10,
+                            textAlign: 'center',
+                          },
+                        ]}
+                      >
+                        {isHoliday && 'holiday'}
+                      </Text> */}
+                    </View>
+                    <View style={styles.verticalLine}></View>
+                    <View style={styles.cardRight}>
+                      <Text style={[styles.cardDuty, { color: textColor }]}>
+                        <MaterialIcons name="work" size={14}></MaterialIcons>{' '}
+                        {(item.schedule == 'EVAL' && 'In Evaluation') ||
+                          (item.schedule == 'DEV' && 'DEVELOPMENT MEETiNG') ||
+                          (item.schedule == 'HOLI' && 'LEAVE/HOLIDAY')}
+                      </Text>
+                      {item.location && (
+                        <Text style={[styles.cardDuty, { color: textColor }]}>
+                          <MaterialIcons
+                            name="location-on"
+                            size={14}
+                          ></MaterialIcons>{' '}
+                          {item.location}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  {/* {isHoliday && (
                     <Text
                       style={{
                         color: '#888',
@@ -716,7 +767,7 @@ const AdvancedProgram: FC = () => {
                     >
                       Holiday
                     </Text>
-                  )}
+                  )} */}
                 </Pressable>
               );
             }}
@@ -868,7 +919,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  cardDate: { fontWeight: '600', fontSize: 16, marginBottom: 6 },
   cardDuty: { fontSize: 15 },
 
   popup: {
@@ -900,16 +950,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  popupOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 50,
-  },
 
   popupCard: {
     width: 280,
@@ -921,30 +961,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 12,
-  },
-
-  popupTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 14,
-    textAlign: 'center',
-  },
-
-  popupInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginVertical: 6,
-  },
-
-  popupLabel: {
-    fontWeight: '600',
-    width: 70, // fixed width for label
-    color: '#333',
-  },
-
-  popupValue: {
-    flex: 1, // allows wrapping
-    color: '#555',
   },
 
   popupActions: {
@@ -999,6 +1015,92 @@ const styles = StyleSheet.create({
     color: '#020304',
     fontSize: 15,
     paddingHorizontal: 8,
+  },
+
+  cardDate: {
+    fontWeight: '700',
+    fontSize: 30,
+    marginBottom: 6,
+    color: '#00a708',
+    paddingRight: 5,
+    paddingLeft: 5,
+    justifyContent: 'space-evenly',
+  },
+  verticalLine: {
+    width: 1,
+    backgroundColor: '#cfcfcf',
+    marginHorizontal: 12,
+    height: '100%',
+  },
+  cardRight: {
+    justifyContent: 'flex-start', // ✅ vertical center
+    alignItems: 'flex-start', // right align
+    textAlignVertical: 'center',
+  },
+  popupOverlay: {
+    flex: 1, // fill the screen
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+
+  popupCardApprovalStyle: {
+    width: 300,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+
+  popupTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 15,
+    textAlign: 'center',
+    color: '#333',
+  },
+
+  popupInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 8,
+  },
+
+  popupLabel: {
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#555',
+  },
+
+  popupValue: {
+    fontSize: 14,
+    color: '#333',
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+
+  popupActionsApproval: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+
+  popupButtonApproval: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginHorizontal: 5,
+    alignItems: 'center',
+  },
+
+  popupButtonTextApproval: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

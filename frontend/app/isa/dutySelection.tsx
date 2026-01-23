@@ -2,7 +2,7 @@ import { useAuth } from '@/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Icon } from '@rneui/themed';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api/axiosInstance';
@@ -30,7 +30,7 @@ const DutySelection = () => {
   //console.log(params.date);
   const date = params.date ?? '';
 
-  const { id } = useAuth();
+  const { id, isLoggedIn } = useAuth();
 
   const edit = params.edit === 'true'; // now edit is a proper boolean
 
@@ -39,6 +39,12 @@ const DutySelection = () => {
   //console.log('params: duty : ', params);
 
   const { addEvent } = useSchedule();
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
+  });
 
   const duties = [
     { label: 'HNST Visit', color: '#1976D2', textColor: '#FFFFFF' },

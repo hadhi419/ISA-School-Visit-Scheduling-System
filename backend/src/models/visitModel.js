@@ -182,26 +182,26 @@ export const checkEditPermissionForMonth = async (month, isa_id) => {
   }
 };
 
-export const fetchVisitsByIsa = async (isa_id, month, day) => {
+export const fetchVisitsByIsa = async (isa_id, date) => {
   try {
     const query = `
-      SELECT v.id, v.visit_date AS date, 
-             l.name AS location, v.duty, v.status
+      SELECT v.id, v.visit_date AS date, v.month,
+             l.name AS location, v.duty, v.status,
+             u.full_name
       FROM visits v
       LEFT JOIN locations l ON v.location_id = l.id
+      LEFT JOIN users u ON v.isa_id = U.id
       WHERE (? IS NULL OR v.isa_id = ?)
-        AND (? IS NULL OR v.month = ?)
-        AND (? IS NULL OR v.visit_date = ?)
+        AND (? IS NULL OR v.date = ?)
+        AND status IN ('VISITED','DDE_APPROVED')
         AND v.duty NOT IN ('HOLI')
       ORDER BY v.visit_date ASC
     `;
     const [rows] = await db.execute(query, [
       isa_id || null,
       isa_id || null,
-      month || null,
-      month || null,
-      day || null,
-      day || null,
+      date || null,
+      date || null,
     ]);
     return rows;
   } catch (err) {
@@ -210,27 +210,37 @@ export const fetchVisitsByIsa = async (isa_id, month, day) => {
 };
 
 // Fetch visits filtered by Location
-export const fetchVisitsByLocation = async (location_id, month, day) => {
+export const fetchVisitsByLocation = async (location_id, date) => {
   try {
+    console.log('safrg', location_id);
+    console.log('safrg', date);
     const query = `
-      SELECT v.id, v.visit_date AS date,
+      SELECT v.id, v.visit_date AS date, v.month,
              u.full_name AS isa_name, v.duty, v.status
       FROM visits v
       LEFT JOIN users u ON v.isa_id = u.id AND u.role = 'ISA'
       WHERE (? IS NULL OR v.location_id = ?)
-        AND (? IS NULL OR v.month = ?)
-        AND (? IS NULL OR V.visit_date = ?)
+        AND (? IS NULL OR V.date = ?)
+        AND status IN ('VISITED','DDE_APPROVED')
         AND v.duty NOT IN ('HOLI')
       ORDER BY v.visit_date ASC
     `;
     const [rows] = await db.execute(query, [
       location_id || null,
       location_id || null,
-      month || null,
-      month || null,
-      day || null,
-      day || null,
+      date || null,
+      date || null,
     ]);
+    return rows;
+  } catch (err) {
+    throw new Error(err);
+  }
+};
+
+export const fetchISAs = async () => {
+  try {
+    const query = `SELECT id, full_name FROM users WHERE  role="ISA"`;
+    const [rows] = await db.execute(query);
     return rows;
   } catch (err) {
     throw new Error(err);

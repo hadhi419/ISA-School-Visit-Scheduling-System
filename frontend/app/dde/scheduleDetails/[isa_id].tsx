@@ -1,6 +1,6 @@
 import { useAuth } from '@/AuthContext';
 import { Icon } from '@rneui/base';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -31,7 +31,9 @@ interface VisitDetail {
 
 const ScheduleDetailPage = ({ route }: any) => {
   const router = useRouter();
-  const isa_id = route?.params?.isa_id ?? 5;
+  //const isa_id = route?.params?.isa_id ?? 5;
+
+  const [isa_id, setisa_id] = useState<number | null>(null);
 
   const [detail, setDetail] = useState<VisitDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,9 +42,23 @@ const ScheduleDetailPage = ({ route }: any) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [comment, setComment] = useState('');
 
-  const { id } = useAuth();
+  const { id, isLoggedIn } = useAuth();
+
+  const params = useLocalSearchParams();
+  const paramId = params.isa_id;
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
+    if (paramId) {
+      //console.log('IDDDDDDDDDDDD', paramId);
+      const parsed = parseInt(paramId[0], 10);
+      setisa_id(parsed);
+    } else {
+      //console.log('IDDDDDDDDDDDD', paramId);
+    }
+
     const fetchDetail = async () => {
       try {
         const res = await api.get(`/approvals/visitDetail/${isa_id}`);

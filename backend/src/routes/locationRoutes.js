@@ -10,6 +10,6 @@ const router = express.Router();
 router.use(authenticate);
 
 // GET /api/locations
-router.get('/', authorizeRoles('ISA', 'DDE', 'ZDE'), fetchLocations);
+router.get('/', authorizeRoles('ISA', 'DDE', 'ZDE', 'ADE'), fetchLocations);
 
 export default router;

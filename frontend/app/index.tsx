@@ -56,7 +56,7 @@ const Login: React.FC = () => {
           router.replace('/dde/ddeDashboard');
           break;
         case 'ADE':
-          router.replace('/ade/adeDashboard');
+          router.push('/ade/adeDashboard');
           break;
         default:
           Alert.alert('Error', 'Invalid user role');
