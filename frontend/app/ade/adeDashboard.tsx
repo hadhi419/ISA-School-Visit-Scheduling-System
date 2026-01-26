@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@/AuthContext';
-
+import { useLoading } from '../../LoadingContext';
 // Images
 const SUPERVISOR_IMAGE = {
   uri: 'https://randomuser.me/api/portraits/men/75.jpg',
@@ -126,15 +126,30 @@ const HigherOfficialDashboard = () => {
   };
 
   const { isLoggedIn, name } = useAuth();
+  const { setLoading } = useLoading();
+
 
   useEffect(() => {
     const loadData = async () => {
+      const minTime = 500; 
+      const start = Date.now(); 
+      setLoading(true); 
+
       try {
         const res = await api.get('/approvals?month=February');
         console.log('Loaded data:', res);
         setVisits(res.data.visits);
       } catch (err) {
         console.error('Error loading data', err);
+      }
+      finally {
+        const elapsed = Date.now() - start; 
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false); 
       }
     };
 
@@ -143,7 +158,7 @@ const HigherOfficialDashboard = () => {
     }
 
     loadData();
-  }, []);
+  }, [isLoggedIn, setLoading]);
 
   const handleMonitorLocationsPress = () => {
     router.push('/common/locationMonitoring');

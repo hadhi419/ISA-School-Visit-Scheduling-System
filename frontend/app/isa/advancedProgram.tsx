@@ -19,6 +19,9 @@ import { ScheduleType } from '../../isa/context/ScheduleContext';
 import { useAuth } from '@/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import api from '../../api/axiosInstance';
+import { useLoading } from '../../LoadingContext'; 
+
+
 
 interface DayCellProps {
   day: CalendarDay;
@@ -220,6 +223,7 @@ const DayCell: FC<{
 
 const AdvancedProgram: FC = () => {
   const { id, name, isLoggedIn } = useAuth();
+  const { setLoading } = useLoading();
 
   const { fromLocationSelection } = useLocalSearchParams<{
     fromLocationSelection?: string;
@@ -284,11 +288,16 @@ const AdvancedProgram: FC = () => {
   // );
 
   const fetchData = async () => {
-    const nextMonth = new Date(
-      new Date().getFullYear(),
-      new Date().getMonth() + 1,
-      1
-    ).toLocaleString('default', { month: 'long' });
+    const minTime = 300; 
+    const start = Date.now();
+    setLoading(true);
+   
+     try {
+      const nextMonth = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth() + 1,
+        1
+      ).toLocaleString('default', { month: 'long' });
 
     const response = await api.get(`/visits/month/${nextMonth}/${id}`);
     const canEditResponse = await api.get(
@@ -313,6 +322,18 @@ const AdvancedProgram: FC = () => {
     console.log('Remoooote', remoteEvents);
 
     setRemoteData(remoteEvents);
+  }
+   catch (error) {
+      console.error('Error fetching advanced program:', error);
+    } finally {
+      const elapsed = Date.now() - start;
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setLoading(false); 
+    }
   };
 
   useEffect(() => {
@@ -330,6 +351,11 @@ const AdvancedProgram: FC = () => {
         new Date().getMonth() + 1,
         1
       ).toLocaleString('default', { month: 'long' });
+     
+      const minTime = 2000; 
+      const start = Date.now();
+      setLoading(true); 
+
       try {
         await api.post('visits/submit', {
           month: nextMonthName,
@@ -341,7 +367,16 @@ const AdvancedProgram: FC = () => {
         alert('Failed to submit monthly schedule.');
       }
 
-      fetchData();
+     finally {
+        await fetchData(); // keep your existing call
+        const elapsed = Date.now() - start;
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false); // ADDED
+      }
     }
   };
 

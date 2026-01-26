@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@/AuthContext';
+import { useLoading } from '../../LoadingContext';
 
 // Images
 const SUPERVISOR_IMAGE = {
@@ -112,18 +113,33 @@ const HigherOfficialDashboard = () => {
 
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
   const { id, isLoggedIn, logout } = useAuth();
+  const { setLoading } = useLoading();
+  
 
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
     }
     const loadData = async () => {
+      const minTime = 300; 
+      const start = Date.now(); 
+      setLoading(true);
+
       try {
         const res = await api.get('/approvals?month=February');
         console.log('Loaded data:', res);
         setVisits(res.data.visits);
       } catch (err) {
         console.error('Error loading data', err);
+      }
+      finally {
+        const elapsed = Date.now() - start; 
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false); 
       }
     };
 

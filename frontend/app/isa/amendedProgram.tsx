@@ -9,6 +9,7 @@ import {
   ScheduledEvent,
   ScheduleType,
 } from '../../isa/context/ScheduleContext';
+import { useLoading } from '../../LoadingContext'; // loading hook
 
 interface CalendarDay {
   id: number;
@@ -173,41 +174,64 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({
 };
 
 const AmmendedProgram: FC = () => {
+
+  const { id, isLoggedIn } = useAuth();       
+  const { setLoading } = useLoading();
   const [scheduledEvents, setRemoteData] = useState<ScheduledEvent[]>([]);
 
-  useEffect(() => {
+   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
     }
     const fetchData = async () => {
-      const nextMonth = new Date(
-        new Date().getFullYear(),
-        new Date().getMonth(),
-        1
-      ).toLocaleString('default', { month: 'long' });
+      const minTime = 2000;                      // ADD
+      const start = Date.now();                  // ADD
+      setLoading(true);                          // ADD
 
-      const response = await api.get(`/visits/month/${nextMonth}/${id}`);
-      console.log(response);
-      const remoteEvents: ScheduledEvent[] = response.data.visits.map(
-        (item: any) => ({
-          id: item.id,
-          date: item.visit_date.toString(),
-          duty: item.duty as ScheduleType,
-          location: item.location_name,
-          status: item.status as ScheduledEvent['status'],
-        })
-      );
+      try {
+        const nextMonth = new Date(
+          new Date().getFullYear(),
+          new Date().getMonth(),
+          1
+        ).toLocaleString('default', { month: 'long' });
 
-      console.log('Fetched amended program data:', remoteEvents);
-      setRemoteData(remoteEvents);
+        const response = await api.get(`/visits/month/${nextMonth}/${id}`);
+        console.log(response);
+        const remoteEvents: ScheduledEvent[] = response.data.visits.map(
+          (item: any) => ({
+            id: item.id,
+            date: item.visit_date.toString(),
+            duty: item.duty as ScheduleType,
+            location: item.location_name,
+            status: item.status as ScheduledEvent['status'],
+          })
+        );
+
+        console.log('Fetched amended program data:', remoteEvents);
+        setRemoteData(remoteEvents);
+      } catch (err) {
+        console.error('Failed to fetch visits', err);
+      } finally {
+        const elapsed = Date.now() - start;      // ADD
+        if (elapsed < minTime) {                 // ADD
+          await new Promise((resolve) =>         // ADD
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false);                       // ADD
+      }
     };
 
     fetchData();
-  }, [setRemoteData]);
+  }, [setRemoteData, id, isLoggedIn, setLoading]);
 
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
+        const minTime = 300;                    // ADD
+        const start = Date.now();                // ADD
+        setLoading(true);  
+
         const nextMonth = new Date(
           new Date().getFullYear(),
           new Date().getMonth(),
@@ -230,13 +254,23 @@ const AmmendedProgram: FC = () => {
         } catch (err) {
           console.error('Failed to fetch visits on focus', err);
         }
+
+         finally {
+          const elapsed = Date.now() - start;    // ADD
+          if (elapsed < minTime) {               // ADD
+            await new Promise((resolve) =>       // ADD
+              setTimeout(resolve, minTime - elapsed)
+            );
+          }
+          setLoading(false);                     // ADD
+        }
       };
 
       fetchData();
-    }, [])
+    }, [id, setLoading])
   );
 
-  const { id, isLoggedIn } = useAuth();
+  //const { id, isLoggedIn } = useAuth();
   const monthToFetch = useMemo(() => {
     return new Date(
       new Date().getFullYear(),

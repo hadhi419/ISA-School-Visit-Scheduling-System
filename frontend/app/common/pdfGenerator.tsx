@@ -43,6 +43,7 @@ const MONTHS = [
 const YEARS = ['2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'];
 
 import { ActivityIndicator } from 'react-native';
+import { useLoading } from '../../LoadingContext';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -58,6 +59,7 @@ const GenerateISAPdf: FC = () => {
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
   const { isLoggedIn } = useAuth();
+  const { setLoading: setGlobalLoading } = useLoading();
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -67,8 +69,25 @@ const GenerateISAPdf: FC = () => {
   }, []);
 
   const fetchIsas = async () => {
-    const res = await api.get('/visits/isaDetails');
-    setIsas(res.data);
+    
+    const minTime = 500;
+    const start = Date.now(); 
+    setGlobalLoading(true);
+
+    try {
+      const res = await api.get('/visits/isaDetails');
+      setIsas(res.data);
+    } catch (err) {
+      console.error('Error loading ISAs', err);
+    } finally {
+      const elapsed = Date.now() - start;
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setGlobalLoading(false); 
+    }
   };
 
   const generatePdf = async () => {
@@ -77,6 +96,10 @@ const GenerateISAPdf: FC = () => {
       return;
     }
     setLoading(true);
+
+    const minTime = 500; 
+    const start = Date.now(); 
+    setGlobalLoading(true);
 
     try {
       console.log(selectedIsa);
@@ -130,6 +153,13 @@ const GenerateISAPdf: FC = () => {
       }
     } finally {
       setLoading(false);
+      const elapsed = Date.now() - start; 
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setGlobalLoading(false); 
     }
   };
 

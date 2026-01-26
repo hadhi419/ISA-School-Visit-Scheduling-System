@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useLoading } from '../../LoadingContext';
 
 // Images
 const SUPERVISOR_IMAGE = {
@@ -120,6 +121,7 @@ const HigherOfficialDashboard = () => {
   const { isLoggedIn, name } = useAuth();
 
   const router = useRouter();
+  const { setLoading } = useLoading();
 
   const handleMonitorLocationsPress = () => {
     router.push('/common/locationMonitoring');
@@ -141,12 +143,25 @@ const HigherOfficialDashboard = () => {
       router.replace('/');
     }
     const loadData = async () => {
+      const minTime = 300; 
+      const start = Date.now(); 
+      setLoading(true); 
+
       try {
         const res = await api.get('/approvals?month=February');
 
         setVisits(res.data.visits);
       } catch (err) {
         console.error('Error loading data', err);
+      }
+      finally {
+        const elapsed = Date.now() - start; // ADDED
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false); // ADDED
       }
     };
 

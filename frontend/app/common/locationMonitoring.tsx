@@ -17,6 +17,7 @@ import {
 import { PaperProvider } from 'react-native-paper';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLoading } from '../../LoadingContext';
 
 interface Location {
   id: number;
@@ -44,6 +45,7 @@ const LocationMonitoring: FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const { role, id, isLoggedIn } = useAuth();
+  const { setLoading } = useLoading();
 
   //const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -75,38 +77,70 @@ const LocationMonitoring: FC = () => {
   const fetchData = async () => {
     if (!selectedLocation || selectedLocation === -1) return;
 
-    let dateParam = '';
-    if (selectedDate) {
-      const yyyy = selectedDate.getFullYear();
-      const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const dd = String(selectedDate.getDate()).padStart(2, '0');
-      dateParam = `&date=${yyyy}-${mm}-${dd}`;
-    }
-    console.log('debugging');
     const date = formatDateToYMD(selectedDate);
-    const response = await api.get(
-      `/visits/location?location_id=${selectedLocation}&date=${date}`
-    );
-    console.log(response);
 
-    setVisits(response.data.data);
+    const minTime = 300; 
+    const start = Date.now(); 
+    setLoading(true); 
+
+    try {
+      let dateParam = '';
+      if (selectedDate) {
+        const yyyy = selectedDate.getFullYear();
+        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(selectedDate.getDate()).padStart(2, '0');
+        dateParam = `&date=${yyyy}-${mm}-${dd}`;
+      }
+      console.log('debugging');
+      const response = await api.get(
+        `/visits/location?location_id=${selectedLocation}&date=${date}`
+      );
+      console.log(response);
+
+      setVisits(response.data.data);
+    } catch (err) {
+      console.error('Error fetching visits by location', err);
+    } finally {
+      const elapsed = Date.now() - start; 
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setLoading(false);
+    }
   };
 
   const fetchLocations = async () => {
-    const response = await api.get(`/locations`);
+    const minTime = 300; 
+    const start = Date.now(); 
+    setLoading(true);
 
-    const locations = response.data.locations;
+    try {
+      const response = await api.get(`/locations`);
 
-    const locationsFiltered = locations.map((loc: { id: any; name: any }) => ({
-      id: loc.id,
-      name: loc.name,
-    }));
+      const locations = response.data.locations;
 
-    console.log(locationsFiltered);
-    setLocations(locationsFiltered);
-    //console.log(dutiesData);
+      const locationsFiltered = locations.map(
+        (loc: { id: any; name: any }) => ({
+          id: loc.id,
+          name: loc.name,
+        })
+      );
 
-    //setVisits(dutiesData);
+      console.log(locationsFiltered);
+      setLocations(locationsFiltered);
+    } catch (err) {
+      console.error('Error fetching locations', err);
+    } finally {
+      const elapsed = Date.now() - start; 
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setLoading(false);
+    }
   };
 
   // 🔹 Load visits by location

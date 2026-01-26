@@ -15,6 +15,7 @@ import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
 import { useAuth } from '@/AuthContext';
 import api from '../../api/axiosInstance';
+import { useLoading } from '../../LoadingContext'; 
 
 const API_URL = '/locations';
 
@@ -37,12 +38,17 @@ const LocationSelection = () => {
   const { addEvent } = useSchedule();
 
   const { id, isLoggedIn } = useAuth();
+  const { setLoading: setGlobalLoading } = useLoading();
 
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
     }
     const fetchLocations = async () => {
+      const minTime = 300; 
+      const start = Date.now(); 
+      setGlobalLoading(true); 
+
       try {
         const res = await api.get(API_URL);
         const fetched =
@@ -65,13 +71,20 @@ const LocationSelection = () => {
         Alert.alert('Error', 'Failed to fetch locations from server');
       } finally {
         setLoading(false);
+        const elapsed = Date.now() - start; // ADDED
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
       }
+      setGlobalLoading(false);
+     }
     };
 
     fetchLocations();
   }, []);
 
-  const handleChoose = async () => {
+   const handleChoose = async () => {
     if (!selectedLocationId) return;
     const today = new Date();
     const nextMonth = new Date(
@@ -80,32 +93,37 @@ const LocationSelection = () => {
       today.getDate()
     );
     const month = nextMonth.toLocaleString('default', { month: 'long' });
-    if (!edit) {
-      const payload = [
-        {
-          visit_date: date,
-          month,
-          isa_id: id,
-          location_id: selectedLocationId,
-          duty: dutyP as ScheduleType,
-          report_text: null,
-        },
-      ];
-      console.log('Payload for edit:', payload);
+
+    const payload = [
+      {
+        visit_date: date,
+        month,
+        isa_id: id,
+        location_id: selectedLocationId,
+        duty: dutyP as ScheduleType,
+        report_text: null,
+      },
+    ];
+
+    console.log('Payload for edit:', payload);
+
+    const minTime = 2000; // ADDED
+    const start = Date.now(); // ADDED
+    setGlobalLoading(true); // ADDED
+
+    try {
       await api.post('visits', payload);
-    } else {
-      const payload = [
-        {
-          visit_date: date,
-          month,
-          isa_id: id,
-          location_id: selectedLocationId,
-          duty: dutyP as ScheduleType,
-          report_text: null,
-        },
-      ];
-      console.log('Payload for edit:', payload);
-      await api.post('visits', payload);
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to save visit');
+    } finally {
+      const elapsed = Date.now() - start; // ADDED
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setGlobalLoading(false); // ADDED
     }
 
     router.navigate({

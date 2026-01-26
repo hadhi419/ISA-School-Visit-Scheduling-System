@@ -18,6 +18,8 @@ import {
 import { Icon } from '@rneui/themed';
 
 import { useAuth } from '@/AuthContext';
+import { useLoading } from '../../LoadingContext';
+
 // Images
 const SUPERVISOR_IMAGE = {
   uri: 'https://randomuser.me/api/portraits/men/75.jpg',
@@ -141,6 +143,7 @@ const ApprovalScreen = () => {
   };
 
   const { id, name, role, isLoggedIn } = useAuth();
+  const { setLoading } = useLoading(); 
 
   useEffect(() => {
     console.log('Iddddddddddd', id);
@@ -150,12 +153,25 @@ const ApprovalScreen = () => {
     }
 
     const loadData = async () => {
+      const minTime = 500;
+      const start = Date.now(); 
+      setLoading(true);
+
       try {
         const res = await api.get('/approvals?month=February');
         console.log('Loaded data:', res);
         setVisits(res.data.visits);
       } catch (err) {
         console.error('Error loading data', err);
+      }
+      finally {
+        const elapsed = Date.now() - start; 
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false);
       }
     };
 

@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api/axiosInstance';
 import { useSchedule } from '../../isa/context/ScheduleContext';
+import { useLoading } from '../../LoadingContext';
 
 const BackIcon = () => (
   <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -31,11 +32,11 @@ const DutySelection = () => {
   const date = params.date ?? '';
 
   const { id, isLoggedIn } = useAuth();
-
+  const { setLoading } = useLoading();
   const edit = params.edit === 'true'; // now edit is a proper boolean
 
   // console.log('edit:', edit);
-
+  
   //console.log('params: duty : ', params);
 
   const { addEvent } = useSchedule();
@@ -74,19 +75,31 @@ const DutySelection = () => {
       isa_id: 5,
     };
     console.log('Payload for delete:', payload);
+    const minTime = 300; 
+    const start = Date.now(); 
+    setLoading(true);
 
-    const res = await api.post('visits/delete', payload);
-    //console.log();
-    // console.log('✅ Event added:', { date, dutyType, location: 'none' });
-    //console.log(res.data.message.message);
-
-    if (
-      res.data.message.message ==
-      'Cannot delete or update a parent row: a foreign key constraint fails (`isa_school_visit_management`.`approval_logs`, CONSTRAINT `approval_logs_ibfk_1` FOREIGN KEY (`visit_id`) REFERENCES `visits` (`id`))'
-    ) {
-      alert('Cannot delete a schedule that was submitted');
+    try {
+      const res = await api.post('visits/delete', payload);
+      if (
+        res.data.message.message ==
+        'Cannot delete or update a parent row: a foreign key constraint fails (`isa_school_visit_management`.`approval_logs`, CONSTRAINT `approval_logs_ibfk_1` FOREIGN KEY (`visit_id`) REFERENCES `visits` (`id`))'
+      ) {
+        alert('Cannot delete a schedule that was submitted');
+      }
+      return router.navigate('/isa/advancedProgram');
+    } catch (err) {
+      console.error('Error deleting visit', err);
+      alert('Failed to delete schedule');
+    } finally {
+      const elapsed = Date.now() - start; // NEW
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setLoading(false); // NEW
     }
-    return router.navigate('/isa/advancedProgram');
   };
 
   const handleDutyPress = async (dutyLabel: string) => {
@@ -119,10 +132,26 @@ const DutySelection = () => {
         },
       ];
       console.log('Payload for edit:', payload);
-      await api.post('visits', payload);
-      //console.log();
-      // console.log('✅ Event added:', { date, dutyType, location: 'none' });
-      return router.navigate('/isa/advancedProgram');
+
+      const minTime = 300; 
+      const start = Date.now(); 
+      setLoading(true); 
+      
+      try {
+        await api.post('visits', payload);
+        return router.navigate('/isa/advancedProgram');
+      } catch (err) {
+        console.error('Error saving HOLI visit', err);
+        alert('Failed to save schedule');
+      } finally {
+        const elapsed = Date.now() - start; // NEW
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false); // NEW
+      }
     }
     // console.log('Selected duty:', dutyType);
     // console.log('isEdit dutySelection:', edit);

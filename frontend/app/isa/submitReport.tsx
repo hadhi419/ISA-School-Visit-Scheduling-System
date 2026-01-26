@@ -21,6 +21,7 @@ import api from '../../api/axiosInstance';
 import { Picker } from '@react-native-picker/picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
+import { useLoading } from '../../LoadingContext';
 
 /* ---------- Types ---------- */
 interface UploadedFile {
@@ -69,6 +70,7 @@ const MonitoringReportForm: FC = () => {
   const duty = params.get('duty');
 
   const { isLoggedIn } = useAuth();
+  const { setLoading } = useLoading();
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -79,11 +81,23 @@ const MonitoringReportForm: FC = () => {
     setVisitId(id || null);
     console.log('Visit ID:', id);
     const fetchLocations = async () => {
+       const minTime = 300; 
+      const start = Date.now(); 
+      setLoading(true); 
       try {
         const res = await api.get('/locations'); // adjust your endpoint
         setLocations(res.data.locations);
       } catch (err) {
         console.error('Failed to fetch locations', err);
+      }
+      finally {
+        const elapsed = Date.now() - start; // ADDED
+        if (elapsed < minTime) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minTime - elapsed)
+          );
+        }
+        setLoading(false); // ADDED
       }
     };
 
@@ -156,6 +170,10 @@ const MonitoringReportForm: FC = () => {
       return;
     }
 
+    const minTime = 300; 
+    const start = Date.now();
+    setLoading(true); 
+
     try {
       const formData = new FormData();
       formData.append('visit_id', visitId?.toString() || '');
@@ -218,6 +236,15 @@ const MonitoringReportForm: FC = () => {
     } catch (err) {
       console.error('Submit Error:', err);
       Alert.alert('Error', 'Network or server error.');
+    }
+    finally {
+      const elapsed = Date.now() - start; 
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setLoading(false); 
     }
   };
 

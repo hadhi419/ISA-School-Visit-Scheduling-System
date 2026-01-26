@@ -24,7 +24,7 @@ const Login: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'http://172.20.10.3:5000/api/auth/login',
+        'http://localhost:5000/api/auth/login',
         {
           email,
           password,
@@ -89,7 +89,7 @@ const Login: React.FC = () => {
         secureTextEntry
       />
 
-      <Button text="Login" onPress={handleLogin} />
+      <Button text="Login" onPress={handleLogin} style={undefined} />
     </View>
   );
 };

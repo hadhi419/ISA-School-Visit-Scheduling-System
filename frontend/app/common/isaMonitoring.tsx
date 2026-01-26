@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLoading } from '../../LoadingContext';
 
 interface ISA {
   id: number;
@@ -43,6 +44,7 @@ const ISAMonitoring: FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const { isLoggedIn } = useAuth();
+  const { setLoading } = useLoading(); 
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -65,22 +67,40 @@ const ISAMonitoring: FC = () => {
   const fetchData = async () => {
     const date = formatDateToYMD(selectedDate);
 
-    if (!selectedIsa || selectedIsa == -1 || selectedIsa == 0) {
-      const response = await api.get(`/visits/isa?isa_id=${null}&date=${date}`);
-      setDuties(response.data.data);
-      console.log('daaaaaaaata', response.data.data);
-      console.log('Duties', duties);
-    } else {
-      const response = await api.get(
-        `/visits/isa?isa_id=${selectedIsa}&date=${date}`
-      );
-      setDuties(response.data.data);
-      console.log(response.data.data);
+    const minTime = 500; 
+    const start = Date.now(); 
+    setLoading(true); 
+
+    try {
+      if (!selectedIsa || selectedIsa == -1 || selectedIsa == 0) {
+        const response = await api.get(
+          `/visits/isa?isa_id=${null}&date=${date}`
+        );
+        setDuties(response.data.data);
+        console.log('daaaaaaaata', response.data.data);
+        console.log('Duties', duties);
+      } else {
+        const response = await api.get(
+          `/visits/isa?isa_id=${selectedIsa}&date=${date}`
+        );
+        setDuties(response.data.data);
+        console.log(response.data.data);
+      }
+
+      const isaResponse = await api.get(`/visits/isaDetails`);
+
+      setIsas(isaResponse.data);
+    } catch (err) {
+      console.error('Error fetching ISA monitoring data', err);
+    } finally {
+      const elapsed = Date.now() - start; // ADDED
+      if (elapsed < minTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minTime - elapsed)
+        );
+      }
+      setLoading(false); // ADDED
     }
-
-    const isaResponse = await api.get(`/visits/isaDetails`);
-
-    setIsas(isaResponse.data);
   };
 
   useEffect(() => {

@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLoading } from '../../LoadingContext';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -174,6 +175,7 @@ const Dashboard: FC<DashboardProps> = () => {
   const { name, logout, id, isLoggedIn } = useAuth();
   console.log('ISA Dashboard - User Name:', name);
 
+  const { setLoading } = useLoading();
   //const [Notifications, setNotifications] = useState<string>('');
 
   useEffect(() => {
@@ -182,12 +184,19 @@ const Dashboard: FC<DashboardProps> = () => {
     }
 
     const fetchNotifications = async () => {
+
+      setLoading(true);
       try {
         const response = await api.get(`/approvals/rejections/latest/${id}`);
         setNotification(response.data?.rejection?.comment || '');
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
+        finally {
+        setTimeout(() => {
+        setLoading(false);
+        }, 300);
+}
     };
 
     fetchNotifications();
