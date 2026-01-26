@@ -1,11 +1,13 @@
 import {
   getSubmittedVisitsSummaryService,
   getVisitDetailService,
-  adeApproveScheduleService,
-  adeRejectScheduleService,
-  ddeApproveScheduleService,
-  getLatestRejectionForISAService,
-  ddeRejectScheduleService,
+  // adeApproveScheduleService,
+  // adeRejectScheduleService,
+  // ddeApproveScheduleService,
+  // getLatestRejectionForISAService,
+  // ddeRejectScheduleService,
+  approveScheduleService,
+  rejectScheduleService,
 } from '../models/approvalModel.js';
 
 export const fetchSubmittedVisits = async (req, res) => {
@@ -18,6 +20,7 @@ export const fetchSubmittedVisits = async (req, res) => {
     const result = visits.map((v) => ({
       isa_id: v.isa_id,
       isa_name: v.isa_name,
+      role: v.role,
       status: v.overall_status,
       scheduleSubmitted: v.schedule_submitted === 1,
     }));
@@ -45,100 +48,100 @@ export const fetchVisitDetail = async (req, res) => {
   }
 };
 
-export const ddeApproveSchedule = async (req, res) => {
-  console.log('Debugging');
+// export const ddeApproveSchedule = async (req, res) => {
+//   console.log('Debugging');
 
-  try {
-    const { isa_id } = req.params;
-    const approved_by = req.body.approved_by; // DDE user id
+//   try {
+//     const { isa_id } = req.params;
+//     const approved_by = req.body.approved_by; // DDE user id
 
-    const result = await ddeApproveScheduleService(isa_id, approved_by);
+//     const result = await ddeApproveScheduleService(isa_id, approved_by);
 
-    console.log(result);
+//     console.log(result);
 
-    res.json({
-      success: true,
-      message: 'Schedule approved and copied to visit_plan.',
-      data: result,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+//     res.json({
+//       success: true,
+//       message: 'Schedule approved and copied to visit_plan.',
+//       data: result,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// };
 
-export const ddeRejectSchedule = async (req, res) => {
-  try {
-    const { isa_id } = req.params;
-    const approved_by = req.body.approved_by;
-    const comment = req.body.comment || '';
+// export const ddeRejectSchedule = async (req, res) => {
+//   try {
+//     const { isa_id } = req.params;
+//     const approved_by = req.body.approved_by;
+//     const comment = req.body.comment || '';
 
-    const updated = await ddeRejectScheduleService(
-      isa_id,
-      approved_by,
-      comment
-    );
+//     const updated = await ddeRejectScheduleService(
+//       isa_id,
+//       approved_by,
+//       comment
+//     );
 
-    res.json({
-      success: true,
-      message: 'Revision requested successfully.',
-      updated,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+//     res.json({
+//       success: true,
+//       message: 'Revision requested successfully.',
+//       updated,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// };
 
-export const adeApproveSchedule = async (req, res) => {
-  console.log('Debugging');
-  console.log(req.body);
+// export const adeApproveSchedule = async (req, res) => {
+//   console.log('Debugging');
+//   console.log(req.body);
 
-  try {
-    const { isa_id } = req.params;
-    const approved_by = req.body.approved_by; // DDE user id
+//   try {
+//     const { isa_id } = req.params;
+//     const approved_by = req.body.approved_by; // DDE user id
 
-    const result = await adeApproveScheduleService(isa_id, approved_by);
+//     const result = await adeApproveScheduleService(isa_id, approved_by);
 
-    console.log(result);
+//     console.log(result);
 
-    res.json({
-      success: true,
-      message: 'Schedule approved by DDE',
-      data: result,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+//     res.json({
+//       success: true,
+//       message: 'Schedule approved by DDE',
+//       data: result,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// };
 
-export const adeRejectSchedule = async (req, res) => {
-  try {
-    //console.log('Debugging adeRejectSchedule');
-    // console.log(req.body);
-    const { isa_id } = req.params;
-    const approved_by = req.body.approved_by;
-    const comment = req.body.comment || '';
-    //console.log(comment);
-    //console.log(approved_by);
+// export const adeRejectSchedule = async (req, res) => {
+//   try {
+//     //console.log('Debugging adeRejectSchedule');
+//     // console.log(req.body);
+//     const { isa_id } = req.params;
+//     const approved_by = req.body.approved_by;
+//     const comment = req.body.comment || '';
+//     //console.log(comment);
+//     //console.log(approved_by);
 
-    const updated = await adeRejectScheduleService(
-      isa_id,
-      approved_by,
-      comment
-    );
+//     const updated = await adeRejectScheduleService(
+//       isa_id,
+//       approved_by,
+//       comment
+//     );
 
-    res.json({
-      success: true,
-      message: 'Revision requested successfully.',
-      updated,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+//     res.json({
+//       success: true,
+//       message: 'Revision requested successfully.',
+//       updated,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ success: false, message: 'Server error' });
+//   }
+// };
 
 export const getLatestRejectionForISA = async (req, res) => {
   const { isa_id } = req.params;
@@ -148,5 +151,67 @@ export const getLatestRejectionForISA = async (req, res) => {
     res.json({ rejection });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch rejection info' });
+  }
+};
+
+export const approveSchedule = async (req, res) => {
+  try {
+    const { target_user_id } = req.params;
+    const { approved_by } = req.body;
+
+    if (!target_user_id || !approved_by) {
+      return res.status(400).json({ message: 'Missing required data' });
+    }
+
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const month = nextMonth.toLocaleString('default', { month: 'long' });
+
+    const result = await approveScheduleService(
+      target_user_id,
+      approved_by,
+      month
+    );
+
+    res.json({
+      success: true,
+      message: 'Schedule approved successfully',
+      data: result,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(403).json({
+      success: false,
+      message: err.message || 'Approval failed',
+    });
+  }
+};
+
+export const rejectSchedule = async (req, res) => {
+  try {
+    const { target_user_id } = req.params;
+    const { approved_by, comment } = req.body;
+
+    if (!target_user_id || !approved_by) {
+      return res.status(400).json({ message: 'Missing required data' });
+    }
+
+    const result = await rejectScheduleService(
+      target_user_id,
+      approved_by,
+      comment || ''
+    );
+
+    res.json({
+      success: true,
+      message: 'Schedule rejected successfully',
+      data: result,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(403).json({
+      success: false,
+      message: err.message || 'Rejection failed',
+    });
   }
 };

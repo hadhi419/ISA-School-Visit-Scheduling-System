@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -57,51 +58,53 @@ const StatusItem = ({
   </View>
 );
 
-// const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
-//   const router = useRouter();
+const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
+  const router = useRouter();
 
-//   const { status, scheduleSubmitted, isa_name, isa_id } = visit;
-//   const { icon, color, label } = getStatusProps(status);
+  const { status, scheduleSubmitted, isa_name, isa_id } = visit;
+  const { icon, color, label } = getStatusProps(status);
 
-//   // Only Pending Approval cards are clickable
-//   const isClickable = label === 'Pending Approval';
+  // Only Pending Approval cards are clickable
+  const isClickable = label === 'Pending Approval';
 
-//   const handleCardPress = () => {
-//     if (!isClickable) return;
-//     router.push(`./scheduleDetails/${visit.isa_id}`);
-//   };
+  const handleCardPress = () => {
+    if (!isClickable) return;
 
-//   return (
-//     <TouchableOpacity
-//       onPress={handleCardPress}
-//       activeOpacity={isClickable ? 0.8 : 1}
-//     >
-//       <View style={[styles.card, !isClickable && { opacity: 0.5 }]}>
-//         <View style={styles.cardHeader}>
-//           <Image source={SUPERVISOR_IMAGE} style={styles.cardProfileImage} />
-//           <View style={{ flex: 1 }}>
-//             <Text style={styles.nameText}>{isa_name}</Text>
-//             <Text style={styles.isaText}>ISA</Text>
-//           </View>
-//           <View
-//             style={[styles.statusBubble, { backgroundColor: color + '22' }]}
-//           >
-//             <MaterialCommunityIcons name="abacus" size={16} color={color} />
-//             <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>
-//               {label}
-//             </Text>
-//           </View>
-//         </View>
-//         <View style={styles.statusRow}>
-//           <StatusItem
-//             label={scheduleSubmitted ? 'Schedule Submitted' : 'No Schedule'}
-//             isSuccess={scheduleSubmitted}
-//           />
-//         </View>
-//       </View>
-//     </TouchableOpacity>
-//   );
-// };
+    //console.log('IDDDDDDDDDDD', visit.isa_id);
+    router.push(`./scheduleDetails/${visit.isa_id}`);
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={handleCardPress}
+      activeOpacity={isClickable ? 0.8 : 1}
+    >
+      <View style={[styles.card, !isClickable && { opacity: 0.5 }]}>
+        <View style={styles.cardHeader}>
+          <Image source={SUPERVISOR_IMAGE} style={styles.cardProfileImage} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.nameText}>{isa_name}</Text>
+            <Text style={styles.isaText}>ISA</Text>
+          </View>
+          <View
+            style={[styles.statusBubble, { backgroundColor: color + '22' }]}
+          >
+            <MaterialCommunityIcons name="abacus" size={16} color={color} />
+            <Text style={[styles.statusLabel, { color, marginLeft: 6 }]}>
+              {label}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.statusRow}>
+          <StatusItem
+            label={scheduleSubmitted ? 'Schedule Submitted' : 'No Schedule'}
+            isSuccess={scheduleSubmitted}
+          />
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const HigherOfficialDashboard = () => {
   const currentMonth = useMemo(() => {
@@ -121,7 +124,16 @@ const HigherOfficialDashboard = () => {
       try {
         const res = await api.get('/approvals?month=February');
         console.log('Loaded data:', res);
-        setVisits(res.data.visits);
+
+        // Suppose these are the roles you want to show
+        const allowedRoles = ['ADE', 'DDE'];
+
+        // Filter visits from API response
+        const filteredVisits = res.data.visits.filter(
+          (visit: { role: string }) => allowedRoles.includes(visit.role)
+        );
+
+        setVisits(filteredVisits);
       } catch (err) {
         console.error('Error loading data', err);
       }
@@ -134,14 +146,14 @@ const HigherOfficialDashboard = () => {
 
   const router = useRouter();
   const handleMonitorLocationsPress = () => {
-    router.push('/common/locationMonitoring');
+    router.push('/higherOfficialCommonScreens/locationMonitoring');
   };
   const hadndleMonitorISAPress = () => {
-    router.push('/common/isaMonitoring');
+    router.push('/higherOfficialCommonScreens/isaMonitoring');
   };
 
   const handlePrintDocument = () => {
-    router.push('/common/pdfGenerator');
+    router.push('/higherOfficialCommonScreens/pdfGenerator');
   };
 
   return (
@@ -156,7 +168,6 @@ const HigherOfficialDashboard = () => {
             }}
           >
             <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-            
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Welcome, ZDE</Text>
           <MaterialCommunityIcons
@@ -221,6 +232,16 @@ const HigherOfficialDashboard = () => {
               Download monthly ISA PDF reports
             </Text>
           </TouchableOpacity>
+        </View>
+
+        <Text style={styles.sectionTitle}>
+          Schedule Approvals ({currentMonth})
+        </Text>
+
+        <View style={styles.cardsContainer}>
+          {visits.map((v) => (
+            <EmployeeStatusCard key={v.isa_id} visit={v} />
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>

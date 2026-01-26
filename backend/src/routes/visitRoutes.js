@@ -18,21 +18,29 @@ const router = express.Router();
 router.use(authenticate);
 
 // POST /api/visits
-router.post('/', authorizeRoles('ISA'), postMultipleVisits);
+router.post('/', authorizeRoles('ISA', 'DDE', 'ADE'), postMultipleVisits);
 
-router.post('/delete', authorizeRoles('ISA'), deleteVisit);
+router.post('/delete', authorizeRoles('ISA', 'DDE', 'ADE'), deleteVisit);
 
 // GET /api/visits/month/:month/:isa_id
-router.get('/month/:month/:isa_id', authorizeRoles('ISA'), fetchAllVisits);
+router.get(
+  '/month/:month/:isa_id',
+  authorizeRoles('ISA', 'DDE', 'ADE'),
+  fetchAllVisits
+);
 
 router.get(
   '/month/:month/:isa_id/edit-permission',
-  authorizeRoles('ISA'),
+  authorizeRoles('ISA', 'DDE', 'ADE'),
   checkMonthlyEditPermission
 );
 
 // POST /api/visits/submit
-router.post('/submit', authorizeRoles('ISA'), submitMonthlyVisits);
+router.post(
+  '/submit',
+  authorizeRoles('ISA', 'DDE', 'ADE'),
+  submitMonthlyVisits
+);
 
 // ISA monitoring route
 router.get('/isa', authorizeRoles('ZDE', 'DDE', 'ADE'), getVisitsByIsa);

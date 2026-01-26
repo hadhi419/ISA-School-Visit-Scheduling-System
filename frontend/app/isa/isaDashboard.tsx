@@ -239,13 +239,13 @@ const Dashboard: FC<DashboardProps> = () => {
             title="Advanced Program"
             buttonStyle={[styles.programBtn, styles.advancedProgram]}
             titleStyle={[styles.programBtnTitle, styles.darkText]}
-            onPress={() => router.push('/isa/advancedProgram')}
+            onPress={() => router.push('/commonScreens/advancedProgram')}
           />
           <Button
             title="Amended Program"
             buttonStyle={[styles.programBtn, styles.amendedProgram]}
             titleStyle={[styles.programBtnTitle, styles.darkText]}
-            onPress={() => router.push('/isa/amendedProgram')}
+            onPress={() => router.push('/commonScreens/amendedProgram')}
           />
         </View>
       </ScrollView>
@@ -261,7 +261,7 @@ const Dashboard: FC<DashboardProps> = () => {
                 style={popupStyles.editBtn}
                 onPress={() => {
                   setShowPopup(false);
-                  router.push('/isa/advancedProgram');
+                  router.push('/commonScreens/advancedProgram');
                 }}
               >
                 <Text style={popupStyles.btnText}>Edit Schedule</Text>

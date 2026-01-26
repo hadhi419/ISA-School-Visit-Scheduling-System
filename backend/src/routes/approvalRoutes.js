@@ -2,10 +2,12 @@ import express from 'express';
 import {
   fetchSubmittedVisits,
   fetchVisitDetail,
-  adeApproveSchedule,
-  adeRejectSchedule,
-  ddeApproveSchedule,
-  ddeRejectSchedule,
+  // adeApproveSchedule,
+  // adeRejectSchedule,
+  // ddeApproveSchedule,
+  // ddeRejectSchedule,
+  approveSchedule,
+  rejectSchedule,
   getLatestRejectionForISA,
 } from '../controllers/approvalController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
@@ -35,13 +37,40 @@ router.get(
 
 // DDE actions
 
-router.post('/dde/approve/:isa_id', authorizeRoles('DDE'), ddeApproveSchedule);
-router.post('/dde/reject/:isa_id', authorizeRoles('DDE'), ddeRejectSchedule);
+router.post(
+  '/dde/approve/:target_user_id',
+  authorizeRoles('DDE'),
+  approveSchedule
+);
+router.post(
+  '/dde/reject/:target_user_id',
+  authorizeRoles('DDE'),
+  rejectSchedule
+);
 
 // ADE actions
 
-router.post('/ade/approve/:isa_id', authorizeRoles('ADE'), adeApproveSchedule);
-router.post('/ade/reject/:isa_id', authorizeRoles('ADE'), adeRejectSchedule);
+router.post(
+  '/ade/approve/:target_user_id',
+  authorizeRoles('ADE'),
+  approveSchedule
+);
+router.post(
+  '/ade/reject/:target_user_id',
+  authorizeRoles('ADE'),
+  rejectSchedule
+);
+
+router.post(
+  '/zde/approve/:target_user_id',
+  authorizeRoles('ZDE'),
+  approveSchedule
+);
+router.post(
+  '/zde/reject/:target_user_id',
+  authorizeRoles('ZDE'),
+  rejectSchedule
+);
 
 router.get(
   '/rejections/latest/:isa_id',

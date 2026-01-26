@@ -10,8 +10,8 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScheduleType } from '../../isa/context/ScheduleContext';
@@ -385,7 +385,7 @@ const AdvancedProgram: FC = () => {
 
   const onDayPress = (dayDate: number, editMode = false) => {
     router.push({
-      pathname: '/commonScreens/dutySelection',
+      pathname: '/isa/dutySelection',
       params: {
         date: dayDate.toString(),
         month: monthToFetch,

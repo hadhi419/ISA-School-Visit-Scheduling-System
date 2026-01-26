@@ -29,8 +29,8 @@ interface VisitResponseItem {
   scheduleSubmitted: boolean;
 }
 
-const getStatusProps = (status: string) => {
-  if (status === 'ADE_APPROVED') {
+const getStatusProps = (status: string, role: string) => {
+  if (status === 'ADE_APPROVED' || (status === 'PENDING' && role === 'DDE')) {
     return { icon: 'hourglass', color: '#ff9800', label: 'Pending Approval' };
   } else if (status === 'DDE_APPROVED') {
     return { icon: 'check-circle', color: '#38c172', label: 'Approved' };
@@ -60,7 +60,12 @@ const StatusItem = ({
 const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   const { status, scheduleSubmitted, isa_name, isa_id } = visit;
   console.log(status);
-  const { icon, color, label } = getStatusProps(status);
+
+  const { role } = useAuth();
+  if (!role) {
+    return;
+  }
+  const { icon, color, label } = getStatusProps(status, role);
 
   // Only Pending Approval cards are clickable
   const isClickable = label === 'Pending Approval';
@@ -117,23 +122,23 @@ const HigherOfficialDashboard = () => {
   }, []);
 
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
-  const { isLoggedIn, name } = useAuth();
+  const { isLoggedIn, name, role } = useAuth();
 
   const router = useRouter();
 
   const handleMonitorLocationsPress = () => {
-    router.push('/common/locationMonitoring');
+    router.push('/higherOfficialCommonScreens/locationMonitoring');
   };
   const hadndleMonitorISAPress = () => {
-    router.push('/common/isaMonitoring');
+    router.push('/higherOfficialCommonScreens/isaMonitoring');
   };
 
   const handlePrintDocument = () => {
-    router.push('/common/pdfGenerator');
+    router.push('/higherOfficialCommonScreens/pdfGenerator');
   };
 
   const handleApprovalPress = () => {
-    router.push('/common/approvalScreen');
+    router.push('/higherOfficialCommonScreens/approvalScreen');
   };
 
   useEffect(() => {
@@ -144,12 +149,21 @@ const HigherOfficialDashboard = () => {
       try {
         const res = await api.get('/approvals?month=February');
 
-        setVisits(res.data.visits);
+        // Suppose these are the roles you want to show
+        const allowedRoles = ['ISA', 'ADE'];
+
+        // Filter visits from API response
+        const filteredVisits = res.data.visits.filter(
+          (visit: { role: string }) => allowedRoles.includes(visit.role)
+        );
+
+        setVisits(filteredVisits);
+
+        console.log('Filtered Visits:', filteredVisits);
       } catch (err) {
         console.error('Error loading data', err);
       }
     };
-
     loadData();
   }, []);
 
@@ -242,7 +256,7 @@ const HigherOfficialDashboard = () => {
         </View>
 
         <Text style={styles.sectionTitle}>
-          ISA Monthly Visit Status ({currentMonth})
+          Schedule Approvals ({currentMonth}) ({currentMonth})
         </Text>
 
         <View style={styles.cardsContainer}>

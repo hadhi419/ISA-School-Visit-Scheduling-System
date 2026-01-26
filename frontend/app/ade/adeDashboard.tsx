@@ -2,7 +2,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-
 import api from '../../api/axiosInstance';
 
 import {
@@ -132,7 +131,18 @@ const HigherOfficialDashboard = () => {
       try {
         const res = await api.get('/approvals?month=February');
         console.log('Loaded data:', res);
-        setVisits(res.data.visits);
+
+        // Suppose these are the roles you want to show
+        const allowedRoles = ['ISA'];
+
+        // Filter visits from API response
+        const filteredVisits = res.data.visits.filter(
+          (visit: { role: string }) => allowedRoles.includes(visit.role)
+        );
+
+        setVisits(filteredVisits);
+
+        console.log('Filtered Visits:', filteredVisits);
       } catch (err) {
         console.error('Error loading data', err);
       }
@@ -146,18 +156,18 @@ const HigherOfficialDashboard = () => {
   }, []);
 
   const handleMonitorLocationsPress = () => {
-    router.push('/common/locationMonitoring');
+    router.push('/higherOfficialCommonScreens/locationMonitoring');
   };
   const hadndleMonitorISAPress = () => {
-    router.push('/common/isaMonitoring');
+    router.push('/higherOfficialCommonScreens/isaMonitoring');
   };
 
   const handlePrintDocument = () => {
-    router.push('/common/pdfGenerator');
+    router.push('/higherOfficialCommonScreens/pdfGenerator');
   };
 
   const handleApprovalPress = () => {
-    router.push('/common/approvalScreen');
+    router.push('/higherOfficialCommonScreens/approvalScreen');
   };
 
   return (
@@ -238,10 +248,53 @@ const HigherOfficialDashboard = () => {
               Download monthly ISA PDF reports
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/commonScreens/advancedProgram')}
+          >
+            <MaterialCommunityIcons
+              name="calendar-badge"
+              size={36}
+              color="#ddc105"
+            />
+            <Text style={styles.actionTitle}>Advanced Program</Text>
+            <Text style={styles.actionSub}>
+              Prepare the schedule for next month
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/commonScreens/amendedProgram')}
+          >
+            <MaterialCommunityIcons
+              name="calendar-check"
+              size={36}
+              color="#04745a"
+            />
+            <Text style={styles.actionTitle}>Amended Program</Text>
+            <Text style={styles.actionSub}>Make Amendments</Text>
+          </TouchableOpacity>
         </View>
 
+        {/* <View style={styles.programActions}>
+          <Button
+            title="Advanced Program"
+            buttonStyle={[styles.programBtn, styles.advancedProgram]}
+            titleStyle={[styles.programBtnTitle, styles.darkText]}
+            onPress={() => router.push('/commonScreens/advancedProgram')}
+          />
+          <Button
+            title="Amended Program"
+            buttonStyle={[styles.programBtn, styles.amendedProgram]}
+            titleStyle={[styles.programBtnTitle, styles.darkText]}
+            onPress={() => router.push('/commonScreens/amendedProgram')}
+          />
+        </View> */}
+
         <Text style={styles.sectionTitle}>
-          ISA Monthly Visit Status ({currentMonth})
+          Schedule Approvals ({currentMonth}) ({currentMonth})
         </Text>
 
         <View style={styles.cardsContainer}>
@@ -382,6 +435,14 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 12, color: '#888', marginRight: 6 },
   logo: { width: 20, height: 20 },
+
+  programActions: { paddingHorizontal: 16, marginTop: 20, gap: 12 },
+  programBtn: { paddingVertical: 18, borderRadius: 12, elevation: 3 },
+  advancedProgram: { backgroundColor: '#d2c319ff' },
+  amendedProgram: { backgroundColor: '#068a74ff' },
+  programBtnTitle: { fontSize: 16, fontWeight: '700', color: '#ffffffff' },
+
+  darkText: { color: '#ffffffff' },
 });
 
 export default HigherOfficialDashboard;

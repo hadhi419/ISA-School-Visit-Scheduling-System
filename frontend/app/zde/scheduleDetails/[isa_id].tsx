@@ -1,6 +1,6 @@
 import { useAuth } from '@/AuthContext';
 import { Icon } from '@rneui/base';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -30,15 +30,28 @@ const ZDE_USER_ID = 6; // Replace with actual logged-in ZDE id
 
 const ScheduleDetailPage = ({ route }: any) => {
   const router = useRouter();
-  const isa_id = route?.params?.isa_id ?? 5;
+  //const isa_id = route?.params?.isa_id ?? 5;
+
+  const [isa_id, setisa_id] = useState<number | null>(null);
 
   const [detail, setDetail] = useState<VisitDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, id } = useAuth();
+
+  const params = useLocalSearchParams();
+  const paramsId = params.isa_id;
 
   useEffect(() => {
+    if (paramsId) {
+      console.log('IDDDDDDDDDDDD', paramsId);
+      const parsed = parseInt(paramsId[0], 10);
+      setisa_id(parsed);
+    } else {
+      console.log('IDDDDDDDDDDDD', paramsId);
+    }
+
     if (!isLoggedIn) {
       router.replace('/');
     }
@@ -73,7 +86,7 @@ const ScheduleDetailPage = ({ route }: any) => {
     setActionLoading(true);
     try {
       const res = await api.post(`/approvals/zde/approve/${isa_id}`, {
-        approved_by: ZDE_USER_ID,
+        approved_by: id,
       });
 
       const data = res.data;

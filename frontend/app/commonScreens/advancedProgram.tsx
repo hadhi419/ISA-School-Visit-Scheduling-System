@@ -219,7 +219,7 @@ const DayCell: FC<{
 };
 
 const AdvancedProgram: FC = () => {
-  const { id, name, isLoggedIn } = useAuth();
+  const { id, name, isLoggedIn, role } = useAuth();
 
   const { fromLocationSelection } = useLocalSearchParams<{
     fromLocationSelection?: string;
@@ -486,6 +486,12 @@ const AdvancedProgram: FC = () => {
 
   console.log('Data to be shown in card view:', dataToBeShownInCard);
 
+  const roleDashboardRoutes = {
+    isa: '/isa/isaDashboard',
+    dde: '/dde/ddeDashboard',
+    ade: '/ade/adeDashboard',
+  } as const;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -494,8 +500,16 @@ const AdvancedProgram: FC = () => {
           type="material"
           color="#E0E0E0"
           size={28}
-          onPress={() => router.push('/isa/isaDashboard')}
+          onPress={() => {
+            if (!role) return;
+            const path =
+              roleDashboardRoutes[
+                role.toLowerCase() as keyof typeof roleDashboardRoutes
+              ];
+            router.replace(path); // ✅ works, no TS error
+          }}
         />
+
         <Text style={styles.headerTitle}>Advanced Program</Text>
         <Pressable
           onPress={() =>
