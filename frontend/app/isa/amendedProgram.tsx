@@ -106,24 +106,26 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({
 
   const dayObj = new Date(day.year, day.monthIndex, day.date);
   const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
-  const isHoliday = day.schedule === 'HOLI';
+  const isHoliday = day.schedule === 'HOLI' || day.schedule === 'PL';
   const isVisited = day.status === 'VISITED';
   const isFutureDate = dayObj > today;
-  const isDisabled = isWeekend || isHoliday || isVisited || isFutureDate;
+  const isDisabled =
+    isHoliday || isVisited || isFutureDate || day.schedule === 'NONE';
 
   const scheduleColors: Record<
     ScheduleType | 'NONE',
     { border: string; background?: string; text: string }
   > = {
     HNST: { border: '#4C72B0', text: '#464545ff' },
-    EXAM: { border: '#6A1B9A', text: '#464545ff' },
-    EVAL: { border: '#66BB6A', text: '#464545ff' },
-    HOLI: { border: '#EF5350', text: '#464545ff' },
-    DEV: { border: '#FFC107', background: '#FFC107', text: '#333' },
-    NONE: {
-      border: 'transparent',
-      text: isWeekend ? '#b1aeaeff' : '#464545ff',
-    },
+    ADVO: { border: '#FFC107', background: '#FFC107', text: '#333' },
+    ExEv: { border: '#66BB6A', text: '#464545ff' },
+    Office: { border: '#8E24AA', text: '#464545ff' },
+    HOLI: { border: '#e00303ff', text: '#464545ff' },
+    PL: { border: '#e00303ff', text: '#464545ff' },
+    Parti: { border: '#2494aa', text: '#464545ff' },
+    Faci: { border: '#ec7c03', text: '#464545ff' },
+    Other: { border: 'rgb(31, 2, 193)', text: '#464545ff' },
+    NONE: { border: 'transparent', text: '#464545ff' },
   };
 
   // ✅ If visited, override bg color to green
@@ -148,12 +150,11 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({
                 : isFutureDate && isWeekend
                   ? 'transparent'
                   : color.border,
-            backgroundColor:
-              isFutureDate && !isWeekend
-                ? '#e0e0e0'
-                : isFutureDate && isWeekend
-                  ? 'transparent'
-                  : color.background,
+            backgroundColor: isFutureDate
+              ? '#e0e0e0'
+              : isFutureDate && isWeekend
+                ? 'transparent'
+                : color.background,
             opacity: isDisabled ? 40 : 100,
           },
         ]}
@@ -162,7 +163,7 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({
           style={[
             styles.dayText,
             {
-              color: isFutureDate && !isWeekend ? '#ffffff' : color.text,
+              color: isFutureDate ? '#ffffff' : color.text,
             },
           ]}
         >
@@ -174,19 +175,18 @@ const DayCell: FC<{ day: CalendarDay; onPress?: () => void }> = ({
 };
 
 const AmmendedProgram: FC = () => {
-
-  const { id, isLoggedIn } = useAuth();       
+  const { id, isLoggedIn } = useAuth();
   const { setLoading } = useLoading();
   const [scheduledEvents, setRemoteData] = useState<ScheduledEvent[]>([]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
     }
     const fetchData = async () => {
-      const minTime = 2000;                      // ADD
-      const start = Date.now();                  // ADD
-      setLoading(true);                          // ADD
+      const minTime = 2000; // ADD
+      const start = Date.now(); // ADD
+      setLoading(true); // ADD
 
       try {
         const nextMonth = new Date(
@@ -212,13 +212,16 @@ const AmmendedProgram: FC = () => {
       } catch (err) {
         console.error('Failed to fetch visits', err);
       } finally {
-        const elapsed = Date.now() - start;      // ADD
-        if (elapsed < minTime) {                 // ADD
-          await new Promise((resolve) =>         // ADD
-            setTimeout(resolve, minTime - elapsed)
+        const elapsed = Date.now() - start; // ADD
+        if (elapsed < minTime) {
+          // ADD
+          await new Promise(
+            (
+              resolve // ADD
+            ) => setTimeout(resolve, minTime - elapsed)
           );
         }
-        setLoading(false);                       // ADD
+        setLoading(false); // ADD
       }
     };
 
@@ -228,9 +231,9 @@ const AmmendedProgram: FC = () => {
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
-        const minTime = 300;                    // ADD
-        const start = Date.now();                // ADD
-        setLoading(true);  
+        const minTime = 300; // ADD
+        const start = Date.now(); // ADD
+        setLoading(true);
 
         const nextMonth = new Date(
           new Date().getFullYear(),
@@ -253,16 +256,17 @@ const AmmendedProgram: FC = () => {
           setRemoteData(remoteEvents);
         } catch (err) {
           console.error('Failed to fetch visits on focus', err);
-        }
-
-         finally {
-          const elapsed = Date.now() - start;    // ADD
-          if (elapsed < minTime) {               // ADD
-            await new Promise((resolve) =>       // ADD
-              setTimeout(resolve, minTime - elapsed)
+        } finally {
+          const elapsed = Date.now() - start; // ADD
+          if (elapsed < minTime) {
+            // ADD
+            await new Promise(
+              (
+                resolve // ADD
+              ) => setTimeout(resolve, minTime - elapsed)
             );
           }
-          setLoading(false);                     // ADD
+          setLoading(false); // ADD
         }
       };
 
@@ -310,17 +314,26 @@ const AmmendedProgram: FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const submittedStatuses: ScheduledEvent['status'][] = [
+      'VISITED',
+      'DDE_APPROVED',
+      'DDE_REJECTED',
+      'ADE_APPROVED',
+      'ADE_REJECTED',
+    ];
+
     return calendarData.filter((day) => {
-      if (day.date === 0) return false;
+      if (day.date === 0) return false; // skip padding
+      if (day.schedule === 'NONE') return false; // skip empty days
+      if (day.schedule === 'HOLI' || day.schedule === 'PL') return false; // skip holidays
 
       const dayObj = new Date(day.year, day.monthIndex, day.date);
       dayObj.setHours(0, 0, 0, 0);
 
-      const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
-      const isHoliday = day.schedule === 'HOLI';
-      const isVisited = day.status === 'VISITED';
+      const isSubmitted = submittedStatuses.includes(day.status);
+      const isFutureDate = dayObj > today;
 
-      return dayObj <= today && !isWeekend && !isHoliday && !isVisited;
+      return !isSubmitted && !isFutureDate; // weekends with duties are included
     }).length;
   }, [calendarData]);
 

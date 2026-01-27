@@ -10,8 +10,8 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScheduleType } from '../../isa/context/ScheduleContext';
@@ -19,9 +19,7 @@ import { ScheduleType } from '../../isa/context/ScheduleContext';
 import { useAuth } from '@/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import api from '../../api/axiosInstance';
-import { useLoading } from '../../LoadingContext'; 
-
-
+import { useLoading } from '../../LoadingContext';
 
 interface DayCellProps {
   day: CalendarDay;
@@ -75,7 +73,7 @@ const getNextMonthCalendar = (scheduledEvents?: {
     days.push({
       date: i,
       month: 'current',
-      schedule: isWeekend ? 'NONE' : scheduledEvents?.[i]?.duty || 'NONE',
+      schedule: scheduledEvents?.[i]?.duty || 'NONE',
       location: scheduledEvents?.[i]?.location,
       year,
       monthIndex: month,
@@ -106,7 +104,7 @@ const DayCell: FC<{
 
   const dayObj = new Date(day.year, day.monthIndex, day.date);
   const isWeekend = dayObj.getDay() === 0 || dayObj.getDay() === 6;
-  const isDisabled = !canEdit || isWeekend;
+  const isDisabled = !canEdit;
 
   const hasDuty = day.schedule !== 'NONE';
 
@@ -114,7 +112,7 @@ const DayCell: FC<{
     if (!canEdit) return;
 
     if (hasDuty) {
-      setShowPopup(true); // Show popup if duty exists
+      setShowPopup(true); // Show p opup if duty exists
     } else {
       onEditPress?.(day.date); // Directly navigate if no duty
     }
@@ -125,10 +123,14 @@ const DayCell: FC<{
     { border: string; background?: string; text: string }
   > = {
     HNST: { border: '#4C72B0', text: '#464545ff' },
-    EXAM: { border: '#6A1B9A', text: '#464545ff' },
-    EVAL: { border: '#66BB6A', text: '#464545ff' },
-    HOLI: { border: '#EF5350', text: '#464545ff' },
-    DEV: { border: '#FFC107', background: '#FFC107', text: '#333' },
+    ADVO: { border: '#FFC107', background: '#FFC107', text: '#333' },
+    ExEv: { border: '#66BB6A', text: '#464545ff' },
+    Office: { border: '#8E24AA', text: '#464545ff' },
+    HOLI: { border: '#e00303ff', text: '#464545ff' },
+    PL: { border: '#e00303ff', text: '#464545ff' },
+    Parti: { border: '#2494aa', text: '#464545ff' },
+    Faci: { border: '#ec7c03', text: '#464545ff' },
+    Other: { border: 'rgb(31, 2, 193)', text: '#464545ff' },
     NONE: { border: 'transparent', text: '#464545ff' },
   };
   const color = scheduleColors[day.schedule] || scheduleColors.NONE;
@@ -148,7 +150,7 @@ const DayCell: FC<{
           <Text
             style={[
               styles.dayText,
-              { color: isDisabled ? '#adaaaa' : color.text },
+              { color: isWeekend || isDisabled ? '#adaaaa' : color.text },
             ]}
           >
             {day.date}
@@ -288,55 +290,55 @@ const AdvancedProgram: FC = () => {
   // );
 
   const fetchData = async () => {
-    const minTime = 300; 
+    const minTime = 300;
     const start = Date.now();
     setLoading(true);
-   
-     try {
+
+    try {
       const nextMonth = new Date(
         new Date().getFullYear(),
         new Date().getMonth() + 1,
         1
       ).toLocaleString('default', { month: 'long' });
 
-    const response = await api.get(`/visits/month/${nextMonth}/${id}`);
-    const canEditResponse = await api.get(
-      `/visits/month/${nextMonth}/${id}/edit-permission`
-    );
+      const response = await api.get(`/visits/month/${nextMonth}/${id}`);
+      const canEditResponse = await api.get(
+        `/visits/month/${nextMonth}/${id}/edit-permission`
+      );
 
-    console.log('Haaaaaaaaaadhi', response.data);
+      console.log('Haaaaaaaaaadhi', response.data);
 
-    const canEditValue = canEditResponse.data.canEdit as boolean;
-    setCanEdit(canEditValue);
+      const canEditValue = canEditResponse.data.canEdit as boolean;
+      setCanEdit(canEditValue);
 
-    console.log('Can Edit Response:', canEditResponse.data);
+      console.log('Can Edit Response:', canEditResponse.data);
 
-    const remoteEvents: ScheduledEvent[] = response.data.visits.map(
-      (item: any) => ({
-        date: item.visit_date.toString(),
-        duty: item.duty as ScheduleType,
-        location: item.location_name,
-      })
-    );
+      const remoteEvents: ScheduledEvent[] = response.data.visits.map(
+        (item: any) => ({
+          date: item.visit_date.toString(),
+          duty: item.duty as ScheduleType,
+          location: item.location_name,
+        })
+      );
 
-    console.log('Remoooote', remoteEvents);
+      console.log('Remoooote', remoteEvents);
 
-    setRemoteData(remoteEvents);
-  }
-   catch (error) {
+      setRemoteData(remoteEvents);
+    } catch (error) {
       console.error('Error fetching advanced program:', error);
     } finally {
       const elapsed = Date.now() - start;
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/');
+    }
     fetchData();
 
     if (!isLoggedIn) {
@@ -351,10 +353,10 @@ const AdvancedProgram: FC = () => {
         new Date().getMonth() + 1,
         1
       ).toLocaleString('default', { month: 'long' });
-     
-      const minTime = 2000; 
+
+      const minTime = 2000;
       const start = Date.now();
-      setLoading(true); 
+      setLoading(true);
 
       try {
         await api.post('visits/submit', {
@@ -365,9 +367,7 @@ const AdvancedProgram: FC = () => {
       } catch (err) {
         console.error(err);
         alert('Failed to submit monthly schedule.');
-      }
-
-     finally {
+      } finally {
         await fetchData(); // keep your existing call
         const elapsed = Date.now() - start;
         if (elapsed < minTime) {
@@ -487,11 +487,19 @@ const AdvancedProgram: FC = () => {
     { bg: string; border: string; text: string }
   > = {
     HNST: { bg: '#E3F2FD', border: '#1976D2', text: '#0D47A1' },
-    DEV: { bg: '#FFF8E1', border: '#FFC107', text: '#795548' },
-    EVAL: { bg: '#E8F5E9', border: '#4CAF50', text: '#1B5E20' },
-    EXAM: { bg: '#F3E5F5', border: '#8E24AA', text: '#4A148C' },
+    // DEV: { bg: '#FFF8E1', border: '#FFC107', text: '#795548' },
+    // EVAL: { bg: '#E8F5E9', border: '#4CAF50', text: '#1B5E20' },
+    // EXAM: { bg: '#F3E5F5', border: '#8E24AA', text: '#4A148C' },
     HOLI: { bg: '#FDECEA', border: '#E53935', text: '#B71C1C' },
     NONE: { bg: '#FFFFFF', border: '#DDD', text: '#333' },
+
+    ADVO: { bg: '#FFF3E0', border: '#FF9800', text: '#BF360C' },
+    ExEv: { bg: '#E0F2F1', border: '#00796B', text: '#004D40' },
+    Office: { bg: '#EDE7F6', border: '#673AB7', text: '#311B92' },
+    PL: { bg: '#FFFDE7', border: '#FBC02D', text: '#F57F17' },
+    Parti: { bg: '#E1F5FE', border: '#03A9F4', text: '#01579B' },
+    Faci: { bg: '#FFF3E0', border: '#FF5722', text: '#BF360C' },
+    Other: { bg: '#F3E5F5', border: '#9C27B0', text: '#4A148C' },
   };
 
   const [selectedDuty, setSelectedDuty] = useState<string | ''>();
@@ -666,11 +674,20 @@ const AdvancedProgram: FC = () => {
                         }}
                       >
                         <Picker.Item label="-- Select Duty --" value="" />
-                        {['HNST', 'DEV', 'EVAL', 'EXAM', 'HOLI', 'ALL'].map(
-                          (duty) => (
-                            <Picker.Item key={duty} label={duty} value={duty} />
-                          )
-                        )}
+                        {[
+                          'HNST',
+                          'ADVO',
+                          'ExEv',
+                          'Office',
+                          'Parti',
+                          'Faci',
+                          'HOLI',
+                          'PL',
+                          'Other',
+                          'NONE',
+                        ].map((duty) => (
+                          <Picker.Item key={duty} label={duty} value={duty} />
+                        ))}
                       </Picker>
                       <Pressable
                         style={{
@@ -702,11 +719,20 @@ const AdvancedProgram: FC = () => {
                   onValueChange={(value) => setSelectedDuty(value)}
                 >
                   <Picker.Item label="-- Select Duty --" value="" />
-                  {['HNST', 'DEV', 'EVAL', 'EXAM', 'HOLI', 'ALL'].map(
-                    (duty) => (
-                      <Picker.Item key={duty} label={duty} value={duty} />
-                    )
-                  )}
+                  {[
+                    'HNST',
+                    'ADVO',
+                    'ExEv',
+                    'Office',
+                    'Parti',
+                    'Faci',
+                    'HOLI',
+                    'PL',
+                    'Other',
+                    'NONE',
+                  ].map((duty) => (
+                    <Picker.Item key={duty} label={duty} value={duty} />
+                  ))}
                 </Picker>
               </View>
             )}
@@ -777,9 +803,17 @@ const AdvancedProgram: FC = () => {
                     <View style={styles.cardRight}>
                       <Text style={[styles.cardDuty, { color: textColor }]}>
                         <MaterialIcons name="work" size={14}></MaterialIcons>{' '}
-                        {(item.schedule == 'EVAL' && 'In Evaluation') ||
-                          (item.schedule == 'DEV' && 'DEVELOPMENT MEETiNG') ||
-                          (item.schedule == 'HOLI' && 'LEAVE/HOLIDAY')}
+                        {(item.schedule == 'ExEv' && 'External Evaluation') ||
+                          (item.schedule == 'Faci' && 'Facilitation') ||
+                          (item.schedule == 'HNST' && 'HNST') ||
+                          (item.schedule == 'Office' &&
+                            'Zone / Division – Office day') ||
+                          (item.schedule == 'Parti' &&
+                            'Meeting / Seminar / Workshops ') ||
+                          (item.schedule == 'HOLI' && 'Holiday') ||
+                          (item.schedule == 'PL' && 'Personal Leabe') ||
+                          (item.schedule == 'Other' && ' Others') ||
+                          (item.schedule == 'ADVO' && 'In school')}
                       </Text>
                       {item.location && (
                         <Text style={[styles.cardDuty, { color: textColor }]}>
