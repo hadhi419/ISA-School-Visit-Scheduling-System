@@ -32,13 +32,23 @@ interface VisitItem {
   duty: string;
   location_id: number;
   status: string;
+  role: string;
 }
 
 const LocationMonitoring: FC = () => {
+  type FilterMode = 'DATE' | 'MONTH_WEEK';
+
+  const [filterMode, setFilterMode] = useState<FilterMode>('DATE');
+
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<number | null>(-1);
   const [visits, setVisits] = useState<VisitItem[]>([]);
   const [showPicker, setShowPicker] = useState(false);
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    new Date().toLocaleString('en-US', { month: 'long' })
+  );
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
 
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
@@ -48,6 +58,39 @@ const LocationMonitoring: FC = () => {
   const { setLoading } = useLoading();
 
   //const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  // Get weeks of the month
+  const getWeeksInMonth = (month: number, year: number) => {
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const weeks: number[] = [];
+    let week = 1;
+    for (let date = 1; date <= lastDate; date++) {
+      const dayOfWeek = (firstDay + date - 1) % 7;
+      if (dayOfWeek === 0 && date !== 1) week++;
+      weeks.push(week);
+    }
+    return Array.from(new Set(weeks)); // unique weeks
+  };
+
+  const monthNameToNumber = (monthName: string): number => {
+    return new Date(`${monthName} 1, 2026`).getMonth(); // 0 = January
+  };
 
   // 🔹 Load locations
   useEffect(() => {
@@ -64,6 +107,15 @@ const LocationMonitoring: FC = () => {
     fetchLocations();
   }, []);
 
+  useEffect(() => {
+    if (filterMode === 'DATE') {
+      setSelectedMonth(new Date().toLocaleString('en-US', { month: 'long' }));
+      setSelectedWeek(null);
+    } else {
+      setSelectedDate(null);
+    }
+  }, [filterMode]);
+
   const formatDateToYMD = (date: Date | null): string | null => {
     if (!date) return null;
 
@@ -79,9 +131,9 @@ const LocationMonitoring: FC = () => {
 
     const date = formatDateToYMD(selectedDate);
 
-    const minTime = 300; 
-    const start = Date.now(); 
-    setLoading(true); 
+    const minTime = 300;
+    const start = Date.now();
+    setLoading(true);
 
     try {
       let dateParam = '';
@@ -91,9 +143,10 @@ const LocationMonitoring: FC = () => {
         const dd = String(selectedDate.getDate()).padStart(2, '0');
         dateParam = `&date=${yyyy}-${mm}-${dd}`;
       }
+      const date = formatDateToYMD(selectedDate);
       console.log('debugging');
       const response = await api.get(
-        `/visits/location?location_id=${selectedLocation}&date=${date}`
+        `visits/location?location_id=${selectedLocation}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
       );
       console.log(response);
 
@@ -101,19 +154,17 @@ const LocationMonitoring: FC = () => {
     } catch (err) {
       console.error('Error fetching visits by location', err);
     } finally {
-      const elapsed = Date.now() - start; 
+      const elapsed = Date.now() - start;
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
       setLoading(false);
     }
   };
 
   const fetchLocations = async () => {
-    const minTime = 300; 
-    const start = Date.now(); 
+    const minTime = 300;
+    const start = Date.now();
     setLoading(true);
 
     try {
@@ -133,11 +184,9 @@ const LocationMonitoring: FC = () => {
     } catch (err) {
       console.error('Error fetching locations', err);
     } finally {
-      const elapsed = Date.now() - start; 
+      const elapsed = Date.now() - start;
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
       setLoading(false);
     }
@@ -154,7 +203,7 @@ const LocationMonitoring: FC = () => {
       return;
     }
     fetchData();
-  }, [selectedLocation, selectedDate]);
+  }, [selectedLocation, selectedDate, selectedMonth, selectedWeek]);
 
   return (
     <PaperProvider>
@@ -175,6 +224,42 @@ const LocationMonitoring: FC = () => {
                 />
                 <Text style={styles.headerTitle}>Location Monitoring</Text>
                 <View style={{ width: 24 }} />
+              </View>
+
+              <View style={styles.tabContainer}>
+                <Pressable
+                  style={[
+                    styles.tab,
+                    filterMode === 'DATE' && styles.activeTab,
+                  ]}
+                  onPress={() => setFilterMode('DATE')}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      filterMode === 'DATE' && styles.activeTabText,
+                    ]}
+                  >
+                    By Date
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.tab,
+                    filterMode === 'MONTH_WEEK' && styles.activeTab,
+                  ]}
+                  onPress={() => setFilterMode('MONTH_WEEK')}
+                >
+                  <Text
+                    style={[
+                      styles.tabText,
+                      filterMode === 'MONTH_WEEK' && styles.activeTabText,
+                    ]}
+                  >
+                    By Month & Week
+                  </Text>
+                </Pressable>
               </View>
 
               {/* Picker */}
@@ -268,67 +353,166 @@ const LocationMonitoring: FC = () => {
               </View>
 
               {/* Date Filter */}
-              <View style={styles.filterContainer}>
-                <Text style={styles.filterLabel}>Filter by Date</Text>
+              {filterMode === 'DATE' && (
+                <View style={styles.filterContainer}>
+                  <Text style={styles.filterLabel}>Filter by Date</Text>
 
-                {Platform.OS === 'web' ? (
-                  // ✅ Web fallback
-                  <input
-                    type="date"
-                    style={{
-                      borderWidth: 2,
-                      borderColor: '#1976D2',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                      width: '100%',
-                    }}
-                    value={
-                      selectedDate ? (formatDateToYMD(selectedDate) ?? '') : ''
-                    }
-                    onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                  />
-                ) : (
-                  // ✅ Mobile (iOS + Android)
-                  <>
+                  {Platform.OS === 'web' ? (
+                    // ✅ Web fallback
+                    <input
+                      type="date"
+                      style={{
+                        borderWidth: 2,
+                        borderColor: '#1976D2',
+                        borderRadius: 8,
+                        padding: 12,
+                        fontSize: 16,
+                        width: '100%',
+                      }}
+                      value={
+                        selectedDate
+                          ? (formatDateToYMD(selectedDate) ?? '')
+                          : ''
+                      }
+                      onChange={(e) =>
+                        setSelectedDate(new Date(e.target.value))
+                      }
+                    />
+                  ) : (
+                    // ✅ Mobile (iOS + Android)
+                    <>
+                      <Pressable
+                        style={styles.iosPickerButton}
+                        onPress={() => setDatePickerVisible(true)}
+                      >
+                        <Text style={styles.iosPickerText}>
+                          {selectedDate
+                            ? selectedDate.toDateString()
+                            : '-- Select Date --'}
+                        </Text>
+                      </Pressable>
+
+                      <DatePickerModal
+                        mode="single"
+                        locale="en"
+                        visible={isDatePickerVisible}
+                        onDismiss={() => setDatePickerVisible(false)}
+                        date={selectedDate ?? new Date()}
+                        onConfirm={({ date }) => {
+                          if (date) {
+                            setSelectedDate(date); // now matches Date | null
+                          }
+                          setDatePickerVisible(false);
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {selectedDate && (
                     <Pressable
-                      style={styles.iosPickerButton}
-                      onPress={() => setDatePickerVisible(true)}
+                      onPress={() => setSelectedDate(null)}
+                      style={{ marginTop: 8 }}
                     >
-                      <Text style={styles.iosPickerText}>
-                        {selectedDate
-                          ? selectedDate.toDateString()
-                          : '-- Select Date --'}
+                      <Text style={{ color: '#1976D2', fontWeight: '600' }}>
+                        Clear Date Filter
                       </Text>
                     </Pressable>
+                  )}
+                </View>
+              )}
 
-                    <DatePickerModal
-                      mode="single"
-                      locale="en"
-                      visible={isDatePickerVisible}
-                      onDismiss={() => setDatePickerVisible(false)}
-                      date={selectedDate ?? new Date()}
-                      onConfirm={({ date }) => {
-                        if (date) {
-                          setSelectedDate(date); // now matches Date | null
+              {/* Week Filter */}
+              {filterMode === 'MONTH_WEEK' && selectedMonth !== null && (
+                <>
+                  {/* Month Filter */}
+                  <View style={[styles.filterContainer, { marginTop: 10 }]}>
+                    <Text style={styles.filterLabel}>Select Month</Text>
+                    {Platform.OS === 'web' ? (
+                      <select
+                        value={selectedMonth}
+                        onChange={(e) => {
+                          setSelectedMonth(e.target.value);
+                          setSelectedWeek(null); // reset week when month changes
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: 12,
+                          fontSize: 16,
+                          borderRadius: 8,
+                          borderColor: '#1976D2',
+                          borderWidth: 2,
+                        }}
+                      >
+                        {months.map((month, idx) => (
+                          <option key={idx} value={month}>
+                            {month}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Picker
+                        selectedValue={selectedMonth}
+                        onValueChange={(val) => {
+                          setSelectedMonth(val);
+                          setSelectedWeek(null);
+                        }}
+                      >
+                        {months.map((month, idx) => (
+                          <Picker.Item key={idx} label={month} value={month} />
+                        ))}
+                      </Picker>
+                    )}
+                  </View>
+
+                  <View style={[styles.filterContainer, { marginTop: 10 }]}>
+                    <Text style={styles.filterLabel}>Select Week</Text>
+                    {Platform.OS === 'web' ? (
+                      <select
+                        value={selectedWeek ?? -1}
+                        onChange={(e) =>
+                          setSelectedWeek(Number(e.target.value))
                         }
-                        setDatePickerVisible(false);
-                      }}
-                    />
-                  </>
-                )}
-
-                {selectedDate && (
-                  <Pressable
-                    onPress={() => setSelectedDate(null)}
-                    style={{ marginTop: 8 }}
-                  >
-                    <Text style={{ color: '#1976D2', fontWeight: '600' }}>
-                      Clear Date Filter
-                    </Text>
-                  </Pressable>
-                )}
-              </View>
+                        style={{
+                          width: '100%',
+                          padding: 12,
+                          fontSize: 16,
+                          borderRadius: 8,
+                          borderColor: '#1976D2',
+                          borderWidth: 2,
+                        }}
+                      >
+                        <option value={-1}>-- Select Week --</option>
+                        {getWeeksInMonth(
+                          monthNameToNumber(selectedMonth),
+                          new Date().getFullYear()
+                        ).map((weekNum) => (
+                          <option key={weekNum} value={weekNum}>
+                            Week {weekNum}
+                          </option>
+                        ))}
+                        ``
+                      </select>
+                    ) : (
+                      <Picker
+                        selectedValue={selectedWeek ?? -1}
+                        onValueChange={(val) => setSelectedWeek(Number(val))}
+                      >
+                        <Picker.Item label="-- Select Week --" value={-1} />
+                        {getWeeksInMonth(
+                          monthNameToNumber(selectedMonth),
+                          new Date().getFullYear()
+                        ).map((weekNum) => (
+                          <Picker.Item
+                            key={weekNum}
+                            label={`Week ${weekNum}`}
+                            value={weekNum}
+                          />
+                        ))}
+                      </Picker>
+                    )}
+                  </View>
+                </>
+              )}
 
               {/* Summary */}
               {selectedLocation && (
@@ -351,6 +535,10 @@ const LocationMonitoring: FC = () => {
               <View>
                 <Text style={styles.cardText}>
                   <MaterialIcons name="person"></MaterialIcons> {item.isa_name}
+                </Text>
+                <Text style={styles.cardText}>
+                  <MaterialIcons name="assured-workload"></MaterialIcons>{' '}
+                  {item.role}
                 </Text>
                 <Text style={styles.cardText}>
                   <MaterialIcons name="work"></MaterialIcons> {item.duty}
@@ -492,4 +680,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   warningText: { textAlign: 'center', fontWeight: '600' },
+  tabContainer: {
+    flexDirection: 'row',
+    margin: 14,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#1976D2',
+  },
+
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+
+  activeTab: {
+    backgroundColor: '#1976D2',
+  },
+
+  tabText: {
+    fontWeight: '600',
+    color: '#1976D2',
+  },
+
+  activeTabText: {
+    color: '#fff',
+  },
 });
