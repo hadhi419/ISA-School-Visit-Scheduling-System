@@ -3,7 +3,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Icon } from '@rneui/themed';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api/axiosInstance';
 import { useSchedule } from '../../isa/context/ScheduleContext';
@@ -17,13 +17,25 @@ const BackIcon = () => (
 
 const dutyLabelToType: Record<
   string,
-  'HNST' | 'EXAM' | 'DEV' | 'EVAL' | 'HOLI'
+  | 'HNST'
+  | 'ADVO'
+  | 'ExEv'
+  | 'Office'
+  | 'Parti'
+  | 'Faci'
+  | 'HOLI'
+  | 'PL'
+  | 'Other'
 > = {
   'HNST Visit': 'HNST',
-  'Dev. Meeting': 'DEV',
-  'In. Evaluation': 'EVAL',
-  'Exam Duty': 'EXAM',
+  Advocation: 'ADVO',
+  'External Evaluation': 'ExEv',
+  'Zone/Division Office': 'Office',
+  Participate: 'Parti',
+  Facilitation: 'Faci',
   Holiday: 'HOLI',
+  'Personal leave': 'PL',
+  Others: 'Other',
 };
 
 const DutySelection = () => {
@@ -36,7 +48,7 @@ const DutySelection = () => {
   const edit = params.edit === 'true'; // now edit is a proper boolean
 
   // console.log('edit:', edit);
-  
+
   //console.log('params: duty : ', params);
 
   const { addEvent } = useSchedule();
@@ -49,10 +61,14 @@ const DutySelection = () => {
 
   const duties = [
     { label: 'HNST Visit', color: '#1976D2', textColor: '#FFFFFF' },
-    { label: 'Dev. Meeting', color: '#FFC107', textColor: '#000000' },
-    { label: 'In. Evaluation', color: '#4CAF50', textColor: '#FFFFFF' },
-    { label: 'Exam Duty', color: '#8E24AA', textColor: '#FFFFFF' },
+    { label: 'Advocation', color: '#FFC107', textColor: '#000000' },
+    { label: 'External Evaluation', color: '#4CAF50', textColor: '#FFFFFF' },
+    { label: 'Zone/Division Office', color: '#8E24AA', textColor: '#FFFFFF' },
+    { label: 'Participate', color: '#2494aa', textColor: '#FFFFFF' },
+    { label: 'Facilitation', color: '#ec7c03', textColor: '#FFFFFF' },
     { label: 'Holiday', color: '#e00303ff', textColor: '#FFFFFF' },
+    { label: 'Personal Leave', color: '#e00303ff', textColor: '#FFFFFF' },
+    { label: 'Others', color: 'rgb(31, 2, 193)', textColor: '#FFFFFF' },
   ];
 
   const handleDeletePress = async () => {
@@ -75,8 +91,8 @@ const DutySelection = () => {
       isa_id: 5,
     };
     console.log('Payload for delete:', payload);
-    const minTime = 300; 
-    const start = Date.now(); 
+    const minTime = 300;
+    const start = Date.now();
     setLoading(true);
 
     try {
@@ -94,9 +110,7 @@ const DutySelection = () => {
     } finally {
       const elapsed = Date.now() - start; // NEW
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
       setLoading(false); // NEW
     }
@@ -133,10 +147,10 @@ const DutySelection = () => {
       ];
       console.log('Payload for edit:', payload);
 
-      const minTime = 300; 
-      const start = Date.now(); 
-      setLoading(true); 
-      
+      const minTime = 300;
+      const start = Date.now();
+      setLoading(true);
+
       try {
         await api.post('visits', payload);
         return router.navigate('/isa/advancedProgram');
@@ -175,30 +189,31 @@ const DutySelection = () => {
         <Text style={styles.headerTitle}>Select Duty</Text>
         <View style={{ width: 28 }} />
       </View>
-
-      <View style={styles.buttonContainer}>
-        {duties.map((duty, index) => (
+      <ScrollView>
+        <View style={styles.buttonContainer}>
+          {duties.map((duty, index) => (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.dutyButton,
+                { backgroundColor: duty.color },
+                pressed && styles.dutyButtonPressed,
+              ]}
+              onPress={() => handleDutyPress(duty.label)}
+            >
+              <Text style={[styles.dutyButtonText, { color: duty.textColor }]}>
+                {duty.label}
+              </Text>
+            </Pressable>
+          ))}
           <Pressable
-            key={index}
-            style={({ pressed }) => [
-              styles.dutyButton,
-              { backgroundColor: duty.color },
-              pressed && styles.dutyButtonPressed,
-            ]}
-            onPress={() => handleDutyPress(duty.label)}
+            style={styles.deleteButton}
+            onPress={() => handleDeletePress()}
           >
-            <Text style={[styles.dutyButtonText, { color: duty.textColor }]}>
-              {duty.label}
-            </Text>
+            <MaterialCommunityIcons name={'delete'} size={40} color="#fd6e00" />
           </Pressable>
-        ))}
-        <Pressable
-          style={styles.deleteButton}
-          onPress={() => handleDeletePress()}
-        >
-          <MaterialCommunityIcons name={'delete'} size={40} color="#fd6e00" />
-        </Pressable>
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -217,6 +232,7 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
+    marginBottom: '10%',
   },
   headerTitle: {
     fontSize: 18,
