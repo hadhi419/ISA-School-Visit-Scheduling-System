@@ -21,17 +21,20 @@ import { useLoading } from '../../LoadingContext';
 interface ISA {
   id: number;
   full_name: string;
+  role: string;
 }
 
 interface DutyItem {
   id: number;
   date: string;
   month: string;
+  visit_date: string;
   location: string;
   duty: string;
   status: string;
   isa_id: number;
   full_name: string;
+  role: string;
 }
 
 const ISAMonitoring: FC = () => {
@@ -40,11 +43,49 @@ const ISAMonitoring: FC = () => {
   const [duties, setDuties] = useState<DutyItem[]>([]);
   const [showPicker, setShowPicker] = useState(false);
 
+  type FilterMode = 'DATE' | 'MONTH_WEEK';
+
+  const [filterMode, setFilterMode] = useState<FilterMode>('DATE');
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(
+    new Date().toLocaleString('en-US', { month: 'long' })
+  );
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const { isLoggedIn } = useAuth();
-  const { setLoading } = useLoading(); 
+  const { setLoading } = useLoading();
+
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  // Get weeks of the month
+  const getWeeksInMonth = (month: number, year: number) => {
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const weeks: number[] = [];
+    let week = 1;
+    for (let date = 1; date <= lastDate; date++) {
+      const dayOfWeek = (firstDay + date - 1) % 7;
+      if (dayOfWeek === 0 && date !== 1) week++;
+      weeks.push(week);
+    }
+    return Array.from(new Set(weeks)); // unique weeks
+  };
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -53,6 +94,15 @@ const ISAMonitoring: FC = () => {
     setSelectedDate(new Date());
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (filterMode === 'DATE') {
+      setSelectedMonth(new Date().toLocaleString('en-US', { month: 'long' }));
+      setSelectedWeek(null);
+    } else {
+      setSelectedDate(null);
+    }
+  }, [filterMode]);
 
   const formatDateToYMD = (date: Date | null): string | null => {
     if (!date) return null;
@@ -67,24 +117,33 @@ const ISAMonitoring: FC = () => {
   const fetchData = async () => {
     const date = formatDateToYMD(selectedDate);
 
-    const minTime = 500; 
-    const start = Date.now(); 
-    setLoading(true); 
+    const minTime = 500;
+    const start = Date.now();
+    setLoading(true);
 
     try {
       if (!selectedIsa || selectedIsa == -1 || selectedIsa == 0) {
+        //console.log(selectedMonth);
+
+        const date = formatDateToYMD(selectedDate);
+        console.log('date', selectedDate);
         const response = await api.get(
-          `/visits/isa?isa_id=${null}&date=${date}`
+          `/visits/isa?isa_id=${selectedIsa}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
         );
         setDuties(response.data.data);
+
         console.log('daaaaaaaata', response.data.data);
-        console.log('Duties', duties);
+        //console.log('Duties', duties);
       } else {
+        // console.log(selectedMonth);
+        console.log('date', selectedDate);
+
+        const date = formatDateToYMD(selectedDate);
         const response = await api.get(
-          `/visits/isa?isa_id=${selectedIsa}&date=${date}`
+          `/visits/isa?isa_id=${selectedIsa}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
         );
         setDuties(response.data.data);
-        console.log(response.data.data);
+        console.log('Daaaaaaata', response.data.data);
       }
 
       const isaResponse = await api.get(`/visits/isaDetails`);
@@ -95,22 +154,26 @@ const ISAMonitoring: FC = () => {
     } finally {
       const elapsed = Date.now() - start; // ADDED
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
       setLoading(false); // ADDED
     }
   };
+  const monthNameToNumber = (monthName: string): number => {
+    return new Date(`${monthName} 1, 2026`).getMonth(); // 0 = January
+  };
 
   useEffect(() => {
+    console.log('Monthhhh', selectedMonth);
     if (!selectedIsa || selectedIsa === -1) {
       fetchData();
       setDuties([]);
       return;
     }
     fetchData();
-  }, [selectedIsa, selectedDate]);
+
+    console.log(selectedMonth);
+  }, [selectedIsa, selectedDate, selectedMonth, selectedWeek]);
 
   const renderHeader = () => (
     <>
@@ -124,6 +187,36 @@ const ISAMonitoring: FC = () => {
         />
         <Text style={styles.headerTitle}>ISA Monitoring</Text>
         <View style={{ width: 24 }} />
+      </View>
+
+      <View style={styles.tabContainer}>
+        <Pressable
+          style={[styles.tab, filterMode === 'DATE' && styles.activeTab]}
+          onPress={() => setFilterMode('DATE')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              filterMode === 'DATE' && styles.activeTabText,
+            ]}
+          >
+            By Date
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.tab, filterMode === 'MONTH_WEEK' && styles.activeTab]}
+          onPress={() => setFilterMode('MONTH_WEEK')}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              filterMode === 'MONTH_WEEK' && styles.activeTabText,
+            ]}
+          >
+            By Month & Week
+          </Text>
+        </Pressable>
       </View>
 
       {/* ISA Picker */}
@@ -160,7 +253,7 @@ const ISAMonitoring: FC = () => {
                     {isas.map((isa) => (
                       <Picker.Item
                         key={isa.id}
-                        label={isa.full_name}
+                        label={`${isa.full_name} (${isa.role.toUpperCase()})`}
                         value={isa.id}
                       />
                     ))}
@@ -186,7 +279,7 @@ const ISAMonitoring: FC = () => {
               {isas.map((isa) => (
                 <Picker.Item
                   key={isa.id}
-                  label={isa.full_name}
+                  label={`${isa.full_name} (${isa.role.toUpperCase()})`}
                   value={isa.id}
                 />
               ))}
@@ -196,61 +289,154 @@ const ISAMonitoring: FC = () => {
       </View>
 
       {/* Date Filter */}
-      <View style={[styles.filterContainer, { marginTop: 10 }]}>
-        <Text style={styles.filterLabel}>Filter by Date</Text>
+      {filterMode === 'DATE' && (
+        <View style={[styles.filterContainer, { marginTop: 10 }]}>
+          <Text style={styles.filterLabel}>Filter by Date</Text>
 
-        {Platform.OS === 'web' ? (
-          <input
-            type="date"
-            style={{
-              borderWidth: 2,
-              borderColor: '#1976D2',
-              borderRadius: 8,
-              padding: 12,
-              fontSize: 16,
-              width: '100%',
-            }}
-            value={selectedDate ? (formatDateToYMD(selectedDate) ?? '') : ''}
-            onChange={(e) => setSelectedDate(new Date(e.target.value))}
-          />
-        ) : (
-          <>
+          {Platform.OS === 'web' ? (
+            <input
+              type="date"
+              style={{
+                borderWidth: 2,
+                borderColor: '#1976D2',
+                borderRadius: 8,
+                padding: 12,
+                fontSize: 16,
+                width: '100%',
+              }}
+              value={selectedDate ? (formatDateToYMD(selectedDate) ?? '') : ''}
+              onChange={(e) => setSelectedDate(new Date(e.target.value))}
+            />
+          ) : (
+            <>
+              <Pressable
+                style={styles.iosPickerButton}
+                onPress={() => setDatePickerVisible(true)}
+              >
+                <Text style={styles.iosPickerText}>
+                  {selectedDate
+                    ? selectedDate.toDateString()
+                    : '-- Select Date --'}
+                </Text>
+              </Pressable>
+
+              <DatePickerModal
+                locale="en"
+                mode="single"
+                visible={isDatePickerVisible}
+                date={selectedDate ?? new Date()}
+                onDismiss={() => setDatePickerVisible(false)}
+                onConfirm={({ date }) => {
+                  if (date) setSelectedDate(date);
+                  setDatePickerVisible(false);
+                }}
+              />
+            </>
+          )}
+
+          {selectedDate && (
             <Pressable
-              style={styles.iosPickerButton}
-              onPress={() => setDatePickerVisible(true)}
+              onPress={() => setSelectedDate(null)}
+              style={{ marginTop: 8 }}
             >
-              <Text style={styles.iosPickerText}>
-                {selectedDate
-                  ? selectedDate.toDateString()
-                  : '-- Select Date --'}
+              <Text style={{ color: '#1976D2', fontWeight: '600' }}>
+                Clear Date Filter
               </Text>
             </Pressable>
+          )}
+        </View>
+      )}
 
-            <DatePickerModal
-              locale="en"
-              mode="single"
-              visible={isDatePickerVisible}
-              date={selectedDate ?? new Date()}
-              onDismiss={() => setDatePickerVisible(false)}
-              onConfirm={({ date }) => {
-                if (date) setSelectedDate(date);
-                setDatePickerVisible(false);
-              }}
-            />
-          </>
-        )}
+      {/* Week Filter */}
+      {filterMode === 'MONTH_WEEK' && selectedMonth !== null && (
+        <>
+          {/* Month Filter */}
+          <View style={[styles.filterContainer, { marginTop: 10 }]}>
+            <Text style={styles.filterLabel}>Select Month</Text>
+            {Platform.OS === 'web' ? (
+              <select
+                value={selectedMonth}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setSelectedWeek(null); // reset week when month changes
+                }}
+                style={{
+                  width: '100%',
+                  padding: 12,
+                  fontSize: 16,
+                  borderRadius: 8,
+                  borderColor: '#1976D2',
+                  borderWidth: 2,
+                }}
+              >
+                {months.map((month, idx) => (
+                  <option key={idx} value={month}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Picker
+                selectedValue={selectedMonth}
+                onValueChange={(val) => {
+                  setSelectedMonth(val);
+                  setSelectedWeek(null);
+                }}
+              >
+                {months.map((month, idx) => (
+                  <Picker.Item key={idx} label={month} value={month} />
+                ))}
+              </Picker>
+            )}
+          </View>
 
-        {selectedDate && (
-          <Pressable
-            onPress={() => setSelectedDate(null)}
-            style={{ marginTop: 8 }}
-          >
-            <Text style={{ color: '#1976D2', fontWeight: '600' }}>
-              Clear Date Filter
-            </Text>
-          </Pressable>
-        )}
-      </View>
+          <View style={[styles.filterContainer, { marginTop: 10 }]}>
+            <Text style={styles.filterLabel}>Select Week</Text>
+            {Platform.OS === 'web' ? (
+              <select
+                value={selectedWeek ?? -1}
+                onChange={(e) => setSelectedWeek(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  padding: 12,
+                  fontSize: 16,
+                  borderRadius: 8,
+                  borderColor: '#1976D2',
+                  borderWidth: 2,
+                }}
+              >
+                <option value={-1}>-- Select Week --</option>
+                {getWeeksInMonth(
+                  monthNameToNumber(selectedMonth),
+                  new Date().getFullYear()
+                ).map((weekNum) => (
+                  <option key={weekNum} value={weekNum}>
+                    Week {weekNum}
+                  </option>
+                ))}
+                ``
+              </select>
+            ) : (
+              <Picker
+                selectedValue={selectedWeek ?? -1}
+                onValueChange={(val) => setSelectedWeek(Number(val))}
+              >
+                <Picker.Item label="-- Select Week --" value={-1} />
+                {getWeeksInMonth(
+                  monthNameToNumber(selectedMonth),
+                  new Date().getFullYear()
+                ).map((weekNum) => (
+                  <Picker.Item
+                    key={weekNum}
+                    label={`Week ${weekNum}`}
+                    value={weekNum}
+                  />
+                ))}
+              </Picker>
+            )}
+          </View>
+        </>
+      )}
 
       {/* Summary */}
       {selectedIsa && selectedIsa !== -1 && (
@@ -272,7 +458,7 @@ const ISAMonitoring: FC = () => {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardRight}>
-              <Text style={styles.cardDate}>{item.date}</Text>
+              <Text style={styles.cardDate}>{item.visit_date}</Text>
               <Text>{item.month}</Text>
             </View>
 
@@ -285,6 +471,10 @@ const ISAMonitoring: FC = () => {
               </Text>
               <Text style={styles.cardText}>
                 <MaterialIcons name="work"></MaterialIcons> {item.duty}
+              </Text>
+              <Text style={styles.cardText}>
+                <MaterialIcons name="assured-workload"></MaterialIcons>{' '}
+                {item.role}
               </Text>
               <Text style={styles.cardText}>
                 <MaterialIcons name="approval"></MaterialIcons> {item.status}
@@ -411,4 +601,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   warningText: { textAlign: 'center', fontWeight: '600' },
+  tabContainer: {
+    flexDirection: 'row',
+    margin: 14,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#1976D2',
+  },
+
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+
+  activeTab: {
+    backgroundColor: '#1976D2',
+  },
+
+  tabText: {
+    fontWeight: '600',
+    color: '#1976D2',
+  },
+
+  activeTabText: {
+    color: '#fff',
+  },
 });

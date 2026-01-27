@@ -143,9 +143,9 @@ const HigherOfficialDashboard = () => {
       router.replace('/');
     }
     const loadData = async () => {
-      const minTime = 300; 
-      const start = Date.now(); 
-      setLoading(true); 
+      const minTime = 300;
+      const start = Date.now();
+      setLoading(true);
 
       try {
         const res = await api.get('/approvals?month=February');
@@ -153,8 +153,7 @@ const HigherOfficialDashboard = () => {
         setVisits(res.data.visits);
       } catch (err) {
         console.error('Error loading data', err);
-      }
-      finally {
+      } finally {
         const elapsed = Date.now() - start; // ADDED
         if (elapsed < minTime) {
           await new Promise((resolve) =>
@@ -236,7 +235,7 @@ const HigherOfficialDashboard = () => {
             />
             <Text style={styles.actionTitle}>Monitor ISAs</Text>
             <Text style={styles.actionSub}>
-              Review ISA assignments and progress
+              Review TA/ADE assignments and progress
             </Text>
           </TouchableOpacity>
 
@@ -251,13 +250,14 @@ const HigherOfficialDashboard = () => {
             />
             <Text style={styles.actionTitle}>Generate Reports</Text>
             <Text style={styles.actionSub}>
-              Download monthly ISA PDF reports
+              Download monthly TA / Subject Directors / DDE PDF reports
             </Text>
           </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>
-          ISA Monthly Visit Status ({currentMonth})
+          Teaching Advisor / Subject Director Monthly Visit Status (
+          {currentMonth})
         </Text>
 
         <View style={styles.cardsContainer}>

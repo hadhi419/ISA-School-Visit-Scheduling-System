@@ -6,7 +6,18 @@ export const postVisits = async (visitsArray) => {
       return { error: 'Visits array is required' };
     }
 
-    const allowedDuties = ['HNST', 'EXAM', 'DEV', 'EVAL', 'HOLI'];
+    const allowedDuties = [
+      'HNST',
+      'ADVO',
+      'ExEv',
+      'Office',
+      'HOLI',
+      'PL',
+      'Parti',
+      'Faci',
+      'Other',
+    ];
+
     const values = [];
 
     const now = new Date();
@@ -182,47 +193,82 @@ export const checkEditPermissionForMonth = async (month, isa_id) => {
   }
 };
 
-export const fetchVisitsByIsa = async (isa_id, date) => {
+export const fetchVisitsByIsa = async (
+  isa_id = null,
+  date = null,
+  month = null,
+  week = null
+) => {
+  console.log(isa_id);
+  console.log(date);
+  console.log(month);
+  console.log(week);
+
   try {
     const query = `
-      SELECT v.id, v.visit_date AS date, v.month,
-             l.name AS location, v.duty, v.status,
-             u.full_name
+      SELECT 
+        v.id,
+        v.visit_date,
+        v.month,
+        l.name AS location,
+        v.duty,
+        v.status,
+        u.full_name,
+        u.role
       FROM visits v
       LEFT JOIN locations l ON v.location_id = l.id
-      LEFT JOIN users u ON v.isa_id = U.id
-      WHERE (? IS NULL OR v.isa_id = ?)
-        AND (? IS NULL OR v.date = ?)
-        AND status IN ('VISITED','DDE_APPROVED')
-        AND v.duty NOT IN ('HOLI')
-      ORDER BY v.visit_date ASC
+      LEFT JOIN users u ON v.isa_id = u.id
+      WHERE
+        (? IS NULL OR v.isa_id = ?) AND
+        (? IS NULL OR v.date = ?) AND
+        (? IS NULL OR v.month = ?) AND
+        (? IS NULL OR CEIL(DAY(v.date)/7) = ?)
+        AND v.status IN ('VISITED','DDE_APPROVED', 'ZDE_APPROVED')
+        AND (v.duty <> 'HOLI' OR v.duty <> 'PL')
+      ORDER BY v.date ASC
     `;
+
+    //console.log(query, [isa_id, isa_id, date, date, month, month, week, week]);
+
     const [rows] = await db.execute(query, [
       isa_id || null,
       isa_id || null,
       date || null,
       date || null,
+      month || null,
+      month || null,
+      week || null,
+      week || null,
     ]);
+
+    //console.log(rows);
+
     return rows;
   } catch (err) {
-    throw new Error(err);
+    console.error('Error fetching visits by ISA:', err);
+    throw err;
   }
 };
 
 // Fetch visits filtered by Location
-export const fetchVisitsByLocation = async (location_id, date) => {
+export const fetchVisitsByLocation = async (location_id, date, month, week) => {
   try {
-    console.log('safrg', location_id);
-    console.log('safrg', date);
+    console.log('l', location_id);
+    console.log('d', date);
+    console.log('m', month);
+    console.log('w', week);
+
     const query = `
       SELECT v.id, v.visit_date AS date, v.month,
-             u.full_name AS isa_name, v.duty, v.status
+             u.full_name AS isa_name, v.duty, v.status, u.role
       FROM visits v
       LEFT JOIN users u ON v.isa_id = u.id AND u.role = 'ISA'
       WHERE (? IS NULL OR v.location_id = ?)
         AND (? IS NULL OR V.date = ?)
-        AND status IN ('VISITED','DDE_APPROVED')
-        AND v.duty NOT IN ('HOLI')
+        AND (? IS NULL OR v.month = ?)
+        AND (? IS NULL OR CEIL(DAY(v.date)/7) = ?)
+        AND status IN ('VISITED','DDE_APPROVED', 'ZDE_APPROVED')
+        AND v.duty NOT IN ('HOLI', 'PL')
       ORDER BY v.visit_date ASC
     `;
     const [rows] = await db.execute(query, [
@@ -230,7 +276,13 @@ export const fetchVisitsByLocation = async (location_id, date) => {
       location_id || null,
       date || null,
       date || null,
+      month || null,
+      month || null,
+      week || null,
+      week || null,
     ]);
+
+    console.log(rows);
     return rows;
   } catch (err) {
     throw new Error(err);
@@ -239,7 +291,7 @@ export const fetchVisitsByLocation = async (location_id, date) => {
 
 export const fetchISAs = async () => {
   try {
-    const query = `SELECT id, full_name FROM users WHERE  role="ISA"`;
+    const query = `SELECT id, full_name, role FROM users WHERE  role IN ('ISA','ADE', 'DDE')`;
     const [rows] = await db.execute(query);
     return rows;
   } catch (err) {

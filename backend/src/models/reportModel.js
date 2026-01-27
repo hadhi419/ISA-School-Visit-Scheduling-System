@@ -22,6 +22,10 @@ export const submitVisitReport = async ({
     actual_location_id = rows[0].id;
   }
 
+  if (!actual_duty) {
+    console.log('hadhi');
+  }
+
   console.log('Hehe hooo', actual_location_id);
   // Get planned location
   const [rows] = await db.query(

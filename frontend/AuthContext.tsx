@@ -29,6 +29,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<Role>(null);
   const [loading, setLoading] = useState(true);
 
+  const bootstrapAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const decoded = jwtDecode<JWTPayload>(token);
+
+        const now = Math.floor(Date.now() / 1000); // current time in seconds
+        if (decoded.exp < now) {
+          // token expired
+          await AsyncStorage.removeItem('token');
+          setRole(null);
+          setId(null);
+          setName(null);
+        } else {
+          setRole(decoded.role);
+          setId(decoded.id);
+          setName(decoded.name);
+        }
+      }
+    } catch {
+      await AsyncStorage.removeItem('token');
+      setRole(null);
+      setId(null);
+      setName(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+
+    const setupAutoLogout = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+
+      const decoded = jwtDecode<JWTPayload>(token);
+      const now = Math.floor(Date.now() / 1000);
+      const secondsLeft = decoded.exp - now;
+
+      if (secondsLeft <= 0) {
+        logout(); // already expired
+      } else {
+        timeout = setTimeout(() => logout(), secondsLeft * 1000);
+      }
+    };
+
+    setupAutoLogout();
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [role]);
+
   // 🔹 App startup
   useEffect(() => {
     const bootstrapAuth = async () => {

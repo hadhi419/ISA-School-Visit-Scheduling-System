@@ -81,16 +81,15 @@ const MonitoringReportForm: FC = () => {
     setVisitId(id || null);
     console.log('Visit ID:', id);
     const fetchLocations = async () => {
-       const minTime = 300; 
-      const start = Date.now(); 
-      setLoading(true); 
+      const minTime = 300;
+      const start = Date.now();
+      setLoading(true);
       try {
         const res = await api.get('/locations'); // adjust your endpoint
         setLocations(res.data.locations);
       } catch (err) {
         console.error('Failed to fetch locations', err);
-      }
-      finally {
+      } finally {
         const elapsed = Date.now() - start; // ADDED
         if (elapsed < minTime) {
           await new Promise((resolve) =>
@@ -170,9 +169,9 @@ const MonitoringReportForm: FC = () => {
       return;
     }
 
-    const minTime = 300; 
+    const minTime = 300;
     const start = Date.now();
-    setLoading(true); 
+    setLoading(true);
 
     try {
       const formData = new FormData();
@@ -236,15 +235,12 @@ const MonitoringReportForm: FC = () => {
     } catch (err) {
       console.error('Submit Error:', err);
       Alert.alert('Error', 'Network or server error.');
-    }
-    finally {
-      const elapsed = Date.now() - start; 
+    } finally {
+      const elapsed = Date.now() - start;
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
@@ -316,9 +312,7 @@ const MonitoringReportForm: FC = () => {
             size={24}
             color={PRIMARY_COLOR}
           />
-          <Text style={{ marginLeft: 10, fontSize: 16 }}>
-            Location Changed?
-          </Text>
+          <Text style={{ marginLeft: 10, fontSize: 16 }}>Any Amendments?</Text>
         </Pressable>
         {/* Show dropdown if changed */}
         {/* ---------- Show dropdown if changed ---------- */}

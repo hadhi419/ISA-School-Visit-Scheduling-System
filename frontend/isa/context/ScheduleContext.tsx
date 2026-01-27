@@ -3,7 +3,17 @@ import { useAuth } from '@/AuthContext';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import api from '../../api/axiosInstance';
 
-export type ScheduleType = 'HNST' | 'EXAM' | 'DEV' | 'EVAL' | 'NONE' | 'HOLI';
+export type ScheduleType =
+  | 'HNST'
+  | 'ADVO'
+  | 'ExEv'
+  | 'Office'
+  | 'Parti'
+  | 'Faci'
+  | 'HOLI'
+  | 'PL'
+  | 'Other'
+  | 'NONE';
 
 export interface ScheduledEvent {
   id: number;

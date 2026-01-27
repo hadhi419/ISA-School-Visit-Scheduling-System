@@ -11,7 +11,9 @@ import {
 export const postMultipleVisits = async (req, res) => {
   try {
     const visitsArray = req.body;
+    console.log(visitsArray);
     const message = await postVisits(visitsArray);
+    console.log(message);
     res.json({ message });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -94,12 +96,17 @@ export const getISAs = async (req, res) => {
 // Controller for ISA Monitoring
 export const getVisitsByIsa = async (req, res) => {
   try {
-    const { isa_id, date } = req.query;
-    console.log(date);
+    console.log(req.query);
+    const { isa_id, date, month, week } = req.query;
+    console.log('ID', month, ' ');
+    const currentMonth = 'january';
+    console.log('Month', month);
 
     const visits = await fetchVisitsByIsa(
       isa_id ? Number(isa_id) : null,
-      date && date !== 'null' ? date : null
+      date && date !== 'null' ? date : null,
+      month && month !== 'null' ? month : currentMonth,
+      week && week !== 'null' ? week : null
     );
 
     res.json({ success: true, data: visits });
@@ -113,12 +120,20 @@ export const getVisitsByIsa = async (req, res) => {
 export const getVisitsByLocation = async (req, res) => {
   try {
     console.log(req.query);
-    const { location_id, date } = req.query;
+
+    const { location_id, date, month, week } = req.query;
+
+    const currentMonth = 'january';
+
     const visits = await fetchVisitsByLocation(
       location_id ? Number(location_id) : null,
 
-      date && date !== 'null' ? date : null
+      date && date !== 'null' ? date : null,
+      month && month !== 'null' ? month : currentMonth,
+      week && week !== 'null' ? week : null
     );
+
+    console.log(visits);
     res.json({ success: true, data: visits });
   } catch (err) {
     console.error(err);

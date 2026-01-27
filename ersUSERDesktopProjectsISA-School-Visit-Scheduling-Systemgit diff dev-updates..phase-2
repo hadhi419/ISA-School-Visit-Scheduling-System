@@ -1,0 +1,230 @@
+[1mdiff --git a/frontend/LoadingContext.tsx b/frontend/LoadingContext.tsx[m
+[1mdeleted file mode 100644[m
+[1mindex ca88565..0000000[m
+[1m--- a/frontend/LoadingContext.tsx[m
+[1m+++ /dev/null[m
+[36m@@ -1,50 +0,0 @@[m
+[31m-// frontend/LoadingContext.tsx[m
+[31m-[m
+[31m-import React, {[m
+[31m-  createContext,[m
+[31m-  useContext,[m
+[31m-  useState,[m
+[31m-  ReactNode,[m
+[31m-} from 'react';[m
+[31m-import { View, ActivityIndicator, StyleSheet } from 'react-native';[m
+[31m-[m
+[31m-type LoadingContextType = {[m
+[31m-  setLoading: (value: boolean) => void;[m
+[31m-};[m
+[31m-[m
+[31m-const LoadingContext = createContext<LoadingContextType | undefined>([m
+[31m-  undefined[m
+[31m-);[m
+[31m-[m
+[31m-export const LoadingProvider = ({ children }: { children: ReactNode }) => {[m
+[31m-  const [loading, setLoading] = useState(false);[m
+[31m-[m
+[31m-  return ([m
+[31m-    <LoadingContext.Provider value={{ setLoading }}>[m
+[31m-      {children}[m
+[31m-      {loading && ([m
+[31m-        <View style={styles.overlay}>[m
+[31m-          <ActivityIndicator size="large" color="#ffffff" />[m
+[31m-        </View>[m
+[31m-      )}[m
+[31m-    </LoadingContext.Provider>[m
+[31m-  );[m
+[31m-};[m
+[31m-[m
+[31m-export const useLoading = () => {[m
+[31m-  const ctx = useContext(LoadingContext);[m
+[31m-  if (!ctx) {[m
+[31m-    throw new Error('useLoading must be used within LoadingProvider');[m
+[31m-  }[m
+[31m-  return ctx;[m
+[31m-};[m
+[31m-[m
+[31m-const styles = StyleSheet.create({[m
+[31m-  overlay: {[m
+[31m-    ...StyleSheet.absoluteFillObject,[m
+[31m-    backgroundColor: 'rgba(0, 0, 0, 0.4)',[m
+[31m-    justifyContent: 'center',[m
+[31m-    alignItems: 'center',[m
+[31m-    zIndex: 9999,[m
+[31m-  },[m
+[31m-});[m
+[1mdiff --git a/frontend/api/axiosInstance.js b/frontend/api/axiosInstance.js[m
+[1mindex d370e14..6ba1fb8 100644[m
+[1m--- a/frontend/api/axiosInstance.js[m
+[1m+++ b/frontend/api/axiosInstance.js[m
+[36m@@ -2,7 +2,7 @@[m [mimport AsyncStorage from '@react-native-async-storage/async-storage';[m
+ import axios from 'axios';[m
+ [m
+ const api = axios.create({[m
+[31m-  baseURL: 'http://localhost:5000/api',[m
+[32m+[m[32m  baseURL: 'http://172.20.10.3:5000/api',[m
+ });[m
+ [m
+ api.interceptors.request.use([m
+[1mdiff --git a/frontend/app/_layout.tsx b/frontend/app/_layout.tsx[m
+[1mindex 5ad8c62..7b70337 100644[m
+[1m--- a/frontend/app/_layout.tsx[m
+[1m+++ b/frontend/app/_layout.tsx[m
+[36m@@ -1,21 +1,14 @@[m
+[31m-// frontend/app/_layout.tsx[m
+[31m-[m
+[32m+[m[32m// app/_layout.tsx[m
+ import { AuthProvider } from '@/AuthContext';[m
+ import { ScheduleProvider } from '@/isa/context/ScheduleContext';[m
+ import { Stack } from 'expo-router';[m
+ import React from 'react';[m
+[31m-// ADD THIS LINE[m
+[31m-import { LoadingProvider } from '../LoadingContext';[m
+ [m
+ export default function RootLayout() {[m
+   return ([m
+     <AuthProvider>[m
+       <ScheduleProvider>[m
+[31m-        {/* ADD THIS WRAPPER */}[m
+[31m-        <LoadingProvider>[m
+[31m-          <Stack screenOptions={{ headerShown: false }} />[m
+[31m-        </LoadingProvider>[m
+[31m-        {/* END WRAPPER */}[m
+[32m+[m[32m        <Stack screenOptions={{ headerShown: false }} />[m
+       </ScheduleProvider>[m
+     </AuthProvider>[m
+   );[m
+[1mdiff --git a/frontend/app/ade/adeDashboard.tsx b/frontend/app/ade/adeDashboard.tsx[m
+[1mindex deb74ed..0fc6475 100644[m
+[1m--- a/frontend/app/ade/adeDashboard.tsx[m
+[1m+++ b/frontend/app/ade/adeDashboard.tsx[m
+[36m@@ -15,7 +15,7 @@[m [mimport {[m
+ } from 'react-native';[m
+ [m
+ import { useAuth } from '@/AuthContext';[m
+[31m-import { useLoading } from '../../LoadingContext';[m
+[32m+[m
+ // Images[m
+ const SUPERVISOR_IMAGE = {[m
+   uri: 'https://randomuser.me/api/portraits/men/75.jpg',[m
+[36m@@ -125,15 +125,9 @@[m [mconst HigherOfficialDashboard = () => {[m
+   };[m
+ [m
+   const { isLoggedIn, name } = useAuth();[m
+[31m-  const { setLoading } = useLoading();[m
+[31m-[m
+ [m
+   useEffect(() => {[m
+     const loadData = async () => {[m
+[31m-      const minTime = 500; [m
+[31m-      const start = Date.now(); [m
+[31m-      setLoading(true); [m
+[31m-[m
+       try {[m
+         const res = await api.get('/approvals?month=February');[m
+         console.log('Loaded data:', res);[m
+[36m@@ -152,15 +146,6 @@[m [mconst HigherOfficialDashboard = () => {[m
+       } catch (err) {[m
+         console.error('Error loading data', err);[m
+       }[m
+[31m-      finally {[m
+[31m-        const elapsed = Date.now() - start; [m
+[31m-        if (elapsed < minTime) {[m
+[31m-          await new Promise((resolve) =>[m
+[31m-            setTimeout(resolve, minTime - elapsed)[m
+[31m-          );[m
+[31m-        }[m
+[31m-        setLoading(false); [m
+[31m-      }[m
+     };[m
+ [m
+     if (!isLoggedIn) {[m
+[36m@@ -168,7 +153,7 @@[m [mconst HigherOfficialDashboard = () => {[m
+     }[m
+ [m
+     loadData();[m
+[31m-  }, [isLoggedIn, setLoading]);[m
+[32m+[m[32m  }, []);[m
+ [m
+   const handleMonitorLocationsPress = () => {[m
+     router.push('/higherOfficialCommonScreens/locationMonitoring');[m
+[1mdiff --git a/frontend/app/dde/ddeDashboard.tsx b/frontend/app/dde/ddeDashboard.tsx[m
+[1mindex 6bbe2ba..9276e6c 100644[m
+[1m--- a/frontend/app/dde/ddeDashboard.tsx[m
+[1m+++ b/frontend/app/dde/ddeDashboard.tsx[m
+[36m@@ -14,7 +14,6 @@[m [mimport {[m
+   TouchableOpacity,[m
+   View,[m
+ } from 'react-native';[m
+[31m-import { useLoading } from '../../LoadingContext';[m
+ [m
+ // Images[m
+ const SUPERVISOR_IMAGE = {[m
+[36m@@ -126,7 +125,6 @@[m [mconst HigherOfficialDashboard = () => {[m
+   const { isLoggedIn, name, role } = useAuth();[m
+ [m
+   const router = useRouter();[m
+[31m-  const { setLoading } = useLoading();[m
+ [m
+   const handleMonitorLocationsPress = () => {[m
+     router.push('/higherOfficialCommonScreens/locationMonitoring');[m
+[36m@@ -148,10 +146,6 @@[m [mconst HigherOfficialDashboard = () => {[m
+       router.replace('/');[m
+     }[m
+     const loadData = async () => {[m
+[31m-      const minTime = 300; [m
+[31m-      const start = Date.now(); [m
+[31m-      setLoading(true); [m
+[31m-[m
+       try {[m
+         const res = await api.get('/approvals?month=February');[m
+ [m
+[36m@@ -169,15 +163,6 @@[m [mconst HigherOfficialDashboard = () => {[m
+       } catch (err) {[m
+         console.error('Error loading data', err);[m
+       }[m
+[31m-      finally {[m
+[31m-        const elapsed = Date.now() - start; // ADDED[m
+[31m-        if (elapsed < minTime) {[m
+[31m-          await new Promise((resolve) =>[m
+[31m-            setTimeout(resolve, minTime - elapsed)[m
+[31m-          );[m
+[31m-        }[m
+[31m-        setLoading(false); // ADDED[m
+[31m-      }[m
+     };[m
+     loadData();[m
+   }, []);[m
+[1mdiff --git a/frontend/app/higherOfficialCommonScreens/approvalScreen.tsx b/frontend/app/higherOfficialCommonScreens/approvalScreen.tsx[m
+[1mindex f961e78..115c486 100644[m
+[1m--- a/frontend/app/higherOfficialCommonScreens/approvalScreen.tsx[m
+[1m+++ b/frontend/app/higherOfficialCommonScreens/approvalScreen.tsx[m
+[36m@@ -18,8 +18,6 @@[m [mimport {[m
+ import { Icon } from '@rneui/themed';[m
+ [m
+ import { useAuth } from '@/AuthContext';[m
+[31m-import { useLoading } from '../../LoadingContext';[m
+[31m-[m
+ // Images[m
+ const SUPERVISOR_IMAGE = {[m
+   uri: 'https://randomuser.me/api/portraits/men/75.jpg',[m
+[36m@@ -143,7 +141,6 @@[m [mconst ApprovalScreen = () => {[m
+   };[m
+ [m
+   const { id, name, role, isLoggedIn } = useAuth();[m
+[31m-  const { setLoading } = useLoading(); [m
+ [m
+   useEffect(() => {[m
+     console.log('Iddddddddddd', id);[m
+[36m@@ -153,10 +150,6 @@[m [mconst ApprovalScreen = () => {[m
+     }[m
+ [m
+     const loadData = async () => {[m
+[31m-      const minTime = 500;[m
+[31m-      const start = Date.now(); [m
+[31m-      setLoading(true);[m
+[31m-[m
+       try {[m
+         const res = await api.get('/approvals?month=February');[m
+         console.log('Loaded data

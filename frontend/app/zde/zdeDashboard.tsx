@@ -114,15 +114,14 @@ const HigherOfficialDashboard = () => {
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
   const { id, isLoggedIn, logout } = useAuth();
   const { setLoading } = useLoading();
-  
 
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
     }
     const loadData = async () => {
-      const minTime = 300; 
-      const start = Date.now(); 
+      const minTime = 300;
+      const start = Date.now();
       setLoading(true);
 
       try {
@@ -131,15 +130,14 @@ const HigherOfficialDashboard = () => {
         setVisits(res.data.visits);
       } catch (err) {
         console.error('Error loading data', err);
-      }
-      finally {
-        const elapsed = Date.now() - start; 
+      } finally {
+        const elapsed = Date.now() - start;
         if (elapsed < minTime) {
           await new Promise((resolve) =>
             setTimeout(resolve, minTime - elapsed)
           );
         }
-        setLoading(false); 
+        setLoading(false);
       }
     };
 
@@ -172,7 +170,6 @@ const HigherOfficialDashboard = () => {
             }}
           >
             <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-            
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Welcome, ZDE</Text>
           <MaterialCommunityIcons
@@ -219,7 +216,7 @@ const HigherOfficialDashboard = () => {
             />
             <Text style={styles.actionTitle}>Monitor ISAs</Text>
             <Text style={styles.actionSub}>
-              Review ISA assignments and progress
+              Review TA / Subject Directors / DDE assignments and progress
             </Text>
           </TouchableOpacity>
 
@@ -234,7 +231,7 @@ const HigherOfficialDashboard = () => {
             />
             <Text style={styles.actionTitle}>Generate Reports</Text>
             <Text style={styles.actionSub}>
-              Download monthly ISA PDF reports
+              Download monthly TA PDF reports
             </Text>
           </TouchableOpacity>
         </View>

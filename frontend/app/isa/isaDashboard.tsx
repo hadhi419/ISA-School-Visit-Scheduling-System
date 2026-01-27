@@ -172,31 +172,33 @@ const Dashboard: FC<DashboardProps> = () => {
   const [notification, setNotification] = useState<string>('');
   const [showPopup, setShowPopup] = useState(false);
 
-  const { name, logout, id, isLoggedIn } = useAuth();
+  const { name, logout, id, isLoggedIn, role } = useAuth();
   console.log('ISA Dashboard - User Name:', name);
 
   const { setLoading } = useLoading();
   //const [Notifications, setNotifications] = useState<string>('');
 
   useEffect(() => {
+    if (role) {
+      console.log(false);
+    }
+    console.log(isLoggedIn);
     if (!isLoggedIn) {
       router.replace('/');
     }
 
     const fetchNotifications = async () => {
-
       setLoading(true);
       try {
         const response = await api.get(`/approvals/rejections/latest/${id}`);
         setNotification(response.data?.rejection?.comment || '');
       } catch (error) {
         console.error('Error fetching notifications:', error);
-      }
-        finally {
+      } finally {
         setTimeout(() => {
-        setLoading(false);
+          setLoading(false);
         }, 300);
-}
+      }
     };
 
     fetchNotifications();
