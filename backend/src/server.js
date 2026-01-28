@@ -8,7 +8,7 @@ import locationRoutes from './routes/locationRoutes.js';
 import visitsRoutes from './routes/visitRoutes.js';
 import approvalRoutes from './routes/approvalRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
-//import visitPdfRoutes from './routes/visitPdfRoutes.js';
+import visitPdfRoutes from './routes/visitPdfRoutes.js';
 
 const app = express();
 
@@ -21,7 +21,7 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/visits', visitsRoutes);
 app.use('/api/approvals', approvalRoutes);
 app.use('/api/reports', reportRoutes);
-//app.use('/api/visits', visitPdfRoutes);
+app.use('/api/visits', visitPdfRoutes);
 
 import bcrypt from 'bcryptjs';
 

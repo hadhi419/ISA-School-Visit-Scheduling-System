@@ -1,72 +1,98 @@
-import { Button, Icon } from "@rneui/themed";
-import { router } from "expo-router";
-import React, { FC } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-const { width } = Dimensions.get("window");
-const CARD_WIDTH = width * 0.9; // slightly wider for nicer look
+import ProfileComponent from '@/components/ProfileComponent';
 
-const AdminDashboard: FC = () => {
+const AdminDashboard = () => {
+  const router = useRouter();
+
+  const [showProfile, setShowProfile] = useState(false);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Admin Dashboard</Text>
+        <MaterialCommunityIcons
+          name="account"
+          size={28}
+          color="#E0E0E0"
+          onPress={() => setShowProfile(true)}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
-        <View style={styles.header}>
-          <Icon name="menu" type="material" color="#fff" size={28} />
-          <Text style={styles.headerTitle}>Admin Dashboard</Text>
-          <Icon name="person" type="material" color="#fff" size={28} />
-        </View>
 
-        {/* Section: Management */}
-        <Text style={styles.sectionTitle}>Management</Text>
-
-        <View style={styles.cardContainer}>
-          {/* Manage Users */}
-          <View style={styles.card}>
-            <Icon name="people" type="material" color="#42A5F5" size={40} />
-            <Text style={styles.cardTitle}>Manage Users</Text>
-            <Text style={styles.cardDescription}>
-              Add, edit, or remove registered users in the system.
-            </Text>
-            <View style={styles.cardActions}>
-              <Button
-                title="Add User"
-                onPress={() => router.push("/admin/addUser")}
-                buttonStyle={[styles.actionButton, { backgroundColor: "#42A5F5" }]}
-                containerStyle={styles.buttonContainer}
-              />
-              <Button
-                title="View Users"
-                onPress={() => router.push("/admin/usersList")}
-                buttonStyle={[styles.actionButton, { backgroundColor: "#1E88E5" }]}
-                containerStyle={styles.buttonContainer}
-              />
+        <Modal visible={showProfile} transparent animationType="fade">
+          <View style={popupStyles.overlay}>
+            <View style={popupStyles.popup}>
+              <ProfileComponent onClose={() => setShowProfile(false)} />
             </View>
           </View>
+        </Modal>
 
-          {/* Manage Locations */}
-          <View style={styles.card}>
-            <Icon name="place" type="material" color="#66BB6A" size={40} />
-            <Text style={styles.cardTitle}>Manage Locations</Text>
-            <Text style={styles.cardDescription}>
-              Add or update available school and visit locations.
-            </Text>
-            <View style={styles.cardActions}>
-              <Button
-                title="Add Location"
-                onPress={() => router.push("/admin/addLocation")}
-                buttonStyle={[styles.actionButton, { backgroundColor: "#66BB6A" }]}
-                containerStyle={styles.buttonContainer}
-              />
-              <Button
-                title="View Locations"
-                onPress={() => router.push("/admin/locationsList")}
-                buttonStyle={[styles.actionButton, { backgroundColor: "#43A047" }]}
-                containerStyle={styles.buttonContainer}
-              />
-            </View>
-          </View>
+        {/* Action Cards */}
+        <View style={styles.actionGrid}>
+          {/* Add User */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/admin/addUser')}
+          >
+            <MaterialCommunityIcons
+              name="account-plus"
+              size={36}
+              color="#42A5F5"
+            />
+            <Text style={styles.actionTitle}>Add User</Text>
+            <Text style={styles.actionSub}>Create new user accounts</Text>
+          </TouchableOpacity>
+
+          {/* View Users */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/admin/usersList')}
+          >
+            <MaterialCommunityIcons
+              name="account-group"
+              size={36}
+              color="#1E88E5"
+            />
+            <Text style={styles.actionTitle}>View Users</Text>
+            <Text style={styles.actionSub}>See all registered users</Text>
+          </TouchableOpacity>
+
+          {/* Add Location */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/admin/addLocation')}
+          >
+            <MaterialCommunityIcons name="map-plus" size={36} color="#66BB6A" />
+            <Text style={styles.actionTitle}>Add Location</Text>
+            <Text style={styles.actionSub}>Add new school locations</Text>
+          </TouchableOpacity>
+
+          {/* View Locations */}
+          <TouchableOpacity
+            style={styles.actionCard}
+            onPress={() => router.push('/admin/locationsList')}
+          >
+            <MaterialCommunityIcons
+              name="map-marker-multiple"
+              size={36}
+              color="#43A047"
+            />
+            <Text style={styles.actionTitle}>View Locations</Text>
+            <Text style={styles.actionSub}>See all school locations</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -74,54 +100,121 @@ const AdminDashboard: FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9f9f9" },
-  scrollContent: { paddingBottom: 30 },
+  safeArea: { flex: 1, backgroundColor: '#f8f9fb' },
+  scrollContent: { paddingBottom: 40 },
 
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#1976D2",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1976D2',
     paddingHorizontal: 16,
-    paddingTop: 15,
-    paddingBottom: 15,
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#333",
+    borderBottomColor: '#333',
   },
-  headerTitle: { fontSize: 18, fontWeight: "500", color: "#fff", flex: 1, textAlign: "center" },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#fff',
+    textAlign: 'center',
+    flex: 1,
+  },
 
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#555',
     marginTop: 20,
     marginBottom: 10,
     paddingHorizontal: 16,
   },
 
-  cardContainer: { paddingHorizontal: 16, gap: 20 },
-
-  card: {
-    width: CARD_WIDTH,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-    marginBottom: 20,
+  actionGrid: {
+    paddingHorizontal: 16,
+    marginTop: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
 
-  cardTitle: { fontSize: 18, fontWeight: "600", color: "#333", marginTop: 12 },
-  cardDescription: { fontSize: 14, color: "#666", marginVertical: 12 },
+  actionCard: {
+    width: '100%', // 2 cards per row
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+    backgroundColor: '#fff',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
 
-  cardActions: { flexDirection: "row", justifyContent: "space-between" },
-  actionButton: { borderRadius: 12, paddingVertical: 12, height:70 },
-  buttonContainer: { flex: 1, marginHorizontal: 5 },
+  actionTitle: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    textAlign: 'center',
+  },
 
-  footer: { color: "#777", textAlign: "center", marginTop: 30, fontSize: 13 },
+  actionSub: {
+    marginTop: 6,
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+  },
+});
+
+const popupStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popup: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 20,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#d32f2f',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 15,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  editBtn: {
+    backgroundColor: '#1976D2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  closeBtn: {
+    backgroundColor: '#9e9e9e',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
 });
 
 export default AdminDashboard;

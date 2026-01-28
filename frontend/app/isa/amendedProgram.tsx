@@ -180,6 +180,8 @@ const AmmendedProgram: FC = () => {
   const [scheduledEvents, setRemoteData] = useState<ScheduledEvent[]>([]);
 
   useEffect(() => {
+    const number = pendingReportsCount;
+    console.log(number);
     if (!isLoggedIn) {
       router.replace('/');
     }
@@ -314,13 +316,9 @@ const AmmendedProgram: FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const submittedStatuses: ScheduledEvent['status'][] = [
-      'VISITED',
-      'DDE_APPROVED',
-      'DDE_REJECTED',
-      'ADE_APPROVED',
-      'ADE_REJECTED',
-    ];
+    const submittedStatuses: ScheduledEvent['status'][] = ['VISITED'];
+
+    console.log(calendarData);
 
     return calendarData.filter((day) => {
       if (day.date === 0) return false; // skip padding

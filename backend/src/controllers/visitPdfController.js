@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
+import { transporter } from '../utils/mailer.js';
 
 export const generateVisitPdf = async (req, res) => {
   try {
@@ -11,13 +12,46 @@ export const generateVisitPdf = async (req, res) => {
       });
     }
 
-    const visits = await fetchVisitsForPdf({
+    const { visits, counts } = await fetchVisitsForPdf({
       isa_id,
       month,
       year,
       date,
       location_id,
     });
+    console.log(visits);
+    console.log(counts);
+
+    // Suppose counts is the array you got from DB
+
+    //  enum('HNST','ADVO','ExEv','Office','HOLI','PL','Parti','Faci','Other')
+    const advoCount =
+      counts.find((c) => c.actual_duty === 'ADVO')?.duty_count || 0;
+    const faciCount =
+      counts.find((c) => c.actual_duty === 'Faci')?.duty_count || 0;
+    const ExEvCount =
+      counts.find((c) => c.actual_duty === 'ExEv')?.duty_count || 0;
+    const hnstCount =
+      counts.find((c) => c.actual_duty === 'HNST')?.duty_count || 0;
+    const OfficeCount =
+      counts.find((c) => c.actual_duty === 'Office')?.duty_count || 0;
+    const HOLICount =
+      counts.find((c) => c.actual_duty === 'HOLI')?.duty_count || 0;
+    const PLCount = counts.find((c) => c.actual_duty === 'PL')?.duty_count || 0;
+    const PartiCount =
+      counts.find((c) => c.actual_duty === 'Parti')?.duty_count || 0;
+    const OtherCount =
+      counts.find((c) => c.actual_duty === 'Other')?.duty_count || 0;
+
+    const total =
+      advoCount +
+      faciCount +
+      OfficeCount +
+      HOLICount +
+      PLCount +
+      PartiCount +
+      OtherCount +
+      ExEvCount;
 
     if (visits.length === 0) {
       return res.status(404).json({ error: 'No visits found' });
@@ -209,7 +243,7 @@ export const generateVisitPdf = async (req, res) => {
         <!-- ===== FOOTER DETAILS BELOW TABLES ===== -->
 <div style="margin-top:20px; font-size:12px; width:100%;">
 
- <table style="width:100%; border-collapse: collapse; border:none;">
+ <table style="width:100%; border-collapse: collapse; border:none; margin-top:100px">
     <tr>
       <td style="width:24%; text-align:center; border:none;">
         ................................<br/>
@@ -304,27 +338,27 @@ export const generateVisitPdf = async (req, res) => {
   <table style="width: 100%; margin-top: 10px; border:1px solid #000; border-collapse:collapse;">
     <tr>
       <td>School Subject Advocation</td>
-      <td>    </>
+      <td>${advoCount}</>
       <td>Govt. Holiday</td>
-      <td>    </>
+      <td>${HOLICount}</>
     </tr>
     <tr>
       <td>Facilitation (Quality circle, Marking, WS)</td>
-      <td>    </>
+      <td>${faciCount}</>
       <td>Personal Leave</td>
-      <td>    </>
+      <td>${PLCount}</>
     </tr>
     <tr>
       <td>Zone/Division</td>
-      <td>    </>
+      <td>${OfficeCount}</>
       <td>Other</td>
-      <td>    </>
+      <td> ${OtherCount}</>
     </tr>
     <tr>
       <td>Participated (Meeting, Semi., WS)</td>
-      <td>    </>
+      <td>${PartiCount} </>
       <td>Total</td>\
-      <td>    </>
+      <td>${total}</>
     </tr>
   </table>
 
@@ -353,12 +387,39 @@ export const generateVisitPdf = async (req, res) => {
 
     await browser.close();
 
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="ISA_Visit_Report_${month}_${year}.pdf"`,
+    // res.set({
+    //   'Content-Type': 'application/pdf',
+    //   'Content-Disposition': `attachment; filename="ISA_Visit_Report_${month}_${year}.pdf"`,
+    // });
+
+    // res.send(pdfBuffer);
+
+    const { officer_email } = req.body;
+
+    if (!officer_email) {
+      return res.status(400).json({ error: 'Officer email is required' });
+    }
+
+    await transporter.sendMail({
+      from: '"ISA Management System" <no-reply@isa.lk>',
+      to: officer_email,
+      subject: `ISA Monthly Report - ${month} ${year}`,
+      text: `Dear Officer,
+
+Please find attached the monthly ISA visit report for ${month} ${year}.
+
+Regards,
+ISA Management System`,
+      attachments: [
+        {
+          filename: `ISA_Visit_Report_${month}_${year}.pdf`,
+          content: pdfBuffer, // 🔥 buffer directly
+          contentType: 'application/pdf',
+        },
+      ],
     });
 
-    res.send(pdfBuffer);
+    res.json({ message: 'PDF generated and emailed successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'PDF generation failed' });

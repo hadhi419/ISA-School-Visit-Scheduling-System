@@ -150,7 +150,7 @@ const DayCell: FC<{
           <Text
             style={[
               styles.dayText,
-              { color: isWeekend || isDisabled ? '#adaaaa' : color.text },
+              { color: isWeekend || isDisabled ? '#000000' : color.text },
             ]}
           >
             {day.date}

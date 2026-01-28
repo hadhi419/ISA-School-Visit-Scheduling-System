@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../api/axiosInstance';
 
 import {
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -13,13 +14,13 @@ import {
   View,
 } from 'react-native';
 
+import ProfileComponent from '@/components/ProfileComponent';
+
 import { useAuth } from '@/AuthContext';
 import { useLoading } from '../../LoadingContext';
 
 // Images
-const SUPERVISOR_IMAGE = {
-  uri: 'https://randomuser.me/api/portraits/men/75.jpg',
-};
+const SUPERVISOR_IMAGE = require('@/assets/avatar.png');
 
 const FOOTER_LOGO = { uri: 'https://via.placeholder.com/20' };
 
@@ -115,6 +116,8 @@ const HigherOfficialDashboard = () => {
   const { id, isLoggedIn, logout } = useAuth();
   const { setLoading } = useLoading();
 
+  const [showProfile, setShowProfile] = useState(false);
+
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
@@ -173,12 +176,20 @@ const HigherOfficialDashboard = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Welcome, ZDE</Text>
           <MaterialCommunityIcons
-            name="account-circle"
+            name="account"
             size={28}
-            color="#eee"
+            color="#E0E0E0"
+            onPress={() => setShowProfile(true)}
           />
         </View>
 
+        <Modal visible={showProfile} transparent animationType="fade">
+          <View style={popupStyles.overlay}>
+            <View style={popupStyles.popup}>
+              <ProfileComponent onClose={() => setShowProfile(false)} />
+            </View>
+          </View>
+        </Modal>
         {/* <Text style={styles.sectionTitle}>
           ISA Monthly Visit Status ({currentMonth})
         </Text> */}
@@ -367,6 +378,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     textAlign: 'center',
+  },
+});
+
+const popupStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popup: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 20,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#d32f2f',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 15,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  editBtn: {
+    backgroundColor: '#1976D2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  closeBtn: {
+    backgroundColor: '#9e9e9e',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });
 

@@ -4,9 +4,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../api/axiosInstance';
 
 import { useAuth } from '@/AuthContext';
+import ProfileComponent from '@/components/ProfileComponent';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Image,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -17,9 +19,7 @@ import {
 import { useLoading } from '../../LoadingContext';
 
 // Images
-const SUPERVISOR_IMAGE = {
-  uri: 'https://randomuser.me/api/portraits/men/75.jpg',
-};
+const SUPERVISOR_IMAGE = require('@/assets/avatar.png');
 
 const FOOTER_LOGO = { uri: 'https://via.placeholder.com/20' };
 
@@ -120,6 +120,8 @@ const HigherOfficialDashboard = () => {
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
   const { isLoggedIn, name } = useAuth();
 
+  const [showProfile, setShowProfile] = useState(false);
+
   const router = useRouter();
   const { setLoading } = useLoading();
 
@@ -190,8 +192,21 @@ const HigherOfficialDashboard = () => {
             size={28}
             color="#eee"
           /> */}
-          <MaterialCommunityIcons name="menu" size={28} color="#eee" />
+          <MaterialCommunityIcons
+            name="account"
+            size={28}
+            color="#E0E0E0"
+            onPress={() => setShowProfile(true)}
+          />
         </View>
+
+        <Modal visible={showProfile} transparent animationType="fade">
+          <View style={popupStyles.overlay}>
+            <View style={popupStyles.popup}>
+              <ProfileComponent onClose={() => setShowProfile(false)} />
+            </View>
+          </View>
+        </Modal>
 
         <View style={styles.actionGrid}>
           {/* <TouchableOpacity
@@ -400,6 +415,55 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     textAlign: 'center',
+  },
+});
+
+const popupStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popup: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 20,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#d32f2f',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 15,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  editBtn: {
+    backgroundColor: '#1976D2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  closeBtn: {
+    backgroundColor: '#9e9e9e',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });
 

@@ -1,7 +1,9 @@
+import ProfileComponent from '@/components/ProfileComponent';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
+import { Modal } from 'react-native';
 
 import api from '../../api/axiosInstance';
 
@@ -18,9 +20,7 @@ import {
 import { useAuth } from '@/AuthContext';
 import { useLoading } from '../../LoadingContext';
 // Images
-const SUPERVISOR_IMAGE = {
-  uri: 'https://randomuser.me/api/portraits/men/75.jpg',
-};
+const SUPERVISOR_IMAGE = require('@/assets/avatar.png');
 
 const FOOTER_LOGO = { uri: 'https://via.placeholder.com/20' };
 
@@ -116,6 +116,8 @@ const HigherOfficialDashboard = () => {
 
   const [visits, setVisits] = useState<VisitResponseItem[]>([]);
 
+  const [showProfile, setShowProfile] = useState(false);
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token'); // Clear the token
@@ -128,12 +130,11 @@ const HigherOfficialDashboard = () => {
   const { isLoggedIn, name } = useAuth();
   const { setLoading } = useLoading();
 
-
   useEffect(() => {
     const loadData = async () => {
-      const minTime = 500; 
-      const start = Date.now(); 
-      setLoading(true); 
+      const minTime = 500;
+      const start = Date.now();
+      setLoading(true);
 
       try {
         const res = await api.get('/approvals?month=February');
@@ -141,15 +142,14 @@ const HigherOfficialDashboard = () => {
         setVisits(res.data.visits);
       } catch (err) {
         console.error('Error loading data', err);
-      }
-      finally {
-        const elapsed = Date.now() - start; 
+      } finally {
+        const elapsed = Date.now() - start;
         if (elapsed < minTime) {
           await new Promise((resolve) =>
             setTimeout(resolve, minTime - elapsed)
           );
         }
-        setLoading(false); 
+        setLoading(false);
       }
     };
 
@@ -180,9 +180,9 @@ const HigherOfficialDashboard = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* BLUE HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleLogout}>
+          {/* <TouchableOpacity onPress={handleLogout}>
             <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <Text style={styles.headerTitle}>Welcome, {name}</Text>
           {/* <MaterialCommunityIcons
@@ -190,7 +190,12 @@ const HigherOfficialDashboard = () => {
             size={28}
             color="#eee"
           /> */}
-          <MaterialCommunityIcons name="menu" size={28} color="#eee" />
+          <MaterialCommunityIcons
+            name="account"
+            size={28}
+            color="#E0E0E0"
+            onPress={() => setShowProfile(true)}
+          />
         </View>
 
         <View style={styles.actionGrid}>
@@ -208,6 +213,14 @@ const HigherOfficialDashboard = () => {
               Approve or ask Revisions on Schedules
             </Text>
           </TouchableOpacity> */}
+
+          <Modal visible={showProfile} transparent animationType="fade">
+            <View style={popupStyles.overlay}>
+              <View style={popupStyles.popup}>
+                <ProfileComponent onClose={() => setShowProfile(false)} />
+              </View>
+            </View>
+          </Modal>
 
           <TouchableOpacity
             style={styles.actionCard}
@@ -235,7 +248,7 @@ const HigherOfficialDashboard = () => {
             />
             <Text style={styles.actionTitle}>Monitor ISAs</Text>
             <Text style={styles.actionSub}>
-              Review ISA assignments and progress
+              Review TA assignments and progress
             </Text>
           </TouchableOpacity>
 
@@ -250,13 +263,13 @@ const HigherOfficialDashboard = () => {
             />
             <Text style={styles.actionTitle}>Generate Reports</Text>
             <Text style={styles.actionSub}>
-              Download monthly ISA PDF reports
+              Download monthly TA/ADE/DDE PDF reports
             </Text>
           </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>
-          ISA Monthly Visit Status ({currentMonth})
+          TA Monthly Visit Status ({currentMonth})
         </Text>
 
         <View style={styles.cardsContainer}>
@@ -397,6 +410,55 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 12, color: '#888', marginRight: 6 },
   logo: { width: 20, height: 20 },
+});
+
+const popupStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popup: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 20,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#d32f2f',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 15,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  editBtn: {
+    backgroundColor: '#1976D2',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  closeBtn: {
+    backgroundColor: '#9e9e9e',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
 });
 
 export default HigherOfficialDashboard;

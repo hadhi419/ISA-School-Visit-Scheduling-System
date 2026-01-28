@@ -1,4 +1,5 @@
-import { Button } from '@rneui/themed';
+import api from '@/api/axiosInstance';
+import { Button, Icon } from '@rneui/themed';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -9,38 +10,30 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
-import api from '@/api/axiosInstance';
-
-import { Icon } from '@rneui/base';
-
-const AddUser = () => {
+const AddLocation = () => {
   const router = useRouter();
 
-  const [full_name, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [role, setRole] = useState('ISA');
+  const [locationName, setName] = useState('');
+  const [category, setCategory] = useState('SCHOOL'); // default SCHOOL
+  const [address, setAddress] = useState('');
 
-  const createUser = async () => {
+  const createLocation = async () => {
     try {
-      const payload = { full_name, email, password, phone, role };
+      const payload = { locationName, category, address };
 
-      const response = await api.post('/auth/register', payload);
+      const response = await api.post('/locations/addLocation', payload);
 
       const data = response.data;
-      console.log(data);
 
-      setEmail('');
-      setFullName('');
-      setPhone('');
-      setRole('ISA');
-      setPassword('');
-      alert('User Created Successfully!');
+      console.log(data);
+      alert('Location Created Successfully!');
+
+      setAddress('');
+      setCategory('SCHOOl');
+      setName('');
     } catch (error) {
       console.log(error);
-      alert('Error creating user.');
+      alert('Error creating location.');
     }
   };
 
@@ -56,53 +49,38 @@ const AddUser = () => {
             size={28}
             onPress={() => router.back()}
           />
-          <Text style={styles.headerTitle}>Add New User</Text>
+          <Text style={styles.headerTitle}>Add New Location</Text>
         </View>
 
-        {/* Card with input fields */}
+        {/* Card */}
         <View style={styles.card}>
-          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.label}>Location Name</Text>
           <TextInput
             style={styles.input}
-            value={full_name}
-            onChangeText={setFullName}
+            value={locationName}
+            onChangeText={setName}
+            placeholder="Enter location name"
           />
 
-          <Text style={styles.label}>Email</Text>
+          <Text style={styles.label}>Category</Text>
           <TextInput
             style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
+            value={category}
+            onChangeText={setCategory}
+            placeholder="SCHOOL or DIVISION"
           />
 
-          <Text style={styles.label}>Password</Text>
+          <Text style={styles.label}>Address</Text>
           <TextInput
             style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          <Text style={styles.label}>Phone</Text>
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-          />
-
-          <Text style={styles.label}>Role</Text>
-          <TextInput
-            style={styles.input}
-            value={role}
-            onChangeText={setRole}
-            placeholder="ISA, ADE, DDE, ZDE, ADMIN"
+            value={address}
+            onChangeText={setAddress}
+            placeholder="Enter address"
           />
 
           <Button
-            title="Create User"
-            onPress={createUser}
+            title="Create Location"
+            onPress={createLocation}
             buttonStyle={styles.button}
           />
         </View>
@@ -143,6 +121,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
   },
+
   label: {
     fontSize: 14,
     fontWeight: '600',
@@ -166,4 +145,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddUser;
+export default AddLocation;

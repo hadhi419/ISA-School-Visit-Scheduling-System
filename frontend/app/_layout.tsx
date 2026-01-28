@@ -14,7 +14,7 @@ export default function RootLayout() {
         <LoadingProvider>
           <Stack
             screenOptions={{
-              headerShown: true,
+              headerShown: false,
               headerRight: () => (
                 <TouchableOpacity
                   onPress={() => router.push('/profile')}

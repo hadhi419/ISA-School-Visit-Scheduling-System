@@ -32,7 +32,8 @@ export const submitMonitoringReport = async (req, res) => {
       actual_duty,
     });
 
-    console.log('Uploaded files:', req.files);
+    //console.log('Uploaded files:', req.files);
+    console.log(location_change_reason);
 
     if (!req.files) {
       return res.status(400).json({ error: 'No files uploaded' });

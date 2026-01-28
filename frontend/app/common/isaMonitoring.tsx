@@ -43,6 +43,9 @@ const ISAMonitoring: FC = () => {
   const [duties, setDuties] = useState<DutyItem[]>([]);
   const [showPicker, setShowPicker] = useState(false);
 
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showWeekPicker, setShowWeekPicker] = useState(false);
+
   type FilterMode = 'DATE' | 'MONTH_WEEK';
 
   const [filterMode, setFilterMode] = useState<FilterMode>('DATE');
@@ -57,6 +60,8 @@ const ISAMonitoring: FC = () => {
 
   const { isLoggedIn } = useAuth();
   const { setLoading } = useLoading();
+
+  const [weeks, setWeeks] = useState<number[]>([]);
 
   const months = [
     'January',
@@ -74,26 +79,31 @@ const ISAMonitoring: FC = () => {
   ];
 
   // Get weeks of the month
-  const getWeeksInMonth = (month: number, year: number) => {
-    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
-    const lastDate = new Date(year, month + 1, 0).getDate();
-    const weeks: number[] = [];
-    let week = 1;
-    for (let date = 1; date <= lastDate; date++) {
-      const dayOfWeek = (firstDay + date - 1) % 7;
-      if (dayOfWeek === 0 && date !== 1) week++;
-      weeks.push(week);
-    }
-    return Array.from(new Set(weeks)); // unique weeks
-  };
+  // Divide month into chunks of 7 days (NOT ISO weeks)
+  const getWeeksInMonth = (month: number, year: number): number[] => {
+    const daysInMonth = new Date(year, month, 0).getDate();
 
+    const totalWeeks = Math.ceil(daysInMonth / 7);
+
+    return Array.from({ length: totalWeeks }, (_, i) => i + 1);
+  };
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
+      return;
     }
-    setSelectedDate(new Date());
+
+    const now = new Date();
+    const monthNumber1to12 = months.indexOf(selectedMonth) + 1;
+    const currentYear = now.getFullYear();
+
+    // Update weeks for month/week mode
+    const newWeeks = getWeeksInMonth(monthNumber1to12, currentYear);
+    setWeeks(newWeeks);
+
+    // Only fetch data when an ISA is selected or filter changes
     fetchData();
-  }, []);
+  }, [selectedIsa, selectedDate, selectedMonth, selectedWeek, filterMode]);
 
   useEffect(() => {
     if (filterMode === 'DATE') {
@@ -347,85 +357,141 @@ const ISAMonitoring: FC = () => {
         </View>
       )}
 
-      {/* Week Filter */}
       {filterMode === 'MONTH_WEEK' && selectedMonth !== null && (
         <>
           {/* Month Filter */}
+          {/* Month Filter */}
           <View style={[styles.filterContainer, { marginTop: 10 }]}>
             <Text style={styles.filterLabel}>Select Month</Text>
-            {Platform.OS === 'web' ? (
-              <select
-                value={selectedMonth}
-                onChange={(e) => {
-                  setSelectedMonth(e.target.value);
-                  setSelectedWeek(null); // reset week when month changes
-                }}
-                style={{
-                  width: '100%',
-                  padding: 12,
-                  fontSize: 16,
-                  borderRadius: 8,
-                  borderColor: '#1976D2',
-                  borderWidth: 2,
-                }}
-              >
-                {months.map((month, idx) => (
-                  <option key={idx} value={month}>
-                    {month}
-                  </option>
-                ))}
-              </select>
+
+            {Platform.OS === 'ios' ? (
+              <>
+                <Pressable
+                  style={styles.iosPickerButton}
+                  onPress={() => setShowMonthPicker(true)}
+                >
+                  <Text style={styles.iosPickerText}>
+                    {selectedMonth ?? '-- Select Month --'}
+                  </Text>
+                </Pressable>
+
+                <Modal
+                  visible={showMonthPicker}
+                  transparent
+                  animationType="slide"
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <Picker
+                        itemStyle={{ color: 'black' }}
+                        selectedValue={selectedMonth}
+                        onValueChange={(val) => {
+                          setSelectedMonth(val);
+                          setSelectedWeek(null);
+                          setShowMonthPicker(false);
+                        }}
+                      >
+                        {months.map((month) => (
+                          <Picker.Item
+                            key={month}
+                            label={month}
+                            value={month}
+                          />
+                        ))}
+                      </Picker>
+
+                      <Pressable
+                        style={styles.doneButton}
+                        onPress={() => setShowMonthPicker(false)}
+                      >
+                        <Text style={styles.doneText}>Done</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+              </>
             ) : (
+              /* Android */
               <Picker
                 selectedValue={selectedMonth}
                 onValueChange={(val) => {
                   setSelectedMonth(val);
                   setSelectedWeek(null);
+                  setShowMonthPicker(false);
                 }}
               >
-                {months.map((month, idx) => (
-                  <Picker.Item key={idx} label={month} value={month} />
+                {months.map((month) => (
+                  <Picker.Item key={month} label={month} value={month} />
                 ))}
               </Picker>
             )}
           </View>
 
+          {/* Week Filter */}
           <View style={[styles.filterContainer, { marginTop: 10 }]}>
             <Text style={styles.filterLabel}>Select Week</Text>
-            {Platform.OS === 'web' ? (
-              <select
-                value={selectedWeek ?? -1}
-                onChange={(e) => setSelectedWeek(Number(e.target.value))}
-                style={{
-                  width: '100%',
-                  padding: 12,
-                  fontSize: 16,
-                  borderRadius: 8,
-                  borderColor: '#1976D2',
-                  borderWidth: 2,
-                }}
-              >
-                <option value={-1}>-- Select Week --</option>
-                {getWeeksInMonth(
-                  monthNameToNumber(selectedMonth),
-                  new Date().getFullYear()
-                ).map((weekNum) => (
-                  <option key={weekNum} value={weekNum}>
-                    Week {weekNum}
-                  </option>
-                ))}
-                ``
-              </select>
+
+            {Platform.OS === 'ios' ? (
+              <>
+                <Pressable
+                  style={styles.iosPickerButton}
+                  onPress={() => setShowWeekPicker(true)}
+                  disabled={!selectedMonth}
+                >
+                  <Text style={styles.iosPickerText}>
+                    {selectedWeek
+                      ? `Week ${selectedWeek}`
+                      : '-- Select Week --'}
+                  </Text>
+                </Pressable>
+
+                <Modal
+                  visible={showWeekPicker}
+                  transparent
+                  animationType="slide"
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <Picker
+                        style={{ height: 220, width: '100%' }}
+                        itemStyle={{ color: 'black' }}
+                        selectedValue={selectedWeek ?? -1}
+                        onValueChange={(val) => {
+                          if (val !== -1) setSelectedWeek(val);
+                          setShowWeekPicker(false);
+                        }}
+                      >
+                        <Picker.Item label="-- Select Week --" value={-1} />
+                        {weeks.map((weekNum) => (
+                          <Picker.Item
+                            key={weekNum}
+                            label={`Week ${weekNum}`}
+                            value={weekNum}
+                          />
+                        ))}
+                      </Picker>
+
+                      <Pressable
+                        style={styles.doneButton}
+                        onPress={() => setShowWeekPicker(false)}
+                      >
+                        <Text style={styles.doneText}>Done</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </Modal>
+              </>
             ) : (
+              /* Android */
               <Picker
                 selectedValue={selectedWeek ?? -1}
-                onValueChange={(val) => setSelectedWeek(Number(val))}
+                onValueChange={(val) => {
+                  setSelectedWeek(Number(val));
+                  setShowWeekPicker(false);
+                }}
               >
                 <Picker.Item label="-- Select Week --" value={-1} />
-                {getWeeksInMonth(
-                  monthNameToNumber(selectedMonth),
-                  new Date().getFullYear()
-                ).map((weekNum) => (
+                {weeks.map((weekNum) => (
                   <Picker.Item
                     key={weekNum}
                     label={`Week ${weekNum}`}

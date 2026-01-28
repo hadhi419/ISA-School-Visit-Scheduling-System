@@ -7,10 +7,10 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get(
+router.post(
   '/pdf',
-  authorizeRoles('ISA', 'ZDE', 'DDE', 'ADE'),
-  generateVisitPdf
+  generateVisitPdf,
+  authorizeRoles('ISA', 'ZDE', 'DDE', 'ADE')
 );
 
 export default router; // ✅ REQUIRED

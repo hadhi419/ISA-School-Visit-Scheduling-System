@@ -135,7 +135,7 @@ const ScheduleDetailPage = ({ route }: any) => {
           type="material"
           color="#fff"
           size={28}
-          onPress={() => router.replace('/zde/zdeDashboard')}
+          onPress={() => router.back()}
         />
         <Text style={styles.headerTitle}>Schedule for {detail.isa_name}</Text>
         <View style={{ width: 28 }} />

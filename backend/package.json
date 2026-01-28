@@ -20,6 +20,7 @@
     "mongoose": "^8.19.3",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.13",
     "nodemon": "^3.1.11",
     "puppeteer": "^24.35.0",
     "sequelize": "^6.37.7",

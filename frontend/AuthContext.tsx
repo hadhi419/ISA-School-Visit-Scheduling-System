@@ -12,6 +12,7 @@ type AuthContextType = {
   loading: boolean;
   login: (token: string) => Promise<void>;
   logout: () => Promise<void>;
+  email: string | null;
 };
 
 type JWTPayload = {
@@ -19,6 +20,7 @@ type JWTPayload = {
   name: string;
   role: Role;
   exp: number;
+  email: string;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -28,6 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [name, setName] = useState<string | null>(null);
   const [role, setRole] = useState<Role>(null);
   const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState<string | null>(null);
 
   const bootstrapAuth = async () => {
     try {
@@ -46,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setRole(decoded.role);
           setId(decoded.id);
           setName(decoded.name);
+          setEmail(decoded.email);
         }
       }
     } catch {
@@ -53,13 +57,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setRole(null);
       setId(null);
       setName(null);
+      setEmail(null);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timeout: number | undefined;
 
     const setupAutoLogout = async () => {
       const token = await AsyncStorage.getItem('token');
@@ -70,16 +75,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const secondsLeft = decoded.exp - now;
 
       if (secondsLeft <= 0) {
-        logout(); // already expired
+        logout();
       } else {
-        timeout = setTimeout(() => logout(), secondsLeft * 1000);
+        timeout = setTimeout(() => {
+          logout();
+        }, secondsLeft * 1000);
       }
     };
 
     setupAutoLogout();
 
     return () => {
-      if (timeout) clearTimeout(timeout);
+      if (timeout !== undefined) {
+        clearTimeout(timeout);
+      }
     };
   }, [role]);
 
@@ -90,9 +99,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const token = await AsyncStorage.getItem('token');
         if (token) {
           const decoded = jwtDecode<JWTPayload>(token);
+          console.log(decoded);
           setRole(decoded.role);
           setId(decoded.id); // Assuming 'exp' is being used as user ID here
           setName(decoded.name);
+          setEmail(decoded.email);
         }
       } catch {
         await AsyncStorage.removeItem('token');
@@ -110,11 +121,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
 
     const decoded = jwtDecode<JWTPayload>(token);
-
+    console.log(decoded);
     setRole(decoded.role);
     setId(decoded.id);
     setName(decoded.name);
     setLoading(false);
+    setEmail(decoded.email);
   };
 
   // 🔹 Logout
@@ -125,6 +137,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setRole(null);
     setId(null);
     setName(null);
+    setEmail(null);
 
     setLoading(false);
   };
@@ -139,6 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         loading,
         login,
         logout,
+        email: email,
       }}
     >
       {children}

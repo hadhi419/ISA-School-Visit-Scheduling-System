@@ -1,6 +1,12 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { createUser, getUserByEmail } from '../models/userModel.js';
+import {
+  createUser,
+  getUserByEmail,
+  getAllUsersModel,
+  editUserModel,
+  changePasswordModel,
+} from '../models/userModel.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -57,6 +63,42 @@ export const loginUser = async (req, res) => {
     );
 
     res.json({ message: 'Login successful', token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await getAllUsersModel();
+
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const editUser = async (req, res) => {
+  try {
+    const { userId, name, email, phone, role } = req.body;
+    console.log('Name ', name);
+    const result = await editUserModel(userId, name, email, phone, role);
+
+    res.json({ message: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    console.log(req.body);
+    const { id, currentPassword, newPassword } = req.body;
+    console.log('Paasss', currentPassword);
+    const result = await changePasswordModel(id, currentPassword, newPassword);
+    console.log('result', result);
+
+    res.json({ result });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

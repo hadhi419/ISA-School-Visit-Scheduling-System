@@ -54,7 +54,17 @@ const MonitoringReportForm: FC = () => {
   const [showDutyPicker, setShowDutyPicker] = useState(false);
 
   const [actualDuty, setActualDuty] = useState<
-    'HNST' | 'EXAM' | 'DEV' | 'EVAL' | 'HOLI' | null
+    | 'HNST'
+    | 'ADVO'
+    | 'ExEv'
+    | 'Office'
+    | 'Parti'
+    | 'Faci'
+    | 'HOLI'
+    | 'PL'
+    | 'Other'
+    | 'NONE'
+    | null
   >(null);
 
   const [locationChangeReason, setLocationChangeReason] = useState('');
@@ -177,6 +187,7 @@ const MonitoringReportForm: FC = () => {
       const formData = new FormData();
       formData.append('visit_id', visitId?.toString() || '');
       formData.append('report_text', observations);
+      //formData.append('reason', locationChangeReason);
       formData.append('status', 'VISITED');
       formData.append(
         'actual_location_id',
@@ -186,7 +197,7 @@ const MonitoringReportForm: FC = () => {
             ? locationParam.toString()
             : ' '
       );
-      formData.append('location_change_reason', 'Summaaaa');
+      formData.append('location_change_reason', locationChangeReason);
       formData.append(
         'actual_duty',
         actualDuty ? actualDuty : duty ? duty : ' '
@@ -318,6 +329,13 @@ const MonitoringReportForm: FC = () => {
         {/* ---------- Show dropdown if changed ---------- */}
         {locationChanged && (
           <View style={{ marginVertical: 10 }}>
+            <Text style={styles.filterLabel}>Reason:</Text>
+            <TextInput
+              style={styles.iosPickerButton}
+              onChangeText={(value) => setLocationChangeReason(value)}
+              value={locationChangeReason} // optional, if you're controlling the input
+            />
+
             {/* Select New Location */}
             <Text style={styles.filterLabel}>Select New Location:</Text>
 
@@ -416,20 +434,51 @@ const MonitoringReportForm: FC = () => {
                           setActualDuty(
                             value as
                               | 'HNST'
-                              | 'EXAM'
-                              | 'DEV'
-                              | 'EVAL'
+                              | 'ADVO'
+                              | 'ExEv'
+                              | 'Office'
+                              | 'Parti'
+                              | 'Faci'
                               | 'HOLI'
+                              | 'PL'
+                              | 'Other'
+                              | 'NONE'
                               | null
                           )
                         }
                       >
+                        {/* | 'HNST'
+                        | 'ADVO'
+                        | 'ExEv'
+                        | 'Office'
+                        | 'Parti'
+                        | 'Faci'
+                        | 'HOLI'
+                        | 'PL'
+                        | 'Other'
+                        > = {
+                        'HNST Visit': 'HNST',
+                        Advocation: 'ADVO',
+                        'External Evaluation': 'ExEv',
+                        'Zone/Division Office': 'Office',
+                        Participate: 'Parti',
+                        Facilitation: 'Faci',
+                        Holiday: 'HOLI',
+                        'Personal Leave': 'PL',
+                        Others: 'Other',*/}
                         <Picker.Item label="-- Select Duty --" value="" />
-                        <Picker.Item label="HNST" value="HNST" />
-                        <Picker.Item label="EXAM" value="EXAM" />
-                        <Picker.Item label="DEV" value="DEV" />
-                        <Picker.Item label="EVAL" value="EVAL" />
-                        <Picker.Item label="HOLI" value="HOLI" />
+                        <Picker.Item label="HNST Visit" value="HNST" />
+                        <Picker.Item label="Advocation" value="ADVO" />
+                        <Picker.Item label="External Evaluatio" value="ExEv" />
+                        <Picker.Item
+                          label="one/Division Office"
+                          value="Office"
+                        />
+                        <Picker.Item label="Participate" value="Parti" />
+                        <Picker.Item label="Facilitation" value="Faci" />
+                        <Picker.Item label="Holiday" value="HOLI" />
+                        <Picker.Item label="personal Leave" value="PL" />
+                        <Picker.Item label="Others" value="Other" />
                       </Picker>
 
                       <Pressable
@@ -448,16 +497,31 @@ const MonitoringReportForm: FC = () => {
                   selectedValue={actualDuty}
                   onValueChange={(value) =>
                     setActualDuty(
-                      value as 'HNST' | 'EXAM' | 'DEV' | 'EVAL' | 'HOLI' | null
+                      value as
+                        | 'HNST'
+                        | 'ADVO'
+                        | 'ExEv'
+                        | 'Office'
+                        | 'Parti'
+                        | 'Faci'
+                        | 'HOLI'
+                        | 'PL'
+                        | 'Other'
+                        | 'NONE'
+                        | null
                     )
                   }
                 >
-                  <Picker.Item label="-- Select Duty --" value={null} />
-                  <Picker.Item label="HNST" value="HNST" />
-                  <Picker.Item label="EXAM" value="EXAM" />
-                  <Picker.Item label="DEV" value="DEV" />
-                  <Picker.Item label="EVAL" value="EVAL" />
-                  <Picker.Item label="HOLI" value="HOLI" />
+                  <Picker.Item label="-- Select Duty --" value="" />
+                  <Picker.Item label="HNST Visit" value="HNST" />
+                  <Picker.Item label="Advocation" value="ADVO" />
+                  <Picker.Item label="External Evaluatio" value="ExEv" />
+                  <Picker.Item label="one/Division Office" value="Office" />
+                  <Picker.Item label="Participate" value="Parti" />
+                  <Picker.Item label="Facilitation" value="Faci" />
+                  <Picker.Item label="Holiday" value="HOLI" />
+                  <Picker.Item label="personal Leave" value="PL" />
+                  <Picker.Item label="Others" value="Other" />
                 </Picker>
               </View>
             )}

@@ -34,7 +34,7 @@ const dutyLabelToType: Record<
   Participate: 'Parti',
   Facilitation: 'Faci',
   Holiday: 'HOLI',
-  'Personal leave': 'PL',
+  'Personal Leave': 'PL',
   Others: 'Other',
 };
 
@@ -118,14 +118,15 @@ const DutySelection = () => {
 
   const handleDutyPress = async (dutyLabel: string) => {
     const dutyType = dutyLabelToType[dutyLabel] || 'HNST';
+    console.log(dutyType);
 
     const month = new Date().toLocaleString('default', { month: 'long' });
 
-    if (dutyType == 'HOLI') {
+    if (dutyType == 'HOLI' || dutyType == 'PL') {
       //console.log('Holiday');
       const searchParams = params;
       const date = searchParams.date ?? '';
-      console.log('srgserehtshtsh', date);
+      console.log('Haaaaaaaaaadhi', date);
 
       const today = new Date();
       const nextMonth = new Date(
@@ -141,7 +142,7 @@ const DutySelection = () => {
           month,
           isa_id: id,
           location_id: null,
-          duty: 'HOLI',
+          duty: dutyType,
           report_text: null,
         },
       ];

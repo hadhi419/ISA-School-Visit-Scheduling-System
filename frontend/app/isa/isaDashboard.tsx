@@ -1,5 +1,6 @@
 import api from '@/api/axiosInstance';
 import { useAuth } from '@/AuthContext';
+import ProfileComponent from '@/components/ProfileComponent';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button } from '@rneui/themed';
 import { router } from 'expo-router';
@@ -8,7 +9,6 @@ import { Modal, Pressable } from 'react-native';
 
 import {
   Dimensions,
-  FlatList,
   Image,
   ScrollView,
   StyleSheet,
@@ -115,26 +115,56 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 10,
   },
+
+  actionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
+
+  actionTitle: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+  },
+
+  actionSub: {
+    marginTop: 6,
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+  },
+  actionGrid: {
+    paddingHorizontal: 16,
+    marginTop: 50,
+  },
 });
 const VISITS_DATA: Visit[] = [
   {
     id: '1',
     location: 'Sundharapuram GTMS',
     time: 'Mon, 10th Nov, 10:00 AM',
-    image:
-      'https://via.placeholder.com/320x180/4C72B0/FFFFFF?text=Sundharapuram',
+    image: require('@/assets/avatar.png'),
   },
   {
     id: '2',
     location: 'Kanagapuram School',
     time: 'Wed, 12th Nov, 11:30 AM',
-    image: 'https://via.placeholder.com/320x180/66BB6A/FFFFFF?text=Kanagapuram',
+    image: require('@/assets/avatar.png'),
   },
   {
     id: '3',
     location: 'New Location Site',
     time: 'Fri, 14th Nov, 2:00 PM',
-    image: 'https://via.placeholder.com/320x180/FFC107/FFFFFF?text=New+Site',
+    image: require('@/assets/avatar.png'),
   },
 ];
 
@@ -171,6 +201,7 @@ const VisitCard: FC<VisitCardProps> = ({ location, time, image }) => (
 const Dashboard: FC<DashboardProps> = () => {
   const [notification, setNotification] = useState<string>('');
   const [showPopup, setShowPopup] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const { name, logout, id, isLoggedIn, role } = useAuth();
   console.log('ISA Dashboard - User Name:', name);
@@ -182,6 +213,7 @@ const Dashboard: FC<DashboardProps> = () => {
     if (role) {
       console.log(false);
     }
+
     console.log(isLoggedIn);
     if (!isLoggedIn) {
       router.replace('/');
@@ -209,16 +241,6 @@ const Dashboard: FC<DashboardProps> = () => {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           {/* <Icon name="menu" type="material" color="#E0E0E0" size={28} /> */}
-          <TouchableOpacity
-            onPress={() => {
-              logout();
-              router.replace('/');
-            }}
-          >
-            <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Good Morning, {name}</Text>
-
           {notification.length > 0 && (
             <TouchableOpacity onPress={() => setShowPopup(true)}>
               <MaterialCommunityIcons
@@ -230,12 +252,27 @@ const Dashboard: FC<DashboardProps> = () => {
             </TouchableOpacity>
           )}
 
-          {/* <Icon name="person" type="material" color="#E0E0E0" size={28} /> */}
+          <Text style={styles.headerTitle}>Good Morning, {name}</Text>
+
+          <MaterialCommunityIcons
+            name="account"
+            size={28}
+            color="#E0E0E0"
+            onPress={() => setShowProfile(true)}
+          />
         </View>
 
-        <Text style={styles.sectionTitle}>Your Upcoming Visits</Text>
+        {/* <Text style={styles.sectionTitle}>Your Upcoming Visits</Text> */}
 
-        <FlatList<Visit>
+        <Modal visible={showProfile} transparent animationType="fade">
+          <View style={popupStyles.overlay}>
+            <View style={popupStyles.popup}>
+              <ProfileComponent onClose={() => setShowProfile(false)} />
+            </View>
+          </View>
+        </Modal>
+
+        {/* <FlatList<Visit>
           data={VISITS_DATA}
           renderItem={({ item }) => <VisitCard {...item} />}
           keyExtractor={(item) => item.id}
@@ -243,21 +280,42 @@ const Dashboard: FC<DashboardProps> = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.visitsCarousel}
           pagingEnabled
-        />
+        /> */}
 
-        <View style={styles.programActions}>
-          <Button
-            title="Advanced Program"
-            buttonStyle={[styles.programBtn, styles.advancedProgram]}
-            titleStyle={[styles.programBtnTitle, styles.darkText]}
+        <View style={styles.actionGrid}>
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: '#ffffff' }]} // Advanced Program color
             onPress={() => router.push('/isa/advancedProgram')}
-          />
-          <Button
-            title="Amended Program"
-            buttonStyle={[styles.programBtn, styles.amendedProgram]}
-            titleStyle={[styles.programBtnTitle, styles.darkText]}
+          >
+            <MaterialCommunityIcons
+              name="school" // choose a relevant icon
+              size={36}
+              color="#cbe105"
+            />
+            <Text style={[styles.actionTitle, { color: '#000000' }]}>
+              Advanced Program
+            </Text>
+            <Text style={[styles.actionSub, { color: '#000000' }]}>
+              View and manage the advanced program
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: '#ffffff' }]} // Amended Program color
             onPress={() => router.push('/isa/amendedProgram')}
-          />
+          >
+            <MaterialCommunityIcons
+              name="file-document-edit" // relevant icon
+              size={36}
+              color="#007c5f"
+            />
+            <Text style={[styles.actionTitle, { color: '#000000' }]}>
+              Submit reports
+            </Text>
+            <Text style={[styles.actionSub, { color: '#000000' }]}>
+              Submit reports for this month
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       <Modal visible={showPopup} transparent animationType="fade">

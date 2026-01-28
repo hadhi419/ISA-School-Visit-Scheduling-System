@@ -15,11 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Buffer } from 'buffer';
-import * as FileSystem from 'expo-file-system/legacy';
-
-import * as Sharing from 'expo-sharing';
-
 interface ISA {
   id: number;
   full_name: string;
@@ -69,9 +64,8 @@ const GenerateISAPdf: FC = () => {
   }, []);
 
   const fetchIsas = async () => {
-    
     const minTime = 500;
-    const start = Date.now(); 
+    const start = Date.now();
     setGlobalLoading(true);
 
     try {
@@ -82,11 +76,9 @@ const GenerateISAPdf: FC = () => {
     } finally {
       const elapsed = Date.now() - start;
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
-      setGlobalLoading(false); 
+      setGlobalLoading(false);
     }
   };
 
@@ -97,8 +89,8 @@ const GenerateISAPdf: FC = () => {
     }
     setLoading(true);
 
-    const minTime = 500; 
-    const start = Date.now(); 
+    const minTime = 500;
+    const start = Date.now();
     setGlobalLoading(true);
 
     try {
@@ -106,38 +98,41 @@ const GenerateISAPdf: FC = () => {
       console.log(selectedMonth);
       const url = `/visits/pdf?isa_id=${selectedIsa}&month=${selectedMonth}&year=${selectedYear}`;
 
-      const response = await api.get(url, {
-        responseType: 'arraybuffer',
-      });
+      const payload = {
+        officer_email: '321mohomedhadhi@gmail.com',
+      };
+      const response = await api.post(url, payload);
 
-      // 🌐 WEB
-      if (Platform.OS === 'web') {
-        const blob = new Blob([response.data], {
-          type: 'application/pdf',
-        });
+      // // 🌐 WEB
+      // if (Platform.OS === 'web') {
+      //   const blob = new Blob([response.data], {
+      //     type: 'application/pdf',
+      //   });
 
-        const fileUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+      //   const fileUrl = window.URL.createObjectURL(blob);
+      //   const link = document.createElement('a');
 
-        link.href = fileUrl;
-        link.download = `ISA_${selectedMonth}_${selectedYear}.pdf`;
-        link.click();
+      //   link.href = fileUrl;
+      //   link.download = `ISA_${selectedMonth}_${selectedYear}.pdf`;
+      //   link.click();
 
-        window.URL.revokeObjectURL(fileUrl);
-        return;
-      }
+      //   window.URL.revokeObjectURL(fileUrl);
+      //   return;
+      // }
 
-      // 📱 ANDROID + IOS
-      const fileUri =
-        FileSystem.cacheDirectory + `ISA_${selectedMonth}_${selectedYear}.pdf`;
+      // // 📱 ANDROID + IOS
+      // const fileUri =
+      //   FileSystem.cacheDirectory + `ISA_${selectedMonth}_${selectedYear}.pdf`;
 
-      const base64 = Buffer.from(response.data).toString('base64');
+      // const base64 = Buffer.from(response.data).toString('base64');
 
-      await FileSystem.writeAsStringAsync(fileUri, base64, {
-        encoding: 'base64',
-      });
+      // await FileSystem.writeAsStringAsync(fileUri, base64, {
+      //   encoding: 'base64',
+      // });
 
-      await Sharing.shareAsync(fileUri);
+      // await Sharing.shareAsync(fileUri);
+      console.log(response.data.message);
+      alert(response.data.message);
     } catch (error) {
       console.error('PDF generation failed', error);
       ///alert('Failed to generate PDF');
@@ -153,13 +148,11 @@ const GenerateISAPdf: FC = () => {
       }
     } finally {
       setLoading(false);
-      const elapsed = Date.now() - start; 
+      const elapsed = Date.now() - start;
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
-      setGlobalLoading(false); 
+      setGlobalLoading(false);
     }
   };
 
