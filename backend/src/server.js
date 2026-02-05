@@ -9,9 +9,13 @@ import visitsRoutes from './routes/visitRoutes.js';
 import approvalRoutes from './routes/approvalRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import visitPdfRoutes from './routes/visitPdfRoutes.js';
-
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Replace __dirname in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Base upload folder
 const uploadBase = path.join(__dirname, 'uploads');
@@ -31,6 +35,8 @@ folders.forEach((folder) => {
     fs.mkdirSync(folderPath, { recursive: true });
   }
 });
+
+console.log('Upload folders are ready!');
 
 const app = express();
 
