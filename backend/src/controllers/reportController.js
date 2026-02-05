@@ -45,18 +45,18 @@ export const submitMonitoringReport = async (req, res) => {
       return res.status(400).json({ error: 'No files uploaded' });
     }
 
-    // // 2️⃣ Save uploaded files to visit_evidence
-    // if (req.files && req.files.length > 0) {
-    //   for (const file of req.files) {
-    //     const fileType = file.mimetype.startsWith('image/') ? 'IMG' : 'DOC'; // map other files to DOC, could add PDF detection
+    // 2️⃣ Save uploaded files to visit_evidence
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const fileType = file.mimetype.startsWith('image/') ? 'IMG' : 'DOC'; // map other files to DOC, could add PDF detection
 
-    //     await addVisitEvidence({
-    //       visit_id,
-    //       file_url: file.path.replace(/\\/g, '/'), // normalize Windows paths
-    //       file_type: fileType,
-    //     });
-    //   }
-    // }
+        await addVisitEvidence({
+          visit_id,
+          file_url: file.path.replace(/\\/g, '/'), // normalize Windows paths
+          file_type: fileType,
+        });
+      }
+    }
 
     // 3️⃣ Fetch the updated visit report with evidence to return
     const report = await getVisitReportById(visit_id);

@@ -9,7 +9,7 @@ export const getAllLocations = async () => {
     FROM locations
   `);
 
-  console.log(rows);
+  //console.log(rows);
   return rows;
 };
 
