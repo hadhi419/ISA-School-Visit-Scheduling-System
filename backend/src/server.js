@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Base upload folder
-const uploadBase = path.join(__dirname, 'uploads');
+export const UPLOAD_BASE = path.join(__dirname, '..', 'uploads');
 
 // Subfolders you want
 const folders = ['documents', 'photos'];
