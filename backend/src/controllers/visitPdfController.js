@@ -422,7 +422,7 @@ ISA Management System`,
 
     res.json({ message: 'PDF generated and emailed successfully' });
   } catch (err) {
-    ////console.error(err);
+    console.error(err);
     res.status(500).json({ error: 'PDF generation failed' });
   }
 };
