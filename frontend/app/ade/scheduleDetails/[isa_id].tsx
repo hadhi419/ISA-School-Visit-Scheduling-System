@@ -51,13 +51,17 @@ const ScheduleDetailPage = ({ route }: any) => {
   const paramsId = params.isa_id;
 
   useEffect(() => {
-    if (paramsId) {
-      console.log('IDDDDDDDDDDDD', paramsId);
-      const parsed = parseInt(paramsId[0], 10);
-      setisa_id(parsed);
-    } else {
-      console.log('IDDDDDDDDDDDD', paramsId);
-    }
+    // //console.log('PARAMMM', paramsId);
+    // if (paramsId) {
+    //   //console.log('IDDDDDDDDDDDD', paramsId);
+    //   const parsed = parseInt(paramsId[0], 10);
+    //   //console.log('Haadhii', paramsId);
+    //   //parseInt(paramsId);
+    //   setisa_id(paramsId);
+    //   //console.log('ISA         : ', isa_id);
+    // } else {
+    //   //console.log('IDDDDDDDDDDDD', paramsId);
+    // }
 
     if (!isLoggedIn) {
       router.replace('/');
@@ -69,12 +73,12 @@ const ScheduleDetailPage = ({ route }: any) => {
         if (token) {
           const decoded = jwtDecode<{ user_Id: number }>(token);
           setUser_Id(decoded.user_Id);
-          console.log('Decoded user_Id:', decoded);
+          //console.log('Decoded user_Id:', decoded);
         }
 
-        console.log('fetchinggg');
+        //console.log('fetchinggg');
         const res = await api.get(`/approvals/visitDetail/${isa_id}`);
-        console.log(res.data.schedule);
+        //console.log(res.data.schedule);
         // Ensure visit_id exists
         res.data.schedule = res.data.schedule.map(
           (item: any, index: number) => ({
@@ -87,13 +91,25 @@ const ScheduleDetailPage = ({ route }: any) => {
 
         setDetail(res.data);
       } catch (err) {
-        console.error(err);
+        //console.error(err);
       } finally {
         setLoading(false);
       }
     };
     fetchDetail();
   }, [isa_id]);
+
+  useEffect(() => {
+    if (!paramsId) return;
+
+    const idStr = Array.isArray(paramsId) ? paramsId[0] : paramsId;
+    const parsedId = Number(idStr);
+
+    if (!Number.isNaN(parsedId)) {
+      setisa_id(parsedId);
+      //console.log('ISA ID:', parsedId);
+    }
+  }, [paramsId]);
 
   const handleApprove = async () => {
     if (!detail) return;
@@ -113,7 +129,7 @@ const ScheduleDetailPage = ({ route }: any) => {
         Alert.alert('Error', data.message || 'Failed to approve schedule.');
       }
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       Alert.alert('Error', 'Server error while approving schedule.');
     } finally {
       setActionLoading(false);
@@ -135,7 +151,7 @@ const ScheduleDetailPage = ({ route }: any) => {
         Alert.alert('Error', data.message || 'Failed to request revisions.');
       }
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       Alert.alert('Error', 'Server error while requesting revisions.');
     } finally {
       setActionLoading(false);
@@ -162,7 +178,7 @@ const ScheduleDetailPage = ({ route }: any) => {
         );
       }
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       Alert.alert('Error', 'Server error while requesting revisions.');
     } finally {
       setActionLoading(false);

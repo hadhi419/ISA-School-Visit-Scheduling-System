@@ -40,16 +40,16 @@ const dutyLabelToType: Record<
 
 const DutySelection = () => {
   const params = useLocalSearchParams();
-  //console.log(params.date);
+  ////console.log(params.date);
   const date = params.date ?? '';
 
   const { id, isLoggedIn } = useAuth();
   const { setLoading } = useLoading();
   const edit = params.edit === 'true'; // now edit is a proper boolean
 
-  // console.log('edit:', edit);
+  // //console.log('edit:', edit);
 
-  //console.log('params: duty : ', params);
+  ////console.log('params: duty : ', params);
 
   const { addEvent } = useSchedule();
 
@@ -72,10 +72,10 @@ const DutySelection = () => {
   ];
 
   const handleDeletePress = async () => {
-    //console.log('Holiday');
+    ////console.log('Holiday');
 
     const date = params.date ?? '';
-    console.log(date);
+    //console.log(date);
 
     const today = new Date();
     const nextMonth = new Date(
@@ -90,7 +90,7 @@ const DutySelection = () => {
       month,
       isa_id: 5,
     };
-    console.log('Payload for delete:', payload);
+    //console.log('Payload for delete:', payload);
     const minTime = 300;
     const start = Date.now();
     setLoading(true);
@@ -105,7 +105,7 @@ const DutySelection = () => {
       }
       return router.navigate('/isa/advancedProgram');
     } catch (err) {
-      console.error('Error deleting visit', err);
+      //console.error('Error deleting visit', err);
       alert('Failed to delete schedule');
     } finally {
       const elapsed = Date.now() - start; // NEW
@@ -118,15 +118,15 @@ const DutySelection = () => {
 
   const handleDutyPress = async (dutyLabel: string) => {
     const dutyType = dutyLabelToType[dutyLabel] || 'HNST';
-    console.log(dutyType);
+    //console.log(dutyType);
 
     const month = new Date().toLocaleString('default', { month: 'long' });
 
     if (dutyType == 'HOLI' || dutyType == 'PL') {
-      //console.log('Holiday');
+      ////console.log('Holiday');
       const searchParams = params;
       const date = searchParams.date ?? '';
-      console.log('Haaaaaaaaaadhi', date);
+      //console.log('Haaaaaaaaaadhi', date);
 
       const today = new Date();
       const nextMonth = new Date(
@@ -146,7 +146,7 @@ const DutySelection = () => {
           report_text: null,
         },
       ];
-      console.log('Payload for edit:', payload);
+      //console.log('Payload for edit:', payload);
 
       const minTime = 300;
       const start = Date.now();
@@ -156,7 +156,7 @@ const DutySelection = () => {
         await api.post('visits', payload);
         return router.navigate('/isa/advancedProgram');
       } catch (err) {
-        console.error('Error saving HOLI visit', err);
+        //console.error('Error saving HOLI visit', err);
         alert('Failed to save schedule');
       } finally {
         const elapsed = Date.now() - start; // NEW
@@ -168,8 +168,8 @@ const DutySelection = () => {
         setLoading(false); // NEW
       }
     }
-    // console.log('Selected duty:', dutyType);
-    // console.log('isEdit dutySelection:', edit);
+    // //console.log('Selected duty:', dutyType);
+    // //console.log('isEdit dutySelection:', edit);
 
     router.push({
       pathname: '/isa/locationSelection',

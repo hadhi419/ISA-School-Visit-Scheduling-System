@@ -133,34 +133,34 @@ const ISAMonitoring: FC = () => {
 
     try {
       if (!selectedIsa || selectedIsa == -1 || selectedIsa == 0) {
-        //console.log(selectedMonth);
+        ////console.log(selectedMonth);
 
         const date = formatDateToYMD(selectedDate);
-        console.log('date', selectedDate);
+        //console.log('date', selectedDate);
         const response = await api.get(
           `/visits/isa?isa_id=${selectedIsa}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
         );
         setDuties(response.data.data);
 
-        console.log('daaaaaaaata', response.data.data);
-        //console.log('Duties', duties);
+        //console.log('daaaaaaaata', response.data.data);
+        ////console.log('Duties', duties);
       } else {
-        // console.log(selectedMonth);
-        console.log('date', selectedDate);
+        // //console.log(selectedMonth);
+        //console.log('date', selectedDate);
 
         const date = formatDateToYMD(selectedDate);
         const response = await api.get(
           `/visits/isa?isa_id=${selectedIsa}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
         );
         setDuties(response.data.data);
-        console.log('Daaaaaaata', response.data.data);
+        //console.log('Daaaaaaata', response.data.data);
       }
 
       const isaResponse = await api.get(`/visits/isaDetails`);
 
       setIsas(isaResponse.data);
     } catch (err) {
-      console.error('Error fetching ISA monitoring data', err);
+      //console.error('Error fetching ISA monitoring data', err);
     } finally {
       const elapsed = Date.now() - start; // ADDED
       if (elapsed < minTime) {
@@ -174,7 +174,7 @@ const ISAMonitoring: FC = () => {
   };
 
   useEffect(() => {
-    console.log('Monthhhh', selectedMonth);
+    //console.log('Monthhhh', selectedMonth);
     if (!selectedIsa || selectedIsa === -1) {
       fetchData();
       setDuties([]);
@@ -182,7 +182,7 @@ const ISAMonitoring: FC = () => {
     }
     fetchData();
 
-    console.log(selectedMonth);
+    //console.log(selectedMonth);
   }, [selectedIsa, selectedDate, selectedMonth, selectedWeek]);
 
   const renderHeader = () => (
@@ -315,7 +315,10 @@ const ISAMonitoring: FC = () => {
                 width: '100%',
               }}
               value={selectedDate ? (formatDateToYMD(selectedDate) ?? '') : ''}
-              onChange={(e) => setSelectedDate(new Date(e.target.value))}
+              onChange={(e) => {
+                setSelectedDate(new Date(e.target.value));
+                setSelectedMonth(' ');
+              }}
             />
           ) : (
             <>
@@ -337,7 +340,10 @@ const ISAMonitoring: FC = () => {
                 date={selectedDate ?? new Date()}
                 onDismiss={() => setDatePickerVisible(false)}
                 onConfirm={({ date }) => {
-                  if (date) setSelectedDate(date);
+                  if (date) {
+                    setSelectedDate(date);
+                    setSelectedMonth('');
+                  }
                   setDatePickerVisible(false);
                 }}
               />

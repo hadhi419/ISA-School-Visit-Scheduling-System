@@ -15,7 +15,7 @@ export const submitVisitReport = async ({
   actual_duty = null,
 }) => {
   if (isNaN(actual_location_id)) {
-    console.log(actual_location_id);
+    ////console.log(actual_location_id);
     const [rows] = await db.query(`SELECT id from locations where name = ?`, [
       actual_location_id,
     ]);
@@ -23,10 +23,10 @@ export const submitVisitReport = async ({
   }
 
   if (!actual_duty) {
-    console.log('hadhi');
+    ////console.log('hadhi');
   }
 
-  console.log('Hehe hooo', actual_location_id);
+  ////console.log('Hehe hooo', actual_location_id);
   // Get planned location
   const [rows] = await db.query(
     `SELECT location_id, duty FROM visits WHERE id = ?`,
@@ -34,12 +34,12 @@ export const submitVisitReport = async ({
   );
 
   const visit = rows[0]; // the first row
-  console.log(visit.location_id, visit.duty);
+  ////console.log(visit.location_id, visit.duty);
 
   // Decide whether location really changed
   const isLocationChanged =
     actual_location_id && Number(actual_location_id) !== visit.location_id;
-  console.log(actual_duty);
+  ////console.log(actual_duty);
   await db.query(
     `
     UPDATE visits

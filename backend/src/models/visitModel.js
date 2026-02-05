@@ -1,7 +1,7 @@
 import db from '../config/db.js';
 export const postVisits = async (visitsArray) => {
   try {
-    console.log(visitsArray);
+    //////console.log(visitsArray);
     if (!Array.isArray(visitsArray) || visitsArray.length === 0) {
       return { error: 'Visits array is required' };
     }
@@ -76,7 +76,7 @@ export const postVisits = async (visitsArray) => {
           formattedDate, // now uses the correct month from POST
         ]);
       } catch (err) {
-        console.warn('Invalid visit_date, skipping', visit_date);
+        ////console.warn('Invalid visit_date, skipping', visit_date);
         continue;
       }
     }
@@ -106,14 +106,14 @@ export const postVisits = async (visitsArray) => {
       flatValues
     );
 
-    console.log(result);
+    //////console.log(result);
 
     return {
       message: `${result.affectedRows} visit(s) saved successfully`,
       duplicates: values.length - result.affectedRows,
     };
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     return { error: 'Server error' };
   }
 };
@@ -135,7 +135,7 @@ export const fetchVisits = async (month, isa_id) => {
 
     return rows;
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     return { error: 'Server error' };
   }
 };
@@ -148,26 +148,26 @@ export const submitVisits = async (month, isa_id) => {
        WHERE month = ? AND isa_id = ?`,
       [month, isa_id]
     );
-    console.log(result);
+    ////console.log(result);
     return `${result.affectedRows} visit(s) submitted successfully`;
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     return 'Failed to submit visits';
   }
 };
 
 export const deleteVisits = async (date, month, isa_id) => {
   try {
-    console.log(date, month, isa_id);
+    ////console.log(date, month, isa_id);
     const [result] = await db.query(
       `delete from visits 
        WHERE visit_date = ? AND month = ? AND isa_id = ?`,
       [date, month, isa_id]
     );
-    console.log(result.warningStatus);
+    ////console.log(result.warningStatus);
     return `${result.affectedRows} visit(s) deleted successfully`;
   } catch (err) {
-    console.error('erroooorrr', err);
+    ////console.error('erroooorrr', err);
     return err;
   }
 };
@@ -188,7 +188,7 @@ export const checkEditPermissionForMonth = async (month, isa_id) => {
     // If any row is locked → cannot edit
     return rows[0].lockedCount === 0;
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     throw err;
   }
 };
@@ -199,10 +199,10 @@ export const fetchVisitsByIsa = async (
   month = null,
   week = null
 ) => {
-  console.log(isa_id);
-  console.log(date);
-  console.log(month);
-  console.log(week);
+  ////console.log(isa_id);
+  ////console.log(date);
+  ////console.log(month);
+  ////console.log(week);
 
   try {
     const query = `
@@ -228,7 +228,7 @@ export const fetchVisitsByIsa = async (
       ORDER BY v.date ASC
     `;
 
-    //console.log(query, [isa_id, isa_id, date, date, month, month, week, week]);
+    //////console.log(query, [isa_id, isa_id, date, date, month, month, week, week]);
 
     const [rows] = await db.execute(query, [
       isa_id || null,
@@ -241,11 +241,11 @@ export const fetchVisitsByIsa = async (
       week || null,
     ]);
 
-    //console.log(rows);
+    //////console.log(rows);
 
     return rows;
   } catch (err) {
-    console.error('Error fetching visits by ISA:', err);
+    ////console.error('Error fetching visits by ISA:', err);
     throw err;
   }
 };
@@ -253,10 +253,10 @@ export const fetchVisitsByIsa = async (
 // Fetch visits filtered by Location
 export const fetchVisitsByLocation = async (location_id, date, month, week) => {
   try {
-    console.log('l', location_id);
-    console.log('d', date);
-    console.log('m', month);
-    console.log('w', week);
+    ////console.log('l', location_id);
+    ////console.log('d', date);
+    ////console.log('m', month);
+    ////console.log('w', week);
 
     const query = `
       SELECT v.id, v.visit_date AS date, v.month,
@@ -282,7 +282,7 @@ export const fetchVisitsByLocation = async (location_id, date, month, week) => {
       week || null,
     ]);
 
-    console.log(rows);
+    ////console.log(rows);
     return rows;
   } catch (err) {
     throw new Error(err);

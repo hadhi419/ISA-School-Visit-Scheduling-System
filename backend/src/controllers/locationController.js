@@ -6,7 +6,10 @@ import {
 
 export const fetchLocations = async (req, res) => {
   try {
+    console.log('coming');
     const locations = await getAllLocations();
+    console.log('going');
+
     res.json({ locations });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -17,7 +20,7 @@ export const addLocation = async (req, res) => {
   try {
     const { locationName, category, address } = req.body;
 
-    console.log(address);
+    ////console.log(address);
 
     const response = await addLocationModel(locationName, category, address);
     res.json({ response });
@@ -30,7 +33,7 @@ export const editLocation = async (req, res) => {
   try {
     const { editLocation, name, category, address } = req.body;
 
-    console.log(address);
+    ////console.log(address);
 
     const response = await editLocationModel(
       editLocation,

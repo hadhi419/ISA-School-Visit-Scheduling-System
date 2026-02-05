@@ -306,12 +306,12 @@ const AdvancedProgram: FC = () => {
         `/visits/month/${nextMonth}/${id}/edit-permission`
       );
 
-      console.log('Haaaaaaaaaadhi', response.data);
+      //console.log('Haaaaaaaaaadhi', response.data);
 
       const canEditValue = canEditResponse.data.canEdit as boolean;
       setCanEdit(canEditValue);
 
-      console.log('Can Edit Response:', canEditResponse.data);
+      //console.log('Can Edit Response:', canEditResponse.data);
 
       const remoteEvents: ScheduledEvent[] = response.data.visits.map(
         (item: any) => ({
@@ -321,11 +321,11 @@ const AdvancedProgram: FC = () => {
         })
       );
 
-      console.log('Remoooote', remoteEvents);
+      //console.log('Remoooote', remoteEvents);
 
       setRemoteData(remoteEvents);
     } catch (error) {
-      console.error('Error fetching advanced program:', error);
+      //console.error('Error fetching advanced program:', error);
     } finally {
       const elapsed = Date.now() - start;
       if (elapsed < minTime) {
@@ -365,7 +365,7 @@ const AdvancedProgram: FC = () => {
         });
         alert('Monthly schedule submitted successfully!');
       } catch (err) {
-        console.error(err);
+        //console.error(err);
         alert('Failed to submit monthly schedule.');
       } finally {
         await fetchData(); // keep your existing call
@@ -468,14 +468,14 @@ const AdvancedProgram: FC = () => {
         }
       });
       const uniquePayloads = Array.from(payloadMap.values());
-      console.log('Payload to be sent:', uniquePayloads);
+      //console.log('Payload to be sent:', uniquePayloads);
       if (uniquePayloads.length === 0) return alert('No new visits to save.');
       await api.post('/visits', uniquePayloads);
       alert('✅ Schedule saved to the database!');
       // fetchMonthVisits(nextMonthName);
       //fetchMonthVisits(monthToFetch);
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       alert('Failed to save schedule.');
     }
   };
@@ -527,7 +527,7 @@ const AdvancedProgram: FC = () => {
       }));
   }
 
-  console.log('Data to be shown in card view:', dataToBeShownInCard);
+  //console.log('Data to be shown in card view:', dataToBeShownInCard);
 
   return (
     <SafeAreaView style={styles.container}>

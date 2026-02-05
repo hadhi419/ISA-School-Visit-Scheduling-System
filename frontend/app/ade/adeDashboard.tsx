@@ -22,8 +22,6 @@ import { useLoading } from '../../LoadingContext';
 // Images
 const SUPERVISOR_IMAGE = require('@/assets/avatar.png');
 
-const FOOTER_LOGO = { uri: 'https://via.placeholder.com/20' };
-
 interface VisitResponseItem {
   isa_id: number;
   isa_name: string;
@@ -34,7 +32,7 @@ interface VisitResponseItem {
 const getStatusProps = (status: string) => {
   if (status === 'PENDING') {
     return { icon: 'hourglass', color: '#ff9800', label: 'Pending Approval' };
-  } else if (status === 'ADE_APPROVED') {
+  } else if (status === 'ADE_APPROVED' || status === 'DDE_APPROVED') {
     return { icon: 'check-circle', color: '#38c172', label: 'Approved' };
   } else {
     return { icon: 'pencil', color: '#f5c407', label: 'In Process' };
@@ -71,7 +69,7 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   const handleCardPress = () => {
     if (!isClickable) return;
 
-    //console.log('IDDDDDDDDDDD', visit.isa_id);
+    ////console.log('IDDDDDDDDDDD', visit.isa_id);
     router.push(`./scheduleDetails/${visit.isa_id}`);
   };
 
@@ -123,7 +121,7 @@ const HigherOfficialDashboard = () => {
       await AsyncStorage.removeItem('token'); // Clear the token
       router.replace('/'); // Redirect to root page
     } catch (err) {
-      console.error('Error during logout', err);
+      //console.error('Error during logout', err);
     }
   };
 
@@ -136,12 +134,18 @@ const HigherOfficialDashboard = () => {
       const start = Date.now();
       setLoading(true);
 
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+      const monthName = nextMonth.toLocaleString('default', { month: 'long' });
+      //console.log(monthName);
+
       try {
-        const res = await api.get('/approvals?month=February');
-        console.log('Loaded data:', res);
+        const res = await api.get(`/approvals?month=${monthName}`);
+        //console.log('Loaded data:', res);
         setVisits(res.data.visits);
       } catch (err) {
-        console.error('Error loading data', err);
+        //console.error('Error loading data', err);
       } finally {
         const elapsed = Date.now() - start;
         if (elapsed < minTime) {

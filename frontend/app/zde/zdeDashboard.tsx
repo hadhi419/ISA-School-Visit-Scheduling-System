@@ -129,10 +129,10 @@ const HigherOfficialDashboard = () => {
 
       try {
         const res = await api.get('/approvals?month=February');
-        console.log('Loaded data:', res);
+        //console.log('Loaded data:', res);
         setVisits(res.data.visits);
       } catch (err) {
-        console.error('Error loading data', err);
+        //console.error('Error loading data', err);
       } finally {
         const elapsed = Date.now() - start;
         if (elapsed < minTime) {
@@ -146,7 +146,7 @@ const HigherOfficialDashboard = () => {
 
     loadData();
 
-    console.log(id);
+    //console.log(id);
   }, []);
 
   const router = useRouter();

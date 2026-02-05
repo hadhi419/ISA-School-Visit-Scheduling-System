@@ -15,18 +15,18 @@ import { ScheduleType, useSchedule } from '../../isa/context/ScheduleContext';
 
 import { useAuth } from '@/AuthContext';
 import api from '../../api/axiosInstance';
-import { useLoading } from '../../LoadingContext'; 
+import { useLoading } from '../../LoadingContext';
 
 const API_URL = '/locations';
 
 const LocationSelection = () => {
   const params = useLocalSearchParams();
-  // console.log(params);
+  // //console.log(params);
   const date = params.date ?? '';
   const dutyP = params.duty ?? '';
   const isEdit = params.isEdit;
   const edit = isEdit === 'true';
-  //console.log('isEdit param location:', isEdit);
+  ////console.log('isEdit param location:', isEdit);
 
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null
@@ -45,9 +45,9 @@ const LocationSelection = () => {
       router.replace('/');
     }
     const fetchLocations = async () => {
-      const minTime = 300; 
-      const start = Date.now(); 
-      setGlobalLoading(true); 
+      const minTime = 300;
+      const start = Date.now();
+      setGlobalLoading(true);
 
       try {
         const res = await api.get(API_URL);
@@ -57,17 +57,17 @@ const LocationSelection = () => {
             name: loc.name,
           })) || [];
 
-        console.log('Fetched locations:', fetched);
+        //console.log('Fetched locations:', fetched);
 
         setLocations(fetched);
-        console.log('debugging');
+        //console.log('debugging');
 
-        console.log(locations);
+        //console.log(locations);
 
-        console.log('debugging');
-        console.log(edit);
+        //console.log('debugging');
+        //console.log(edit);
       } catch (err) {
-        console.error(err);
+        //console.error(err);
         Alert.alert('Error', 'Failed to fetch locations from server');
       } finally {
         setLoading(false);
@@ -76,15 +76,15 @@ const LocationSelection = () => {
           await new Promise((resolve) =>
             setTimeout(resolve, minTime - elapsed)
           );
+        }
+        setGlobalLoading(false);
       }
-      setGlobalLoading(false);
-     }
     };
 
     fetchLocations();
   }, []);
 
-   const handleChoose = async () => {
+  const handleChoose = async () => {
     if (!selectedLocationId) return;
     const today = new Date();
     const nextMonth = new Date(
@@ -105,7 +105,7 @@ const LocationSelection = () => {
       },
     ];
 
-    console.log('Payload for edit:', payload);
+    //console.log('Payload for edit:', payload);
 
     const minTime = 2000; // ADDED
     const start = Date.now(); // ADDED
@@ -114,14 +114,12 @@ const LocationSelection = () => {
     try {
       await api.post('visits', payload);
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       Alert.alert('Error', 'Failed to save visit');
     } finally {
       const elapsed = Date.now() - start; // ADDED
       if (elapsed < minTime) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, minTime - elapsed)
-        );
+        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
       }
       setGlobalLoading(false); // ADDED
     }

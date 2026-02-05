@@ -24,7 +24,7 @@ const Login: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'http://172.20.10.3:5000/api/auth/login',
+        'https://isa-school-visit-scheduling-system.onrender.com/api/auth/login',
         {
           email,
           password,
@@ -32,7 +32,7 @@ const Login: React.FC = () => {
       );
 
       const { token } = response.data;
-      console.log('Received token:', token);
+      //console.log('Received token:', token);
 
       const decoded: any = jwtDecode(token);
       const userRole = decoded.role;
@@ -63,7 +63,7 @@ const Login: React.FC = () => {
           return;
       }
     } catch (err: any) {
-      console.log(err.response?.data || err.message);
+      //console.log(err.response?.data || err.message);
       Alert.alert(
         'Login Failed',
         err.response?.data?.error || 'Something went wrong'

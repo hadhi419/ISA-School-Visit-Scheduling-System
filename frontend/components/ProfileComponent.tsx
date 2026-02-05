@@ -41,7 +41,7 @@ export default function ProfileComponent({ onClose }: Props) {
       });
 
       alert(response.data.result);
-      console.log(response.data);
+      //console.log(response.data);
       if (response.data.result === 'Password has been changed successfully') {
         setModalVisible(false);
       }
@@ -49,7 +49,7 @@ export default function ProfileComponent({ onClose }: Props) {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       alert('Failed to change password.');
     } finally {
       setLoading(false);

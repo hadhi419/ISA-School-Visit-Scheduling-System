@@ -45,18 +45,11 @@ const ScheduleDetailPage = ({ route }: any) => {
   const { id, isLoggedIn } = useAuth();
 
   const params = useLocalSearchParams();
-  const paramId = params.isa_id;
+  const paramsId = params.isa_id;
 
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
-    }
-    if (paramId) {
-      //console.log('IDDDDDDDDDDDD', paramId);
-      const parsed = parseInt(paramId[0], 10);
-      setisa_id(parsed);
-    } else {
-      //console.log('IDDDDDDDDDDDD', paramId);
     }
 
     const fetchDetail = async () => {
@@ -73,7 +66,7 @@ const ScheduleDetailPage = ({ route }: any) => {
 
         setDetail(json);
       } catch (err) {
-        console.error(err);
+        //console.error(err);
       } finally {
         setLoading(false);
       }
@@ -81,6 +74,18 @@ const ScheduleDetailPage = ({ route }: any) => {
 
     fetchDetail();
   }, [isa_id]);
+
+  useEffect(() => {
+    if (!paramsId) return;
+
+    const idStr = Array.isArray(paramsId) ? paramsId[0] : paramsId;
+    const parsedId = Number(idStr);
+
+    if (!Number.isNaN(parsedId)) {
+      setisa_id(parsedId);
+      //console.log('ISA ID:', parsedId);
+    }
+  }, [paramsId]);
 
   const handleApprove = async () => {
     setActionLoading(true);

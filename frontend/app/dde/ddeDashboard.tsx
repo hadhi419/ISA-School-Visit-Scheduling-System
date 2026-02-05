@@ -60,7 +60,7 @@ const StatusItem = ({
 
 const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   const { status, scheduleSubmitted, isa_name, isa_id } = visit;
-  console.log(status);
+  //console.log(status);
   const { icon, color, label } = getStatusProps(status);
 
   // Only Pending Approval cards are clickable
@@ -69,7 +69,7 @@ const EmployeeStatusCard = ({ visit }: { visit: VisitResponseItem }) => {
   const router = useRouter();
 
   const handleCardPress = () => {
-    console.log(visit.isa_id);
+    //console.log(visit.isa_id);
     if (!isClickable) return;
     router.push(`./scheduleDetails/${visit.isa_id}`);
   };
@@ -149,12 +149,18 @@ const HigherOfficialDashboard = () => {
       const start = Date.now();
       setLoading(true);
 
-      try {
-        const res = await api.get('/approvals?month=February');
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
 
+      const monthName = nextMonth.toLocaleString('default', { month: 'long' });
+      //console.log('MONTHHH', monthName);
+
+      try {
+        const res = await api.get(`/approvals?month=${monthName}`);
+        //console.log(visits);
         setVisits(res.data.visits);
       } catch (err) {
-        console.error('Error loading data', err);
+        //console.error('Error loading data', err);
       } finally {
         const elapsed = Date.now() - start; // ADDED
         if (elapsed < minTime) {
@@ -174,7 +180,7 @@ const HigherOfficialDashboard = () => {
       await AsyncStorage.removeItem('token'); // Clear the token
       router.replace('/'); // Redirect to root page
     } catch (err) {
-      console.error('Error during logout', err);
+      //console.error('Error during logout', err);
     }
   };
 

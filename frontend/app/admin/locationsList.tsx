@@ -42,7 +42,7 @@ const LocationsList = () => {
       const res = await api.get('/locations');
       setLocations(res.data.locations);
     } catch (err) {
-      console.log(err);
+      //console.log(err);
       alert('Error fetching locations.');
     } finally {
       setLoading(false);
@@ -87,7 +87,7 @@ const LocationsList = () => {
       setShowModal(false);
       fetchLocations();
     } catch (err) {
-      console.log(err);
+      //console.log(err);
       alert('Error updating location.');
     }
   };

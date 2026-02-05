@@ -58,7 +58,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
   // Fetch all visits for a month (both approved and unapproved)
   const fetchMonthVisits = async (month: string) => {
     try {
-      console.log(`📡 Fetching all visit data for ${month}...`);
+      //console.log(`📡 Fetching all visit data for ${month}...`);
       const response = await api.get(`visits/month/${month}${id}`);
       const visits = response.data.visits;
 
@@ -76,19 +76,19 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
           const filteredPrev = prev.filter((e) => e.month !== month);
           return [...filteredPrev, ...formatted];
         });
-        console.log('✅ All visits loaded for month:', month, formatted);
+        //console.log('✅ All visits loaded for month:', month, formatted);
       } else {
-        console.warn('Unexpected response format:', response.data);
+        //console.warn('Unexpected response format:', response.data);
       }
     } catch (error) {
-      console.error('❌ Failed to fetch visits:', error);
+      //console.error('❌ Failed to fetch visits:', error);
     }
   };
 
   // Fetch only approved visits for a month
   const fetchMonthVisitsApproved = async (month: string) => {
     try {
-      console.log(`📡 Fetching approved visit data for ${month}...`);
+      //console.log(`📡 Fetching approved visit data for ${month}...`);
       const response = await api.get(`/visits/approved/month/${month}`);
       const visits = response.data.visits;
 
@@ -106,12 +106,12 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
           const filteredPrev = prev.filter((e) => e.month !== month);
           return [...filteredPrev, ...formatted];
         });
-        console.log('✅ Approved visits loaded for month:', month, formatted);
+        //console.log('✅ Approved visits loaded for month:', month, formatted);
       } else {
-        console.warn('Unexpected response format:', response.data);
+        //console.warn('Unexpected response format:', response.data);
       }
     } catch (error) {
-      console.error('❌ Failed to fetch approved visits:', error);
+      //console.error('❌ Failed to fetch approved visits:', error);
     }
   };
 

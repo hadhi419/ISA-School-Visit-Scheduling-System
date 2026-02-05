@@ -53,7 +53,7 @@ const GenerateISAPdf: FC = () => {
   const [showIsaPicker, setShowIsaPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, email } = useAuth();
   const { setLoading: setGlobalLoading } = useLoading();
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const GenerateISAPdf: FC = () => {
       const res = await api.get('/visits/isaDetails');
       setIsas(res.data);
     } catch (err) {
-      console.error('Error loading ISAs', err);
+      //console.error('Error loading ISAs', err);
     } finally {
       const elapsed = Date.now() - start;
       if (elapsed < minTime) {
@@ -94,12 +94,12 @@ const GenerateISAPdf: FC = () => {
     setGlobalLoading(true);
 
     try {
-      console.log(selectedIsa);
-      console.log(selectedMonth);
+      //console.log(selectedIsa);
+      //console.log(selectedMonth);
       const url = `/visits/pdf?isa_id=${selectedIsa}&month=${selectedMonth}&year=${selectedYear}`;
 
       const payload = {
-        officer_email: '321mohomedhadhi@gmail.com',
+        officer_email: email,
       };
       const response = await api.post(url, payload);
 
@@ -131,10 +131,11 @@ const GenerateISAPdf: FC = () => {
       // });
 
       // await Sharing.shareAsync(fileUri);
-      console.log(response.data.message);
+      //console.log(response.data.message);
       alert(response.data.message);
+      
     } catch (error) {
-      console.error('PDF generation failed', error);
+      //console.error('PDF generation failed', error);
       ///alert('Failed to generate PDF');
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 404) {

@@ -181,7 +181,7 @@ const AmmendedProgram: FC = () => {
 
   useEffect(() => {
     const number = pendingReportsCount;
-    console.log(number);
+    //console.log(number);
     if (!isLoggedIn) {
       router.replace('/');
     }
@@ -198,7 +198,7 @@ const AmmendedProgram: FC = () => {
         ).toLocaleString('default', { month: 'long' });
 
         const response = await api.get(`/visits/month/${nextMonth}/${id}`);
-        console.log(response);
+        //console.log(response);
         const remoteEvents: ScheduledEvent[] = response.data.visits.map(
           (item: any) => ({
             id: item.id,
@@ -209,10 +209,10 @@ const AmmendedProgram: FC = () => {
           })
         );
 
-        console.log('Fetched amended program data:', remoteEvents);
+        //console.log('Fetched amended program data:', remoteEvents);
         setRemoteData(remoteEvents);
       } catch (err) {
-        console.error('Failed to fetch visits', err);
+        //console.error('Failed to fetch visits', err);
       } finally {
         const elapsed = Date.now() - start; // ADD
         if (elapsed < minTime) {
@@ -257,7 +257,7 @@ const AmmendedProgram: FC = () => {
 
           setRemoteData(remoteEvents);
         } catch (err) {
-          console.error('Failed to fetch visits on focus', err);
+          //console.error('Failed to fetch visits on focus', err);
         } finally {
           const elapsed = Date.now() - start; // ADD
           if (elapsed < minTime) {
@@ -318,7 +318,7 @@ const AmmendedProgram: FC = () => {
 
     const submittedStatuses: ScheduledEvent['status'][] = ['VISITED'];
 
-    console.log(calendarData);
+    //console.log(calendarData);
 
     return calendarData.filter((day) => {
       if (day.date === 0) return false; // skip padding
@@ -342,7 +342,7 @@ const AmmendedProgram: FC = () => {
     duty: ScheduleType
   ) => {
     const current_year = new Date().getFullYear();
-    console.log(location);
+    //console.log(location);
 
     router.push({
       pathname: '/isa/submitReport',

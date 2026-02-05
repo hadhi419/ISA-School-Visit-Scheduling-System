@@ -175,7 +175,7 @@ const VISITS_DATA: Visit[] = [
 //     logout();
 //     router.replace('/'); // Redirect to root page
 //   } catch (err) {
-//     console.error('Error during logout', err);
+//     //console.error('Error during logout', err);
 //   }
 // };
 
@@ -204,17 +204,17 @@ const Dashboard: FC<DashboardProps> = () => {
   const [showProfile, setShowProfile] = useState(false);
 
   const { name, logout, id, isLoggedIn, role } = useAuth();
-  console.log('ISA Dashboard - User Name:', name);
+  //console.log('ISA Dashboard - User Name:', name);
 
   const { setLoading } = useLoading();
   //const [Notifications, setNotifications] = useState<string>('');
 
   useEffect(() => {
     if (role) {
-      console.log(false);
+      //console.log(false);
     }
 
-    console.log(isLoggedIn);
+    //console.log(isLoggedIn);
     if (!isLoggedIn) {
       router.replace('/');
     }
@@ -225,7 +225,7 @@ const Dashboard: FC<DashboardProps> = () => {
         const response = await api.get(`/approvals/rejections/latest/${id}`);
         setNotification(response.data?.rejection?.comment || '');
       } catch (error) {
-        console.error('Error fetching notifications:', error);
+        //console.error('Error fetching notifications:', error);
       } finally {
         setTimeout(() => {
           setLoading(false);

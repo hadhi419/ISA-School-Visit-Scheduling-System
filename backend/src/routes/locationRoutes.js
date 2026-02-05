@@ -19,6 +19,7 @@ router.get(
   authorizeRoles('ISA', 'DDE', 'ZDE', 'ADE', 'ADMIN'),
   fetchLocations
 );
+
 router.post('/addLocation', authorizeRoles('ADMIN'), addLocation);
 
 router.post('/edit', authorizeRoles('ADMIN'), editLocation);

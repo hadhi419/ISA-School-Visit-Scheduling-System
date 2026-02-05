@@ -12,7 +12,10 @@ export const fetchSubmittedVisits = async (req, res) => {
   try {
     // Optional: you can pass month via query param, else default to current month
     const month = req.query.month;
+
+    //console.log('Monthhhh', month);
     const visits = await getSubmittedVisitsSummaryService(month);
+    //console.log(visits);
 
     // Convert schedule_submitted from 0/1 to boolean
     const result = visits.map((v) => ({
@@ -24,7 +27,7 @@ export const fetchSubmittedVisits = async (req, res) => {
 
     res.json({ visits: result });
   } catch (err) {
-    console.error(err);
+    //console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -32,6 +35,7 @@ export const fetchSubmittedVisits = async (req, res) => {
 export const fetchVisitDetail = async (req, res) => {
   try {
     const isa_id = req.params.isa_id;
+    //console.log();
 
     if (!isa_id) {
       return res.status(400).json({ error: 'isa_id is required' });
@@ -40,13 +44,13 @@ export const fetchVisitDetail = async (req, res) => {
     const detail = await getVisitDetailService(isa_id);
     res.json(detail);
   } catch (err) {
-    console.error(err);
+    //console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
 export const ddeApproveSchedule = async (req, res) => {
-  console.log('Debugging');
+  //console.log('Debugging');
 
   try {
     const { isa_id } = req.params;
@@ -54,7 +58,7 @@ export const ddeApproveSchedule = async (req, res) => {
 
     const result = await ddeApproveScheduleService(isa_id, approved_by);
 
-    console.log(result);
+    //console.log(result);
 
     res.json({
       success: true,
@@ -62,7 +66,7 @@ export const ddeApproveSchedule = async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error(err);
+    //console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -85,14 +89,14 @@ export const ddeRejectSchedule = async (req, res) => {
       updated,
     });
   } catch (err) {
-    console.error(err);
+    //console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
 export const adeApproveSchedule = async (req, res) => {
-  console.log('Debugging');
-  console.log(req.body);
+  //console.log('Debugging');
+  //console.log(req.body);
 
   try {
     const { isa_id } = req.params;
@@ -100,7 +104,7 @@ export const adeApproveSchedule = async (req, res) => {
 
     const result = await adeApproveScheduleService(isa_id, approved_by);
 
-    console.log(result);
+    //console.log(result);
 
     res.json({
       success: true,
@@ -108,20 +112,20 @@ export const adeApproveSchedule = async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error(err);
+    //console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
 export const adeRejectSchedule = async (req, res) => {
   try {
-    //console.log('Debugging adeRejectSchedule');
-    // console.log(req.body);
+    ////console.log('Debugging adeRejectSchedule');
+    // //console.log(req.body);
     const { isa_id } = req.params;
     const approved_by = req.body.approved_by;
     const comment = req.body.comment || '';
-    //console.log(comment);
-    //console.log(approved_by);
+    ////console.log(comment);
+    ////console.log(approved_by);
 
     const updated = await adeRejectScheduleService(
       isa_id,
@@ -135,7 +139,7 @@ export const adeRejectSchedule = async (req, res) => {
       updated,
     });
   } catch (err) {
-    console.error(err);
+    //console.error(err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

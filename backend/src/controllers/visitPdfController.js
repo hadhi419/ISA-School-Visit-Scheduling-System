@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { executablePath } from 'puppeteer';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
 
@@ -19,8 +19,8 @@ export const generateVisitPdf = async (req, res) => {
       date,
       location_id,
     });
-    console.log(visits);
-    console.log(counts);
+    ////console.log(visits);
+    ////console.log(counts);
 
     // Suppose counts is the array you got from DB
 
@@ -371,6 +371,8 @@ export const generateVisitPdf = async (req, res) => {
 
     /* ---------- PDF GENERATION ---------- */
     const browser = await puppeteer.launch({
+      //Render
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -421,7 +423,7 @@ ISA Management System`,
 
     res.json({ message: 'PDF generated and emailed successfully' });
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     res.status(500).json({ error: 'PDF generation failed' });
   }
 };

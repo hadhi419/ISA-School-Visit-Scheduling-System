@@ -89,7 +89,7 @@ const MonitoringReportForm: FC = () => {
     setDate(`${year}-${month}-${day}`);
     setLocation(locationParam || '');
     setVisitId(id || null);
-    console.log('Visit ID:', id);
+    //console.log('Visit ID:', id);
     const fetchLocations = async () => {
       const minTime = 300;
       const start = Date.now();
@@ -98,7 +98,7 @@ const MonitoringReportForm: FC = () => {
         const res = await api.get('/locations'); // adjust your endpoint
         setLocations(res.data.locations);
       } catch (err) {
-        console.error('Failed to fetch locations', err);
+        //console.error('Failed to fetch locations', err);
       } finally {
         const elapsed = Date.now() - start; // ADDED
         if (elapsed < minTime) {
@@ -148,7 +148,7 @@ const MonitoringReportForm: FC = () => {
         copyToCacheDirectory: true,
       });
 
-      console.log('Document picker result:', result);
+      //console.log('Document picker result:', result);
 
       if (result.canceled === false) {
         const file: UploadedFile = {
@@ -157,14 +157,14 @@ const MonitoringReportForm: FC = () => {
           type: 'document',
           uri: result.assets[0].uri,
         };
-        //console.log('Fileee ', file);
+        ////console.log('Fileee ', file);
 
         setUploadedFiles((prev) => [...prev, file]);
       } else {
-        console.log('User canceled document picker');
+        //console.log('User canceled document picker');
       }
     } catch (err) {
-      console.error('pickDocument error:', err);
+      //console.error('pickDocument error:', err);
     }
   };
 
@@ -222,7 +222,7 @@ const MonitoringReportForm: FC = () => {
             type: file.type === 'photo' ? 'image/jpeg' : 'application/pdf',
           } as any);
 
-          console.log('URIII', file.uri);
+          //console.log('URIII', file.uri);
         }
       }
 
@@ -231,7 +231,7 @@ const MonitoringReportForm: FC = () => {
       });
 
       const data = response.data;
-      console.log('Submit Response:', response);
+      //console.log('Submit Response:', response);
 
       if (response.data.message == 'Monitoring report submitted successfully') {
         Alert.alert('Success', data.message);
@@ -244,7 +244,7 @@ const MonitoringReportForm: FC = () => {
 
       router.back();
     } catch (err) {
-      console.error('Submit Error:', err);
+      //console.error('Submit Error:', err);
       Alert.alert('Error', 'Network or server error.');
     } finally {
       const elapsed = Date.now() - start;
@@ -311,7 +311,7 @@ const MonitoringReportForm: FC = () => {
             marginVertical: 10,
           }}
           onPress={() => {
-            console.log(location);
+            //console.log(location);
             setLocationChanged((prev) => !prev);
           }}
         >

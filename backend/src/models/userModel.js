@@ -55,7 +55,7 @@ export const changePasswordModel = async (id, currentPass, newPass) => {
       return 'Your current password is wrong';
     }
     const hashedPassword = await bcrypt.hash(newPass, 10);
-    console.log(hashedPassword);
+    ////console.log(hashedPassword);
     const query = 'update users set password=? where id=?';
 
     const [result] = await db.query(query, [hashedPassword, id]);

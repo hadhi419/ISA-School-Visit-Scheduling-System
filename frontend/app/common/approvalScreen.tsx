@@ -35,7 +35,7 @@
 // }
 
 // const getStatusProps = (status: string, role: string) => {
-//   console.log(role, status);
+//   //console.log(role, status);
 //   if (status === 'PENDING') {
 //     return { icon: 'hourglass', color: '#ff9800', label: 'Pending Approval' };
 //   } else if (
@@ -84,7 +84,7 @@
 //   const handleCardPress = () => {
 //     if (!isClickable) return;
 
-//     //console.log('IDDDDDDDDDDD', visit.isa_id);
+//     ////console.log('IDDDDDDDDDDD', visit.isa_id);
 //     if(role==="DDA")
 //     {
 //       router.push('/dd')
@@ -138,7 +138,7 @@
 //       await AsyncStorage.removeItem('token'); // Clear the token
 //       router.replace('/'); // Redirect to root page
 //     } catch (err) {
-//       console.error('Error during logout', err);
+//       //console.error('Error during logout', err);
 //     }
 //   };
 
@@ -146,7 +146,7 @@
 //   const { setLoading } = useLoading();
 
 //   useEffect(() => {
-//     console.log('Iddddddddddd', id);
+//     //console.log('Iddddddddddd', id);
 
 //     if (!isLoggedIn) {
 //       router.replace('/');
@@ -159,10 +159,10 @@
 
 //       try {
 //         const res = await api.get('/approvals?month=February');
-//         console.log('Loaded data:', res);
+//         //console.log('Loaded data:', res);
 //         setVisits(res.data.visits);
 //       } catch (err) {
-//         console.error('Error loading data', err);
+//         //console.error('Error loading data', err);
 //       }
 //       finally {
 //         const elapsed = Date.now() - start;

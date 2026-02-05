@@ -43,9 +43,9 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await getUserByEmail(email);
-    //console.log(user);
+    //////console.log(user);
 
-    console.log(user.role);
+    ////console.log(user.role);
     if (!user)
       return res.status(400).json({ error: 'Invalid email or password' });
 
@@ -81,7 +81,7 @@ export const getAllUsers = async (req, res) => {
 export const editUser = async (req, res) => {
   try {
     const { userId, name, email, phone, role } = req.body;
-    console.log('Name ', name);
+    ////console.log('Name ', name);
     const result = await editUserModel(userId, name, email, phone, role);
 
     res.json({ message: result });
@@ -92,11 +92,11 @@ export const editUser = async (req, res) => {
 
 export const changePassword = async (req, res) => {
   try {
-    console.log(req.body);
+    ////console.log(req.body);
     const { id, currentPassword, newPassword } = req.body;
-    console.log('Paasss', currentPassword);
+    ////console.log('Paasss', currentPassword);
     const result = await changePasswordModel(id, currentPassword, newPassword);
-    console.log('result', result);
+    ////console.log('result', result);
 
     res.json({ result });
   } catch (err) {

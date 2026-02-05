@@ -112,23 +112,24 @@ const LocationMonitoring: FC = () => {
     const now = new Date();
 
     const monthNumber1to12 = monthsToGetWeeks.indexOf(selectedMonth) + 1; // 3
-    console.log('monthNameToNumber ', monthNumber1to12);
+    // //console.log('monthNameToNumber ', monthNumber1to12);
     const currentYear = now.getFullYear(); // e.g. 2026
 
     const hehe = getWeeksInMonth(monthNumber1to12, currentYear);
-    console.log('Hehehee', hehe);
+    // //console.log('Hehehee', hehe);
 
     setWeeks(hehe);
 
-    console.log(weeks);
+    // //console.log(weeks);
 
     if (!isLoggedIn) {
       router.replace('/');
     }
-    console.log(role);
-    console.log(id);
+    // //console.log(role);
+    ////console.log(id);
     const today = new Date();
 
+    setSelectedMonth('');
     setSelectedDate(today);
 
     fetchData();
@@ -140,21 +141,21 @@ const LocationMonitoring: FC = () => {
     const now = new Date();
 
     const monthNumber1to12 = monthsToGetWeeks.indexOf(selectedMonth) + 1; // 3
-    console.log('monthNameToNumber ', monthNumber1to12);
+    // //console.log('monthNameToNumber ', monthNumber1to12);
     const currentYear = now.getFullYear();
 
     const weeks = getWeeksInMonth(monthNumber1to12, currentYear);
-    console.log('Hehehee', weeks);
+    //  //console.log('Hehehee', weeks);
 
     setWeeks(weeks);
 
-    console.log(weeks);
+    ////console.log(weeks);
 
     if (!isLoggedIn) {
       router.replace('/');
     }
-    console.log(role);
-    console.log(id);
+    ////console.log(role);
+    ////console.log(id);
     const today = new Date();
 
     setSelectedDate(today);
@@ -200,15 +201,16 @@ const LocationMonitoring: FC = () => {
         dateParam = `&date=${yyyy}-${mm}-${dd}`;
       }
       const date = formatDateToYMD(selectedDate);
-      console.log('debugging');
+      //  //console.log('debugging');
+      //console.log(date);
       const response = await api.get(
         `visits/location?location_id=${selectedLocation}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
       );
-      console.log(response);
+      // //console.log(response);
 
       setVisits(response.data.data);
     } catch (err) {
-      console.error('Error fetching visits by location', err);
+      // //console.error('Error fetching visits by location', err);
     } finally {
       const elapsed = Date.now() - start;
       if (elapsed < minTime) {
@@ -235,10 +237,10 @@ const LocationMonitoring: FC = () => {
         })
       );
 
-      console.log(locationsFiltered);
+      ////console.log(locationsFiltered);
       setLocations(locationsFiltered);
     } catch (err) {
-      console.error('Error fetching locations', err);
+      //  //console.error('Error fetching locations', err);
     } finally {
       const elapsed = Date.now() - start;
       if (elapsed < minTime) {
@@ -248,16 +250,22 @@ const LocationMonitoring: FC = () => {
     }
   };
 
+  useEffect(() => {
+    setSelectedDate(null);
+    fetchData();
+  }, [selectedMonth, selectedWeek]);
+
   // 🔹 Load visits by location
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
     }
-    console.log('daaate', selectedDate);
+    // //console.log('daaate', selectedDate);
     if (!selectedLocation || selectedLocation === -1) {
       setVisits([]);
       return;
     }
+    //console.log('Debugging');
     fetchData();
   }, [selectedLocation, selectedDate, selectedMonth, selectedWeek]);
 
@@ -430,9 +438,10 @@ const LocationMonitoring: FC = () => {
                           ? (formatDateToYMD(selectedDate) ?? '')
                           : ''
                       }
-                      onChange={(e) =>
-                        setSelectedDate(new Date(e.target.value))
-                      }
+                      onChange={(e) => {
+                        setSelectedMonth('');
+                        setSelectedDate(new Date(e.target.value));
+                      }}
                     />
                   ) : (
                     // ✅ Mobile (iOS + Android)
@@ -456,7 +465,9 @@ const LocationMonitoring: FC = () => {
                         date={selectedDate ?? new Date()}
                         onConfirm={({ date }) => {
                           if (date) {
-                            setSelectedDate(date); // now matches Date | null
+                            setSelectedMonth('');
+                            setSelectedDate(date);
+                            // now matches Date | null
                           }
                           setDatePickerVisible(false);
                         }}

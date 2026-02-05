@@ -2,10 +2,14 @@ import db from '../config/db.js';
 
 // Get all locations with full details
 export const getAllLocations = async () => {
+  console.log('coming');
+
   const [rows] = await db.query(`
     SELECT id, name, category, address 
     FROM locations
   `);
+
+  console.log(rows);
   return rows;
 };
 

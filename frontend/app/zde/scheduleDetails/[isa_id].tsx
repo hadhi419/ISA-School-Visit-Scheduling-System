@@ -44,9 +44,9 @@ const ScheduleDetailPage = ({ route }: any) => {
     }
     const fetchDetail = async () => {
       try {
-        console.log('fetchinggg');
+        //console.log('fetchinggg');
         const res = await api.get(`/approvals/visitDetail/${isa_id}`);
-        console.log(res.data.schedule);
+        //console.log(res.data.schedule);
         // Ensure visit_id exists
         res.data.schedule = res.data.schedule.map(
           (item: any, index: number) => ({
@@ -59,7 +59,7 @@ const ScheduleDetailPage = ({ route }: any) => {
 
         setDetail(res.data);
       } catch (err) {
-        console.error(err);
+        //console.error(err);
       } finally {
         setLoading(false);
       }
@@ -85,7 +85,7 @@ const ScheduleDetailPage = ({ route }: any) => {
         Alert.alert('Error', data.message || 'Failed to approve schedule.');
       }
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       Alert.alert('Error', 'Server error while approving schedule.');
     } finally {
       setActionLoading(false);
@@ -109,7 +109,7 @@ const ScheduleDetailPage = ({ route }: any) => {
         Alert.alert('Error', data.message || 'Failed to request revisions.');
       }
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       Alert.alert('Error', 'Server error while requesting revisions.');
     } finally {
       setActionLoading(false);

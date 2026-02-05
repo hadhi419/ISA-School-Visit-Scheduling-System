@@ -25,14 +25,14 @@ const AddLocation = () => {
 
       const data = response.data;
 
-      console.log(data);
+      //console.log(data);
       alert('Location Created Successfully!');
 
       setAddress('');
       setCategory('SCHOOl');
       setName('');
     } catch (error) {
-      console.log(error);
+      //console.log(error);
       alert('Error creating location.');
     }
   };

@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const token = await AsyncStorage.getItem('token');
         if (token) {
           const decoded = jwtDecode<JWTPayload>(token);
-          console.log(decoded);
+          //console.log(decoded);
           setRole(decoded.role);
           setId(decoded.id); // Assuming 'exp' is being used as user ID here
           setName(decoded.name);
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
 
     const decoded = jwtDecode<JWTPayload>(token);
-    console.log(decoded);
+    //console.log(decoded);
     setRole(decoded.role);
     setId(decoded.id);
     setName(decoded.name);

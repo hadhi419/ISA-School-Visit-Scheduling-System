@@ -16,7 +16,6 @@ const router = express.Router();
 // Apply JWT authentication to all routes
 router.use(authenticate);
 
-// GET /api/isa-dashboard?month=December
 router.get(
   '/',
   authorizeRoles('ZDE', 'DDE', 'ADE'), // check roles

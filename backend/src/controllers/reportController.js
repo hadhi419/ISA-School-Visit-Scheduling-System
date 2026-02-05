@@ -32,13 +32,13 @@ export const submitMonitoringReport = async (req, res) => {
       actual_duty,
     });
 
-    //console.log('Uploaded files:', req.files);
-    console.log(location_change_reason);
+    //////console.log('Uploaded files:', req.files);
+    ////console.log(location_change_reason);
 
     if (!req.files) {
       return res.status(400).json({ error: 'No files uploaded' });
     } else {
-      console.log('Uploaded files:', req.files);
+      ////console.log('Uploaded files:', req.files);
     }
 
     if (req.files.length === 0) {
@@ -66,7 +66,7 @@ export const submitMonitoringReport = async (req, res) => {
       report,
     });
   } catch (err) {
-    console.error('submitMonitoringReport error:', err);
+    ////console.error('submitMonitoringReport error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };

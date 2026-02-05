@@ -5,13 +5,17 @@ export const getSubmittedVisitsSummaryService = async (month) => {
     const selectedMonth =
       month || new Date().toLocaleString('default', { month: 'long' });
 
+    ////console.log(selectedMonth);
+    ////console.log('2', month);
+
     const [rows] = await db.query(
       `
       SELECT 
         u.id AS isa_id,
         u.full_name AS isa_name,
+        v.status,
 
-        -- Overall status based on priority: REJECTED > any APPROVED > PENDING > IN_PROCESS
+      
         MAX(
           CASE
             WHEN v.status LIKE '%REJECTED%' THEN v.status
@@ -21,7 +25,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
           END
         ) AS overall_status,
 
-        -- Schedule submitted? 1 if at least one visit exists beyond IN_PROCESS
+       
        CASE 
         WHEN COUNT(v.id) = 0 THEN 0
         WHEN SUM(CASE WHEN v.status <> 'IN_PROCESS' THEN 1 ELSE 0 END) > 0 THEN 1
@@ -30,7 +34,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
 
 
       FROM users u
-      LEFT JOIN visits v ON v.isa_id = u.id AND v.month = "February"
+      LEFT JOIN visits v ON v.isa_id = u.id AND v.month = ?
       WHERE u.role = 'ISA'
       GROUP BY u.id, u.full_name
       ORDER BY u.full_name ASC
@@ -38,15 +42,18 @@ export const getSubmittedVisitsSummaryService = async (month) => {
       [selectedMonth]
     );
 
+    ////console.log(rows);
+
     return rows;
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     return [];
   }
 };
 
 export const getVisitDetailService = async (isa_id) => {
   try {
+    ////console.log('ISAAAA', isa_id);
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     const month = nextMonth.toLocaleString('default', { month: 'long' });
@@ -82,7 +89,7 @@ export const getVisitDetailService = async (isa_id) => {
       })),
     };
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     return { isa_id, isa_name: 'Unknown', schedule: [] };
   }
 };
@@ -127,11 +134,11 @@ export const ddeApproveScheduleService = async (isa_id, approved_by) => {
       [approved_by, isa_id]
     );
 
-    console.log(result);
+    ////console.log(result);
 
     return { message: 'DDE approved and visits copied to visit_plan' };
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     throw err;
   }
 };
@@ -172,9 +179,9 @@ export const adeRejectScheduleService = async (
   approved_by = 9,
   comment = ''
 ) => {
-  console.log(comment);
-  console.log(isa_id);
-  console.log(approved_by);
+  ////console.log(comment);
+  ////console.log(isa_id);
+  ////console.log(approved_by);
 
   const [updateResult] = await db.query(
     `
@@ -199,7 +206,7 @@ export const adeRejectScheduleService = async (
        VALUES (?, ?, 'ADE', 'REJECTED', ?, NOW())`,
       [visit.visit_id, approved_by, comment]
     );
-    //console.log(row);
+    //////console.log(row);
   }
 
   return updateResult.affectedRows;
@@ -207,7 +214,7 @@ export const adeRejectScheduleService = async (
 
 export const adeApproveScheduleService = async (isa_id, approved_by) => {
   try {
-    console.log(approved_by);
+    ////console.log(approved_by);
     // 1. Update visits table: mark as ADE_APPROVED
     await db.query(
       `UPDATE visits
@@ -246,11 +253,11 @@ export const adeApproveScheduleService = async (isa_id, approved_by) => {
       [approved_by, isa_id]
     );
 
-    console.log(result);
+    ////console.log(result);
 
     return { message: 'ADE approved' };
   } catch (err) {
-    console.error(err);
+    ////console.error(err);
     throw err;
   }
 };

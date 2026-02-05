@@ -42,7 +42,7 @@ const UsersList = () => {
       const res = await api.get('/auth/allUsers');
       setUsers(res.data.users);
     } catch (err) {
-      console.log(err);
+      //console.log(err);
       alert('Error fetching users.');
     } finally {
       setLoading(false);
@@ -81,7 +81,7 @@ const UsersList = () => {
       setShowModal(false);
       fetchUsers();
     } catch (err) {
-      console.log(err);
+      //console.log(err);
       alert('Error updating user.');
     }
   };

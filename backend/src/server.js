@@ -28,7 +28,7 @@ import bcrypt from 'bcryptjs';
 async function hashed() {
   const password = '123456';
   const hashed = await bcrypt.hash(password, 10);
-  console.log(hashed);
+  // ////console.log(hashed);
 }
 
 app.get('/', async (req, res) => {

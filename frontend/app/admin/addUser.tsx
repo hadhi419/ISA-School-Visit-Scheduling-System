@@ -30,7 +30,7 @@ const AddUser = () => {
       const response = await api.post('/auth/register', payload);
 
       const data = response.data;
-      console.log(data);
+      //console.log(data);
 
       setEmail('');
       setFullName('');
@@ -39,7 +39,7 @@ const AddUser = () => {
       setPassword('');
       alert('User Created Successfully!');
     } catch (error) {
-      console.log(error);
+      //console.log(error);
       alert('Error creating user.');
     }
   };
