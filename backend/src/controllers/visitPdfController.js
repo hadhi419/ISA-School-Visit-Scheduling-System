@@ -371,8 +371,7 @@ export const generateVisitPdf = async (req, res) => {
 
     /* ---------- PDF GENERATION ---------- */
     const browser = await puppeteer.launch({
-      //Render
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      executablePath: executablePath(),
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
