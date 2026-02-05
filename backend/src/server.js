@@ -10,6 +10,28 @@ import approvalRoutes from './routes/approvalRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import visitPdfRoutes from './routes/visitPdfRoutes.js';
 
+import fs from 'fs';
+import path from 'path';
+
+// Base upload folder
+const uploadBase = path.join(__dirname, 'uploads');
+
+// Subfolders you want
+const folders = ['documents', 'photos'];
+
+// Ensure the base folder exists
+if (!fs.existsSync(uploadBase)) {
+  fs.mkdirSync(uploadBase, { recursive: true });
+}
+
+// Ensure each subfolder exists
+folders.forEach((folder) => {
+  const folderPath = path.join(uploadBase, folder);
+  if (!fs.existsSync(folderPath)) {
+    fs.mkdirSync(folderPath, { recursive: true });
+  }
+});
+
 const app = express();
 
 app.use(cors());
