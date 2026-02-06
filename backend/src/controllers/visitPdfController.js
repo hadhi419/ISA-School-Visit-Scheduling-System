@@ -1,5 +1,4 @@
-import chromium from 'chrome-aws-lambda';
-import puppeteer from 'puppeteer-core';
+import puppeteer, { executablePath } from 'puppeteer';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
 
@@ -371,11 +370,13 @@ export const generateVisitPdf = async (req, res) => {
     `;
 
     /* ---------- PDF GENERATION ---------- */
+
     const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+      executablePath: process.env.RENDER
+        ? puppeteer.executablePath()
+        : undefined,
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
     const page = await browser.newPage();
