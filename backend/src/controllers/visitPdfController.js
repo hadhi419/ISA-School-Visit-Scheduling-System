@@ -371,6 +371,8 @@ export const generateVisitPdf = async (req, res) => {
 
     /* ---------- PDF GENERATION ---------- */
 
+    console.log('Using Chrome:', puppeteer.executablePath());
+
     const browser = await puppeteer.launch({
       executablePath: process.env.RENDER
         ? puppeteer.executablePath()
