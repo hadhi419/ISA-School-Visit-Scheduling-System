@@ -3,7 +3,8 @@ import axios from 'axios';
 
 const api = axios.create({
   //baseURL: 'http://localhost:5000/api',
-  baseURL: 'https://isa-school-visit-scheduling-system.onrender.com/api',
+  //baseURL: 'https://isa-school-visit-scheduling-system.onrender.com/api',
+  baseURL: 'https://isa-school-visit-scheduling-system.fly.dev/api',
 });
 
 api.interceptors.request.use(
