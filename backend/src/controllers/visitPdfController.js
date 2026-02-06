@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer';
+//import puppeteer from 'puppeteer';
+import { chromium } from 'playwright';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
 
@@ -373,26 +374,41 @@ export const generateVisitPdf = async (req, res) => {
 
     //    console.log('Using Chrome:', puppeteer.executablePath());
 
-    const browser = await puppeteer.launch({
+    // const browser = await puppeteer.launch({
+    //   headless: true,
+    //   args: [
+    //     '--no-sandbox',
+    //     '--disable-setuid-sandbox',
+    //     '--disable-dev-shm-usage',
+    //   ],
+    // });
+
+    const browser = await chromium.launch({
       headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-      ],
+      args: ['--no-sandbox'],
     });
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-
+    await page.setContent(html);
     const pdfBuffer = await page.pdf({
       format: 'A4',
       landscape: true,
       printBackground: true,
-      margin: { top: '5mm', bottom: '5mm' },
     });
 
     await browser.close();
+
+    // const page = await browser.newPage();
+    // await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    // const pdfBuffer = await page.pdf({
+    //   format: 'A4',
+    //   landscape: true,
+    //   printBackground: true,
+    //   margin: { top: '5mm', bottom: '5mm' },
+    // });
+
+    // await browser.close();
 
     // res.set({
     //   'Content-Type': 'application/pdf',

@@ -24,7 +24,8 @@ const Login: React.FC = () => {
 
     try {
       const response = await axios.post(
-        'https://isa-school-visit-scheduling-system.onrender.com/api/auth/login',
+        'http://localhost:5000/api/auth/login',
+        //'https://isa-school-visit-scheduling-system.onrender.com/api/auth/login',
         {
           email,
           password,
