@@ -1,4 +1,4 @@
-import puppeteer, { executablePath } from 'puppeteer';
+import puppeteer from 'puppeteer';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
 
@@ -371,7 +371,7 @@ export const generateVisitPdf = async (req, res) => {
 
     /* ---------- PDF GENERATION ---------- */
 
-    console.log('Using Chrome:', puppeteer.executablePath());
+    //    console.log('Using Chrome:', puppeteer.executablePath());
 
     const browser = await puppeteer.launch({
       headless: true,
