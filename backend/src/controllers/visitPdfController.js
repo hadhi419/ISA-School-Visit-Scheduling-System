@@ -408,6 +408,7 @@ export const generateVisitPdf = async (req, res) => {
           executablePath:
             process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
           headless: true,
+          timeout: 60000,
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
