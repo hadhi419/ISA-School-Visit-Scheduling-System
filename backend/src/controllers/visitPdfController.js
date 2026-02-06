@@ -1,5 +1,5 @@
-//import puppeteer from 'puppeteer';
-import { chromium } from 'playwright';
+import puppeteer from 'puppeteer-core';
+import chromium from 'chrome-aws-lambda';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
 
@@ -21,6 +21,7 @@ export const generateVisitPdf = async (req, res) => {
       location_id,
     });
     ////console.log(visits);
+
     ////console.log(counts);
 
     // Suppose counts is the array you got from DB
@@ -383,17 +384,53 @@ export const generateVisitPdf = async (req, res) => {
     //   ],
     // });
 
-    const browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox'],
-    });
+    // const browser = await chromium.launch({
+    //   headless: true,
+    //   args: ['--no-sandbox'],
+    // });
 
+    // const page = await browser.newPage();
+    // await page.setContent(html);
+    // const pdfBuffer = await page.pdf({
+    //   format: 'A4',
+    //   landscape: true,
+    //   printBackground: true,
+    // });
+
+    // await browser.close();
+
+    async function launchBrowser() {
+      let browser;
+
+      if (process.env.RENDER) {
+        // On Render Linux
+        browser = await puppeteer.launch({
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath,
+          headless: chromium.headless,
+        });
+      } else {
+        // Local Windows/Mac
+        browser = await puppeteer.launch({
+          executablePath:
+            'C:\\Users\\USER\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe',
+          headless: true,
+        });
+      }
+
+      return browser;
+    }
+
+    const browser = await launchBrowser();
     const page = await browser.newPage();
-    await page.setContent(html);
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       landscape: true,
       printBackground: true,
+      margin: { top: '5mm', bottom: '5mm' },
     });
 
     await browser.close();
