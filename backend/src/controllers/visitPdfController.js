@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import chromium from 'chrome-aws-lambda';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
@@ -407,15 +407,15 @@ export const generateVisitPdf = async (req, res) => {
         browser = await puppeteer.launch({
           args: chromium.args,
           defaultViewport: chromium.defaultViewport,
-          executablePath:
-            (await chromium.executablePath) || '/usr/bin/chromium-browser',
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
           headless: chromium.headless,
         });
       } else {
+        console.log(await chromium.executablePath);
         // Local Windows/Mac
         browser = await puppeteer.launch({
-          executablePath:
-            'C:\\Users\\USER\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe',
+          //executablePath: await chromium.executablePath,
+          // 'C:\\Users\\USER\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe',
           headless: true,
         });
       }

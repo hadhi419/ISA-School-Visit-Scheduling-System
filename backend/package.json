@@ -13,9 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "puppeteer-core": "^10.4.0",
-    "chrome-aws-lambda": "^10.1.0",
     "bcryptjs": "^3.0.3",
+    "chrome-aws-lambda": "^10.1.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
@@ -26,6 +25,7 @@
     "nodemailer": "^7.0.13",
     "nodemon": "^3.1.11",
     "playwright": "^1.58.1",
+    "puppeteer": "^24.37.1",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.3"
   },
