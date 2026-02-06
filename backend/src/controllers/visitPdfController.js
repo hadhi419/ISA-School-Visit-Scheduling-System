@@ -402,6 +402,7 @@ export const generateVisitPdf = async (req, res) => {
     async function launchBrowser() {
       let browser;
 
+      console.log(process.env.PUPPETEER_EXECUTABLE_PATH, 'URL');
       if (process.env.RENDER) {
         // On Render Linux
         browser = await puppeteer.launch({
