@@ -1,9 +1,10 @@
-import { Icon } from '@rneui/base';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import AppAlert from '@/components/AppAlert';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -37,6 +38,20 @@ const LocationSelection = () => {
   const [loading, setLoading] = useState(true);
   const { addEvent } = useSchedule();
 
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const [submitting, setSubmitting] = useState(false);
+
+  const [appAlert, setAppAlert] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
   const { id, isLoggedIn } = useAuth();
   const { setLoading: setGlobalLoading } = useLoading();
 
@@ -68,7 +83,11 @@ const LocationSelection = () => {
         //console.log(edit);
       } catch (err) {
         //console.error(err);
-        Alert.alert('Error', 'Failed to fetch locations from server');
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Failed to fetch locations from server',
+        });
       } finally {
         setLoading(false);
         const elapsed = Date.now() - start; // ADDED
@@ -84,8 +103,16 @@ const LocationSelection = () => {
     fetchLocations();
   }, []);
 
+  const selectedLocation = locations.find(
+    (l) => Number(l.id) === selectedLocationId
+  );
+
   const handleChoose = async () => {
-    if (!selectedLocationId) return;
+    if (!selectedLocationId || submitting) return;
+
+    setSubmitting(true);
+    setGlobalLoading(true);
+
     const today = new Date();
     const nextMonth = new Date(
       today.getFullYear(),
@@ -105,28 +132,19 @@ const LocationSelection = () => {
       },
     ];
 
-    //console.log('Payload for edit:', payload);
-
-    const minTime = 2000; // ADDED
-    const start = Date.now(); // ADDED
-    setGlobalLoading(true); // ADDED
-
     try {
       await api.post('visits', payload);
+      router.navigate({ pathname: '/isa/advancedProgram' });
     } catch (err) {
-      //console.error(err);
-      Alert.alert('Error', 'Failed to save visit');
+      setAppAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to save visit',
+      });
     } finally {
-      const elapsed = Date.now() - start; // ADDED
-      if (elapsed < minTime) {
-        await new Promise((resolve) => setTimeout(resolve, minTime - elapsed));
-      }
-      setGlobalLoading(false); // ADDED
+      setSubmitting(false);
+      setGlobalLoading(false);
     }
-
-    router.navigate({
-      pathname: '/isa/advancedProgram',
-    });
   };
 
   if (loading) {
@@ -140,14 +158,17 @@ const LocationSelection = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppAlert
+        visible={appAlert.visible}
+        title={appAlert.title}
+        message={appAlert.message}
+        onClose={() => setAppAlert({ ...appAlert, visible: false })}
+      />
       <View style={styles.header}>
-        <Icon
-          name="arrow-back"
-          type="material"
-          color="#E0E0E0"
-          size={28}
-          onPress={() => router.back()}
-        />
+        <Pressable onPress={() => router.back()}>
+          <MaterialCommunityIcons name="arrow-left" size={28} color="#E0E0E0" />
+        </Pressable>
+
         <Text style={styles.headerTitle}>Select Location</Text>
         <View style={{ width: 28 }} />
       </View>
@@ -177,12 +198,59 @@ const LocationSelection = () => {
       />
 
       <Pressable
-        style={[styles.chooseButton, !selectedLocationId && { opacity: 0.5 }]}
-        onPress={handleChoose}
-        disabled={!selectedLocationId}
+        style={[
+          styles.chooseButton,
+          (!selectedLocationId || submitting) && { opacity: 0.5 },
+        ]}
+        onPress={() => setShowConfirm(true)}
+        disabled={!selectedLocationId || submitting}
       >
-        <Text style={styles.chooseButtonText}>Choose</Text>
+        <Text style={styles.chooseButtonText}>
+          {submitting ? 'Saving...' : 'Choose'}
+        </Text>
       </Pressable>
+
+      {showConfirm && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Confirm Selection</Text>
+
+            <Text style={styles.modalText}>
+              Date: <Text style={styles.bold}>{date}</Text>
+            </Text>
+
+            <Text style={styles.modalText}>
+              Duty: <Text style={styles.bold}>{dutyP}</Text>
+            </Text>
+
+            <Text style={styles.modalText}>
+              Location:{' '}
+              <Text style={styles.bold}>{selectedLocation?.name}</Text>
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowConfirm(false)}
+              >
+                <Text style={styles.modalBtnText}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={() => {
+                  setShowConfirm(false);
+                  handleChoose();
+                }}
+              >
+                <Text style={styles.modalBtnText}>
+                  {submitting ? 'Saving...' : 'Confirm'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -235,4 +303,64 @@ const styles = StyleSheet.create({
   },
   chooseButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  modalBox: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+  },
+
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+
+  modalText: {
+    fontSize: 15,
+    marginBottom: 8,
+  },
+
+  bold: {
+    fontWeight: '600',
+  },
+
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  cancelButton: {
+    backgroundColor: '#9E9E9E',
+    marginRight: 10,
+  },
+
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+
+  modalBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });

@@ -1,4 +1,3 @@
-import { Button } from '@rneui/themed';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -9,10 +8,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
+import AppAlert from '@/components/AppAlert';
 import api from '@/api/axiosInstance';
-
-import { Icon } from '@rneui/base';
+import { Button, IconButton } from 'react-native-paper';
 
 const AddUser = () => {
   const router = useRouter();
@@ -23,41 +21,74 @@ const AddUser = () => {
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('ISA');
 
+  const [loading, setLoading] = useState(false);
+
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: 'Alert',
+    message: '',
+  });
+
   const createUser = async () => {
+    if (!full_name || !email || !password || !phone || !role) {
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Please fill all fields',
+      });
+      return;
+    }
+
     try {
+      setLoading(true);
+
       const payload = { full_name, email, password, phone, role };
-
-      const response = await api.post('/auth/register', payload);
-
-      const data = response.data;
-      //console.log(data);
+      await api.post('/auth/register', payload);
 
       setEmail('');
       setFullName('');
       setPhone('');
       setRole('ISA');
       setPassword('');
-      alert('User Created Successfully!');
+
+      setAlert({
+        visible: true,
+        title: 'Success',
+        message: 'User created successfully!',
+      });
     } catch (error) {
-      //console.log(error);
-      alert('Error creating user.');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Error creating user.',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <AppAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onClose={() =>
+          setAlert({ visible: false, title: 'Alert', message: '' })
+        }
+      />
+      <View style={styles.header}>
+        <IconButton
+          icon="arrow-left" // MaterialCommunityIcons name
+          iconColor="#fff" // must use iconColor instead of color
+          size={28}
+          onPress={() => router.back()}
+        />
+        <Text style={styles.headerTitle}>Add New User</Text>
+      </View>
+
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Header */}
-        <View style={styles.header}>
-          <Icon
-            name="arrow-back"
-            type="material"
-            color="#fff"
-            size={28}
-            onPress={() => router.back()}
-          />
-          <Text style={styles.headerTitle}>Add New User</Text>
-        </View>
 
         {/* Card with input fields */}
         <View style={styles.card}>
@@ -101,10 +132,14 @@ const AddUser = () => {
           />
 
           <Button
-            title="Create User"
+            mode="contained"
             onPress={createUser}
-            buttonStyle={styles.button}
-          />
+            style={styles.button}
+            loading={loading}
+            disabled={loading}
+          >
+            {loading ? 'Creating...' : 'Create User'}
+          </Button>
         </View>
       </ScrollView>
     </SafeAreaView>

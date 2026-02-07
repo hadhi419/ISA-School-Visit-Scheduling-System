@@ -1,7 +1,8 @@
 import api from '@/api/axiosInstance';
 import { useAuth } from '@/AuthContext';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { Icon } from '@rneui/themed';
+
 import axios from 'axios';
 import { router } from 'expo-router';
 import React, { FC, useEffect, useState } from 'react';
@@ -14,6 +15,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import AppAlert from '@/components/AppAlert';
 
 interface ISA {
   id: number;
@@ -56,6 +59,12 @@ const GenerateISAPdf: FC = () => {
   const { isLoggedIn, email } = useAuth();
   const { setLoading: setGlobalLoading } = useLoading();
 
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: 'Alert',
+    message: '',
+  });
+
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
@@ -84,7 +93,11 @@ const GenerateISAPdf: FC = () => {
 
   const generatePdf = async () => {
     if (!selectedIsa || !selectedMonth || !selectedYear) {
-      alert('Please select ISA, month, and year');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Please select ISA, month, and year',
+      });
       return;
     }
     setLoading(true);
@@ -132,20 +145,36 @@ const GenerateISAPdf: FC = () => {
 
       // await Sharing.shareAsync(fileUri);
       //console.log(response.data.message);
-      alert(response.data.message);
-      
+      setAlert({
+        visible: true,
+        title: 'Success',
+        message: response.data.message,
+      });
     } catch (error) {
       //console.error('PDF generation failed', error);
       ///alert('Failed to generate PDF');
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 404) {
-          alert('You are not allowed generate the document for this month/isa');
+          setAlert({
+            visible: true,
+            title: 'Permission Denied',
+            message:
+              'You are not allowed to generate the document for this month/ISA',
+          });
           return;
         }
 
-        alert('Server error occurred');
+        setAlert({
+          visible: true,
+          title: 'Server Error',
+          message: 'Server error occurred',
+        });
       } else {
-        alert('Unexpected error');
+        setAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Unexpected error occurred',
+        });
       }
     } finally {
       setLoading(false);
@@ -159,14 +188,24 @@ const GenerateISAPdf: FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onClose={() =>
+          setAlert({ visible: false, title: 'Alert', message: '' })
+        }
+      />
+
       {/* Header */}
       <View style={styles.header}>
-        <Icon
+        <MaterialIcons
           name="arrow-back"
-          type="material"
+          size={28}
           color="#fff"
           onPress={() => router.back()}
         />
+
         <Text style={styles.headerTitle}>Generate ISA PDF</Text>
         <View style={{ width: 24 }} />
       </View>
@@ -203,7 +242,11 @@ const GenerateISAPdf: FC = () => {
                     ? isas.find((i) => i.id === selectedIsa)?.full_name
                     : 'Choose ISA'}
                 </Text>
-                <Icon name="arrow-drop-down" size={28} color={PRIMARY_COLOR} />
+                <MaterialIcons
+                  name="arrow-drop-down"
+                  size={28}
+                  color={PRIMARY_COLOR}
+                />
               </View>
             </Pressable>
 
@@ -264,7 +307,11 @@ const GenerateISAPdf: FC = () => {
                 <Text style={styles.pickerValue}>
                   {selectedMonth ?? 'Select Month'}
                 </Text>
-                <Icon name="arrow-drop-down" size={28} color={PRIMARY_COLOR} />
+                <MaterialIcons
+                  name="arrow-drop-down"
+                  size={28}
+                  color={PRIMARY_COLOR}
+                />
               </View>
             </Pressable>
 
@@ -319,7 +366,11 @@ const GenerateISAPdf: FC = () => {
                 <Text style={styles.pickerValue}>
                   {selectedYear ?? 'Select Year'}
                 </Text>
-                <Icon name="arrow-drop-down" size={28} color={PRIMARY_COLOR} />
+                <MaterialIcons
+                  name="arrow-drop-down"
+                  size={28}
+                  color={PRIMARY_COLOR}
+                />
               </View>
             </Pressable>
 

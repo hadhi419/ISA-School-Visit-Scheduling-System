@@ -87,7 +87,7 @@ export const getVisitReportById = async (visitId) => {
   const [files] = await db.query(
     `SELECT * FROM visit_evidence WHERE visit_id = ?`,
     [visitId]
-  );
+  )
 
   return { ...visit, evidence: files };
 };

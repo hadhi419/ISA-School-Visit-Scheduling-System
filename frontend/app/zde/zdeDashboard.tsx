@@ -163,25 +163,25 @@ const HigherOfficialDashboard = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => {
+            logout();
+            router.replace('/');
+          }}
+        >
+          <MaterialCommunityIcons name="logout" size={28} color="#eee" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Welcome, ZDE</Text>
+        <MaterialCommunityIcons
+          name="account"
+          size={28}
+          color="#E0E0E0"
+          onPress={() => setShowProfile(true)}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* BLUE HEADER */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => {
-              logout();
-              router.replace('/');
-            }}
-          >
-            <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Welcome, ZDE</Text>
-          <MaterialCommunityIcons
-            name="account"
-            size={28}
-            color="#E0E0E0"
-            onPress={() => setShowProfile(true)}
-          />
-        </View>
 
         <Modal visible={showProfile} transparent animationType="fade">
           <View style={popupStyles.overlay}>

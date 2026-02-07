@@ -18,8 +18,12 @@ export const submitMonitoringReport = async (req, res) => {
       actual_duty,
     } = req.body;
 
+    // Validate required fields
     if (!visit_id || !report_text || !status) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({
+        success: false,
+        message: 'visit_id, report_text, and status are required',
+      });
     }
 
     // 1️⃣ Update visit report text and status
@@ -32,41 +36,36 @@ export const submitMonitoringReport = async (req, res) => {
       actual_duty,
     });
 
-    //////console.log('Uploaded files:', req.files);
-    ////console.log(location_change_reason);
-
-    if (!req.files) {
-      return res.status(400).json({ error: 'No files uploaded' });
-    } else {
-      ////console.log('Uploaded files:', req.files);
+    // 2️⃣ Handle uploaded files
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files uploaded',
+      });
     }
 
-    if (req.files.length === 0) {
-      return res.status(400).json({ error: 'No files uploaded' });
+    for (const file of req.files) {
+      const fileType = file.mimetype.startsWith('image/') ? 'IMG' : 'DOC';
+      await addVisitEvidence({
+        visit_id,
+        file_url: file.path.replace(/\\/g, '/'),
+        file_type: fileType,
+      });
     }
 
-    // 2️⃣ Save uploaded files to visit_evidence
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const fileType = file.mimetype.startsWith('image/') ? 'IMG' : 'DOC'; // map other files to DOC, could add PDF detection
-
-        await addVisitEvidence({
-          visit_id,
-          file_url: file.path.replace(/\\/g, '/'), // normalize Windows paths
-          file_type: fileType,
-        });
-      }
-    }
-
-    // 3️⃣ Fetch the updated visit report with evidence to return
+    // 3️⃣ Fetch updated report with evidence
     const report = await getVisitReportById(visit_id);
 
     return res.status(201).json({
+      success: true,
       message: 'Monitoring report submitted successfully',
-      report,
+      data: report,
     });
   } catch (err) {
-    ////console.error('submitMonitoringReport error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error in submitMonitoringReport:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while submitting monitoring report',
+    });
   }
 };

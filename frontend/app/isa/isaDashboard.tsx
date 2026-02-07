@@ -2,7 +2,6 @@ import api from '@/api/axiosInstance';
 import { useAuth } from '@/AuthContext';
 import ProfileComponent from '@/components/ProfileComponent';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button } from '@rneui/themed';
 import { router } from 'expo-router';
 import { FC, useEffect, useState } from 'react';
 import { Modal, Pressable } from 'react-native';
@@ -36,6 +35,18 @@ interface DashboardProps {}
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffffff' },
   scrollContent: { paddingBottom: 20 },
+
+  visitDetailsButton: {
+    backgroundColor: '#4C72B0',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  visitDetailsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 
   header: {
     flexDirection: 'row',
@@ -185,15 +196,15 @@ const VisitCard: FC<VisitCardProps> = ({ location, time, image }) => (
     <View style={styles.cardContent}>
       <Text style={styles.cardLocation}>{location}</Text>
       <Text style={styles.cardTime}>{time}</Text>
-      <Button
-        title="View Details"
-        buttonStyle={{
-          backgroundColor: '#4C72B0',
-          borderRadius: 8,
-        }}
-        titleStyle={{ fontSize: 16, fontWeight: '600' }}
+      <Pressable
+        style={({ pressed }) => [
+          styles.visitDetailsButton,
+          pressed && { opacity: 0.7 },
+        ]}
         onPress={() => console.log(`Viewing details for ${location}`)}
-      />
+      >
+        <Text style={styles.visitDetailsButtonText}>View Details</Text>
+      </Pressable>
     </View>
   </View>
 );
@@ -238,30 +249,30 @@ const Dashboard: FC<DashboardProps> = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        {/* <Icon name="menu" type="material" color="#E0E0E0" size={28} /> */}
+        {notification.length > 0 && (
+          <TouchableOpacity onPress={() => setShowPopup(true)}>
+            <MaterialCommunityIcons
+              name="bell-alert"
+              size={26}
+              color={notification.length > 0 ? '#ffea00' : '#eee'}
+              style={{ marginRight: 10 }}
+            />
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.headerTitle}>Good Morning, {name}</Text>
+
+        <MaterialCommunityIcons
+          name="account"
+          size={28}
+          color="#E0E0E0"
+          onPress={() => setShowProfile(true)}
+        />
+      </View>
+
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          {/* <Icon name="menu" type="material" color="#E0E0E0" size={28} /> */}
-          {notification.length > 0 && (
-            <TouchableOpacity onPress={() => setShowPopup(true)}>
-              <MaterialCommunityIcons
-                name="bell-alert"
-                size={26}
-                color={notification.length > 0 ? '#ffea00' : '#eee'}
-                style={{ marginRight: 10 }}
-              />
-            </TouchableOpacity>
-          )}
-
-          <Text style={styles.headerTitle}>Good Morning, {name}</Text>
-
-          <MaterialCommunityIcons
-            name="account"
-            size={28}
-            color="#E0E0E0"
-            onPress={() => setShowProfile(true)}
-          />
-        </View>
-
         {/* <Text style={styles.sectionTitle}>Your Upcoming Visits</Text> */}
 
         <Modal visible={showProfile} transparent animationType="fade">
@@ -398,5 +409,16 @@ const popupStyles = StyleSheet.create({
   btnText: {
     color: '#fff',
     fontWeight: '700',
+  },
+  visitDetailsButton: {
+    backgroundColor: '#4C72B0',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  visitDetailsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

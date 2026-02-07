@@ -1,7 +1,12 @@
 import api from '@/api/axiosInstance';
-import { Button, Icon } from '@rneui/themed';
+import { Button } from 'react-native-paper';
+
+import AppAlert from '@/components/AppAlert';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+
+import { MaterialIcons } from '@expo/vector-icons';
+
 import {
   SafeAreaView,
   ScrollView,
@@ -17,6 +22,12 @@ const AddLocation = () => {
   const [category, setCategory] = useState('SCHOOL'); // default SCHOOL
   const [address, setAddress] = useState('');
 
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: 'Alert',
+    message: '',
+  });
+
   const createLocation = async () => {
     try {
       const payload = { locationName, category, address };
@@ -26,31 +37,39 @@ const AddLocation = () => {
       const data = response.data;
 
       //console.log(data);
-      alert('Location Created Successfully!');
+      setAlert({
+        visible: true,
+        title: 'Success',
+        message: 'Location created successfully!',
+      });
 
       setAddress('');
       setCategory('SCHOOl');
       setName('');
     } catch (error) {
       //console.log(error);
-      alert('Error creating location.');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Error creating location.',
+      });
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <MaterialIcons
+          name="arrow-back"
+          size={28}
+          color="#E0E0E0"
+          onPress={() => router.back()}
+        />
+        <Text style={styles.headerTitle}>Add New Location</Text>
+        <View style={{ width: 28 }} />
+      </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Header */}
-        <View style={styles.header}>
-          <Icon
-            name="arrow-back"
-            type="material"
-            color="#fff"
-            size={28}
-            onPress={() => router.back()}
-          />
-          <Text style={styles.headerTitle}>Add New Location</Text>
-        </View>
 
         {/* Card */}
         <View style={styles.card}>
@@ -79,12 +98,24 @@ const AddLocation = () => {
           />
 
           <Button
-            title="Create Location"
+            mode="contained" // filled button
             onPress={createLocation}
-            buttonStyle={styles.button}
-          />
+            loading={false} // optional, can set dynamic state
+            style={styles.button}
+          >
+            Create Location
+          </Button>
         </View>
       </ScrollView>
+
+      <AppAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onClose={() =>
+          setAlert({ visible: false, title: 'Alert', message: '' })
+        }
+      />
     </SafeAreaView>
   );
 };

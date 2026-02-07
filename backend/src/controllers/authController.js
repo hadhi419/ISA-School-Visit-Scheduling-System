@@ -16,24 +16,29 @@ export const registerUser = async (req, res) => {
   try {
     const { full_name, email, password, phone, role } = req.body;
 
-    // Check required fields
     if (!full_name || !email || !password || !phone || !role) {
-      return res.status(400).json({ error: 'All fields are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'All fields are required' });
     }
 
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already exists' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email already exists' });
     }
 
     const result = await createUser(full_name, email, password, phone, role);
 
     res.status(201).json({
+      success: true,
       message: 'User registered successfully',
-      userId: result.insertId,
+      data: { userId: result.insertId },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in registerUser:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -41,65 +46,89 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email and password are required' });
+    }
 
     const user = await getUserByEmail(email);
-    //////console.log(user);
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid email or password' });
+    }
 
-    ////console.log(user.role);
-    if (!user)
-      return res.status(400).json({ error: 'Invalid email or password' });
-
-    //const isMatch = await bcrypt.compare(password, user.password);
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ error: 'Invalid email or password' });
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid email or password' });
+    }
 
     const token = jwt.sign(
       { id: user.id, name: user.full_name, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      {
-        expiresIn: '1h',
-      }
+      { expiresIn: '1h' }
     );
 
-    res.json({ message: 'Login successful', token });
+    res.json({ success: true, message: 'Login successful', data: { token } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in loginUser:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
+// Get all users
 export const getAllUsers = async (req, res) => {
   try {
     const users = await getAllUsersModel();
-
-    res.json({ users });
+    res.json({ success: true, data: { users } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in getAllUsers:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
+// Edit user
 export const editUser = async (req, res) => {
   try {
     const { userId, name, email, phone, role } = req.body;
-    ////console.log('Name ', name);
+    if (!userId || !name || !email || !phone || !role) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'All fields are required' });
+    }
+
     const result = await editUserModel(userId, name, email, phone, role);
 
-    res.json({ message: result });
+    res.json({ success: true, message: result });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in editUser:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
+// Change password
 export const changePassword = async (req, res) => {
   try {
-    ////console.log(req.body);
     const { id, currentPassword, newPassword } = req.body;
-    ////console.log('Paasss', currentPassword);
-    const result = await changePasswordModel(id, currentPassword, newPassword);
-    ////console.log('result', result);
 
-    res.json({ result });
+    if (!id || !currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'All fields are required' });
+    }
+
+    const result = await changePasswordModel(id, currentPassword, newPassword);
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+      data: result,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in changePassword:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };

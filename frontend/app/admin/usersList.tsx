@@ -1,5 +1,6 @@
 import api from '@/api/axiosInstance';
-import { Icon } from '@rneui/themed';
+import AppAlert from '@/components/AppAlert';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -28,6 +29,12 @@ const UsersList = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: 'Alert',
+    message: '',
+  });
+
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -43,7 +50,11 @@ const UsersList = () => {
       setUsers(res.data.users);
     } catch (err) {
       //console.log(err);
-      alert('Error fetching users.');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Error fetching users.',
+      });
     } finally {
       setLoading(false);
     }
@@ -64,7 +75,11 @@ const UsersList = () => {
 
   const saveEdit = async () => {
     if (!selectedUser || !editName || !editEmail || !editRole) {
-      alert('All fields must be filled');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'All fields must be filled.',
+      });
       return;
     }
 
@@ -77,27 +92,45 @@ const UsersList = () => {
         phone: editPhone,
       };
       await api.post('/auth/editUser', payload);
-      alert('User updated successfully!');
+      setAlert({
+        visible: true,
+        title: 'Success',
+        message: 'User updated successfully!',
+      });
       setShowModal(false);
       fetchUsers();
     } catch (err) {
       //console.log(err);
-      alert('Error updating user.');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Error updating user.',
+      });
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <AppAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onClose={() =>
+          setAlert({ visible: false, title: 'Alert', message: '' })
+        }
+      />
+
+      {/* Header */}
       {/* Header */}
       <View style={styles.header}>
-        <Icon
+        <MaterialIcons
           name="arrow-back"
-          type="material"
-          color="#fff"
           size={28}
+          color="#E0E0E0"
           onPress={() => router.back()}
         />
         <Text style={styles.headerTitle}>All Users</Text>
+        <View style={{ width: 28 }} />
       </View>
 
       <ScrollView
@@ -110,9 +143,8 @@ const UsersList = () => {
           <View key={user.id} style={styles.card}>
             {/* Left: user icon */}
             <View style={styles.iconArea}>
-              <Icon
+              <MaterialCommunityIcons
                 name="account"
-                type="material-community"
                 color="#1976D2"
                 size={28}
               />
@@ -130,12 +162,7 @@ const UsersList = () => {
               style={styles.editButton}
               onPress={() => handleEditClick(user)}
             >
-              <Icon
-                name="pencil"
-                type="material-community"
-                color="#fff"
-                size={24}
-              />
+              <MaterialCommunityIcons name="pencil" color="#fff" size={24} />
             </TouchableOpacity>
           </View>
         ))}

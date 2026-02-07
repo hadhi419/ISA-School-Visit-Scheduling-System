@@ -6,105 +6,158 @@ import {
   fetchVisitsByIsa,
   fetchVisitsByLocation,
   fetchISAs,
+  submitVisits,
 } from '../models/visitModel.js';
 
+// Post multiple visits
 export const postMultipleVisits = async (req, res) => {
   try {
     const visitsArray = req.body;
-    //////console.log(visitsArray);
-    const message = await postVisits(visitsArray);
-    //////console.log(message);
-    res.json({ message });
+    if (!Array.isArray(visitsArray) || visitsArray.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Visits array is required and cannot be empty',
+      });
+    }
+
+    const result = await postVisits(visitsArray);
+    res.json({
+      success: true,
+      message: 'Visits added successfully',
+      data: result,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in postMultipleVisits:', err);
+    res
+      .status(500)
+      .json({ success: false, message: 'Server error while posting visits' });
   }
 };
 
+// Delete a visit
 export const deleteVisit = async (req, res) => {
   try {
-    ////console.log(req.body);
     const { visit_date, month, isa_id } = req.body;
-    //////console.log(visit_date, month, isa_id);
-    const message = await deleteVisits(visit_date, month, isa_id);
-    ////console.log('Routerrr', message);
-    res.json({ message });
+    if (!visit_date || !month || !isa_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'visit_date, month, and isa_id are required',
+      });
+    }
+
+    const result = await deleteVisits(visit_date, month, isa_id);
+    res.json({
+      success: true,
+      message: 'Visit deleted successfully',
+      data: result,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in deleteVisit:', err);
+    res
+      .status(500)
+      .json({ success: false, message: 'Server error while deleting visit' });
   }
 };
 
+// Fetch all visits
 export const fetchAllVisits = async (req, res) => {
   try {
     const { month, isa_id } = req.params;
+    if (!month || !isa_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Month and ISA ID are required',
+      });
+    }
+
     const visits = await fetchVisits(month, isa_id);
-    res.json({ visits });
+    res.json({ success: true, data: visits });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in fetchAllVisits:', err);
+    res
+      .status(500)
+      .json({ success: false, message: 'Server error while fetching visits' });
   }
 };
 
-import { submitVisits } from '../models/visitModel.js';
-
+// Submit monthly visits
 export const submitMonthlyVisits = async (req, res) => {
   try {
     const { month, isa_id } = req.body;
-
     if (!month || !isa_id) {
-      return res.status(400).json({ error: 'Month and ISA ID are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Month and ISA ID are required' });
     }
 
     const result = await submitVisits(month, isa_id);
-    res.json({ message: result });
+    res.json({ success: true, message: result });
   } catch (err) {
-    ////console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error in submitMonthlyVisits:', err);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Server error while submitting visits',
+      });
   }
 };
 
+// Check monthly edit permission
 export const checkMonthlyEditPermission = async (req, res) => {
   try {
     const { month, isa_id } = req.params;
-
     if (!month || !isa_id) {
-      return res.status(400).json({ error: 'Month and ISA ID are required' });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Month and ISA ID are required' });
     }
 
     const canEdit = await checkEditPermissionForMonth(month, isa_id);
 
     res.json({
+      success: true,
       canEdit,
       reason: canEdit
         ? null
         : 'Schedule is locked after approval by higher authority',
     });
   } catch (err) {
-    ////console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Error in checkMonthlyEditPermission:', err);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Server error while checking edit permission',
+      });
   }
 };
 
+// Get all ISAs
 export const getISAs = async (req, res) => {
   try {
     const isas = await fetchISAs();
-    res.json(isas);
+    res.json({ success: true, data: isas });
   } catch (err) {
-    ////console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Error in getISAs:', err);
+    res
+      .status(500)
+      .json({ success: false, message: 'Server error while fetching ISAs' });
   }
 };
 
-// Controller for ISA Monitoring
+// Get visits by ISA
 export const getVisitsByIsa = async (req, res) => {
   try {
-    //////console.log(req.query);
     const { isa_id, date, month, week } = req.query;
-    //////console.log('ID', month, ' ');
-    const currentMonth = ' ';
-    //////console.log('Monthhhhh', month);
-    ////console.log('month ', month);
+    if (!isa_id) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'isa_id is required' });
+    }
 
     const visits = await fetchVisitsByIsa(
-      isa_id ? Number(isa_id) : null,
+      Number(isa_id),
       date && date !== 'null' ? date : null,
       month && month !== 'null' ? month : '',
       week && week !== 'null' ? week : null
@@ -112,32 +165,41 @@ export const getVisitsByIsa = async (req, res) => {
 
     res.json({ success: true, data: visits });
   } catch (err) {
-    ////console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Error in getVisitsByIsa:', err);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Server error while fetching visits by ISA',
+      });
   }
 };
 
-// Controller for Location Monitoring
+// Get visits by location
 export const getVisitsByLocation = async (req, res) => {
   try {
-    ////console.log(req.query);
-
     const { location_id, date, month, week } = req.query;
-
-    const currentMonth = null;
+    if (!location_id) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'location_id is required' });
+    }
 
     const visits = await fetchVisitsByLocation(
-      location_id ? Number(location_id) : null,
-
+      Number(location_id),
       date && date !== 'null' ? date : null,
-      month && month !== 'null' ? month : currentMonth,
+      month && month !== 'null' ? month : null,
       week && week !== 'null' ? week : null
     );
 
-    ////console.log(visits);
     res.json({ success: true, data: visits });
   } catch (err) {
-    ////console.error(err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Error in getVisitsByLocation:', err);
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: 'Server error while fetching visits by location',
+      });
   }
 };

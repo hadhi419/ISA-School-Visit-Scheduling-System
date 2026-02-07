@@ -4,36 +4,50 @@ import {
   editLocationModel,
 } from '../models/locationModel.js';
 
+// Fetch all locations
 export const fetchLocations = async (req, res) => {
   try {
-    console.log('coming');
     const locations = await getAllLocations();
-    console.log('going');
-
-    res.json({ locations });
+    res.json({ success: true, data: { locations } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in fetchLocations:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
+// Add a new location
 export const addLocation = async (req, res) => {
   try {
     const { locationName, category, address } = req.body;
 
-    ////console.log(address);
+    if (!locationName || !category || !address) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'All fields are required' });
+    }
 
     const response = await addLocationModel(locationName, category, address);
-    res.json({ response });
+    res.status(201).json({
+      success: true,
+      message: 'Location added successfully',
+      data: response,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in addLocation:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
+// Edit an existing location
 export const editLocation = async (req, res) => {
   try {
     const { editLocation, name, category, address } = req.body;
 
-    ////console.log(address);
+    if (!editLocation || !name || !category || !address) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'All fields are required' });
+    }
 
     const response = await editLocationModel(
       editLocation,
@@ -41,8 +55,13 @@ export const editLocation = async (req, res) => {
       category,
       address
     );
-    res.json('Edit done successfully', response);
+    res.json({
+      success: true,
+      message: 'Location edited successfully',
+      data: response,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in editLocation:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };

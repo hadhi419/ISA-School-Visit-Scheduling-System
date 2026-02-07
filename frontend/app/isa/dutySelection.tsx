@@ -1,6 +1,6 @@
 import { useAuth } from '@/AuthContext';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Icon } from '@rneui/themed';
+import AppAlert from '@/components/AppAlert';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -46,6 +46,16 @@ const DutySelection = () => {
   const { id, isLoggedIn } = useAuth();
   const { setLoading } = useLoading();
   const edit = params.edit === 'true'; // now edit is a proper boolean
+
+  const [appAlert, setAppAlert] = React.useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
   // //console.log('edit:', edit);
 
@@ -101,12 +111,20 @@ const DutySelection = () => {
         res.data.message.message ==
         'Cannot delete or update a parent row: a foreign key constraint fails (`isa_school_visit_management`.`approval_logs`, CONSTRAINT `approval_logs_ibfk_1` FOREIGN KEY (`visit_id`) REFERENCES `visits` (`id`))'
       ) {
-        alert('Cannot delete a schedule that was submitted');
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Cannot delete a schedule that was submitted',
+        });
       }
       return router.navigate('/isa/advancedProgram');
     } catch (err) {
       //console.error('Error deleting visit', err);
-      alert('Failed to delete schedule');
+      setAppAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to delete schedule',
+      });
     } finally {
       const elapsed = Date.now() - start; // NEW
       if (elapsed < minTime) {
@@ -157,7 +175,11 @@ const DutySelection = () => {
         return router.navigate('/isa/advancedProgram');
       } catch (err) {
         //console.error('Error saving HOLI visit', err);
-        alert('Failed to save schedule');
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Failed to save schedule',
+        });
       } finally {
         const elapsed = Date.now() - start; // NEW
         if (elapsed < minTime) {
@@ -179,12 +201,18 @@ const DutySelection = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppAlert
+        visible={appAlert.visible}
+        title={appAlert.title}
+        message={appAlert.message}
+        onClose={() => setAppAlert({ ...appAlert, visible: false })}
+      />
+
       <View style={styles.header}>
-        <Icon
+        <MaterialIcons
           name="arrow-back"
-          type="material"
-          color="#E0E0E0"
           size={28}
+          color="#E0E0E0"
           onPress={() => router.back()}
         />
         <Text style={styles.headerTitle}>Select Duty</Text>

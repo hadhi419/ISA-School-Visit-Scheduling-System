@@ -1,9 +1,10 @@
-import { Icon } from '@rneui/themed';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import AppAlert from '@/components/AppAlert';
 import { router } from 'expo-router';
 import { useSearchParams } from 'expo-router/build/hooks';
 import React, { FC, useEffect, useState } from 'react';
 import {
-  Alert,
   Modal,
   Platform,
   Pressable,
@@ -43,6 +44,25 @@ const MonitoringReportForm: FC = () => {
   const [observations, setObservations] = useState('');
   const [assessments, setAssessments] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+
+  const [appAlert, setAppAlert] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
+  if (!observations) {
+    setAppAlert({
+      visible: true,
+      title: 'Error',
+      message: 'Observations are required.',
+    });
+    return;
+  }
 
   const [locationChanged, setLocationChanged] = useState(false);
   const [actualLocationId, setActualLocationId] = useState<number | null>(null);
@@ -175,7 +195,15 @@ const MonitoringReportForm: FC = () => {
   /* ---------- Submit Form ---------- */
   const submitReport = async () => {
     if (!observations) {
-      Alert.alert('Error', 'Observations are required.');
+      if (!observations) {
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Observations are required.',
+        });
+        return;
+      }
+
       return;
     }
 
@@ -234,18 +262,30 @@ const MonitoringReportForm: FC = () => {
       //console.log('Submit Response:', response);
 
       if (response.data.message == 'Monitoring report submitted successfully') {
-        Alert.alert('Success', data.message);
+        setAppAlert({
+          visible: true,
+          title: 'Success',
+          message: data.message,
+        });
         setObservations('');
         setAssessments('');
         setUploadedFiles([]);
       } else {
-        Alert.alert('Error', data.error || 'Something went wrong.');
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: data.error || 'Something went wrong.',
+        });
       }
 
       router.back();
     } catch (err) {
       //console.error('Submit Error:', err);
-      Alert.alert('Error', 'Network or server error.');
+      setAppAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Network or server error.',
+      });
     } finally {
       const elapsed = Date.now() - start;
       if (elapsed < minTime) {
@@ -258,17 +298,20 @@ const MonitoringReportForm: FC = () => {
   /* ---------- File Item ---------- */
   const FileItem: FC<FileItemProps> = ({ file, onRemove }) => (
     <View style={styles.fileItem}>
-      <Icon
+      <MaterialCommunityIcons
         name={
           file.type === 'document' ? 'file-document-outline' : 'image-outline'
         }
-        type="material-community"
         color="#555"
         size={20}
       />
       <Text style={styles.fileName}>{file.name}</Text>
       <Pressable onPress={() => onRemove(file.id)}>
-        <Icon name="delete-outline" type="material" color="#CC3333" size={24} />
+        <MaterialCommunityIcons
+          name="delete-outline"
+          color="#CC3333"
+          size={24}
+        />{' '}
       </Pressable>
     </View>
   );
@@ -276,14 +319,18 @@ const MonitoringReportForm: FC = () => {
   /* ---------- UI ---------- */
   return (
     <SafeAreaView style={styles.safeArea}>
+      <AppAlert
+        visible={appAlert.visible}
+        title={appAlert.title}
+        message={appAlert.message}
+        onClose={() => setAppAlert({ ...appAlert, visible: false })}
+      />
+
       <View style={styles.header}>
-        <Icon
-          name="arrow-back"
-          type="material"
-          color="#fff"
+        <MaterialCommunityIcons
+          name="arrow-left" // Use arrow-left instead of arrow-back for MCI
           size={28}
-          style={styles.backIcon}
-          onPress={() => router.back()}
+          color="#fff"
         />
         <Text style={styles.headerTitle}>Submit Monitoring Report</Text>
       </View>
@@ -315,11 +362,10 @@ const MonitoringReportForm: FC = () => {
             setLocationChanged((prev) => !prev);
           }}
         >
-          <Icon
+          <MaterialCommunityIcons
             name={
               locationChanged ? 'checkbox-marked' : 'checkbox-blank-outline'
             }
-            type="material-community"
             size={24}
             color={PRIMARY_COLOR}
           />
@@ -551,9 +597,8 @@ const MonitoringReportForm: FC = () => {
           style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
           onPress={pickImage}
         >
-          <Icon
+          <MaterialCommunityIcons
             name="camera-outline"
-            type="material-community"
             color="#1565C0"
             size={24}
           />
@@ -565,9 +610,34 @@ const MonitoringReportForm: FC = () => {
           style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
           onPress={pickDocument}
         >
-          <Icon
+          <MaterialCommunityIcons
             name="file-document-outline"
-            type="material-community"
+            color="#1565C0"
+            size={24}
+          />
+          <Text style={[styles.uploadButtonText, { color: '#1565C0' }]}>
+            Upload Photos
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
+          onPress={pickDocument}
+        >
+          <MaterialCommunityIcons
+            name="camera-outline"
+            color="#1565C0"
+            size={24}
+          />
+          <Text style={[styles.uploadButtonText, { color: '#1565C0' }]}>
+            Upload Photos
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
+          onPress={pickDocument}
+        >
+          <MaterialCommunityIcons
+            name="file-document-outline"
             color="#1565C0"
             size={24}
           />

@@ -24,11 +24,29 @@ export default function ProfileComponent({ onClose }: Props) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [appAlert, setAppAlert] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
+
   const handleChangePassword = () => setModalVisible(true);
 
   const submitPasswordChange = async () => {
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match!');
+      if (newPassword !== confirmPassword) {
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Passwords do not match!',
+        });
+        return;
+      }
+
       return;
     }
 
@@ -40,7 +58,14 @@ export default function ProfileComponent({ onClose }: Props) {
         newPassword,
       });
 
-      alert(response.data.result);
+      setAppAlert({
+        visible: true,
+        title:
+          response.data.result === 'Password has been changed successfully'
+            ? 'Success'
+            : 'Info',
+        message: response.data.result,
+      });
       //console.log(response.data);
       if (response.data.result === 'Password has been changed successfully') {
         setModalVisible(false);
@@ -50,7 +75,11 @@ export default function ProfileComponent({ onClose }: Props) {
       setConfirmPassword('');
     } catch (err) {
       //console.error(err);
-      alert('Failed to change password.');
+      setAppAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to change password.',
+      });
     } finally {
       setLoading(false);
     }

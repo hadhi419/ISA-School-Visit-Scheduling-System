@@ -186,26 +186,25 @@ const HigherOfficialDashboard = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* BLUE HEADER */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleLogout}>
-            <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Welcome, {name}</Text>
-          {/* <MaterialCommunityIcons
+      {/* BLUE HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleLogout}>
+          <MaterialCommunityIcons name="logout" size={28} color="#eee" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Welcome, {name}</Text>
+        {/* <MaterialCommunityIcons
             name="account-circle"
             size={28}
             color="#eee"
           /> */}
-          <MaterialCommunityIcons
-            name="account"
-            size={28}
-            color="#E0E0E0"
-            onPress={() => setShowProfile(true)}
-          />
-        </View>
-
+        <MaterialCommunityIcons
+          name="account"
+          size={28}
+          color="#E0E0E0"
+          onPress={() => setShowProfile(true)}
+        />
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         <Modal visible={showProfile} transparent animationType="fade">
           <View style={popupStyles.overlay}>
             <View style={popupStyles.popup}>

@@ -1,5 +1,5 @@
 import { useAuth } from '@/AuthContext';
-import { Icon } from '@rneui/themed';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -362,11 +362,10 @@ const AmmendedProgram: FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Icon
+        <MaterialIcons
           name="arrow-back"
-          type="material"
-          color="#E0E0E0"
           size={28}
+          color="#E0E0E0"
           onPress={() => router.back()}
         />
         <Text style={styles.headerTitle}>Amended Program</Text>

@@ -1,10 +1,10 @@
 import { useAuth } from '@/AuthContext';
-import { Icon } from '@rneui/base';
+import AppAlert from '@/components/AppAlert';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -32,6 +32,12 @@ interface VisitDetail {
 const ScheduleDetailPage = ({ route }: any) => {
   const router = useRouter();
   //const isa_id = route?.params?.isa_id ?? 5;
+
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: 'Alert',
+    message: '',
+  });
 
   const [isa_id, setisa_id] = useState<number | null>(null);
 
@@ -95,13 +101,17 @@ const ScheduleDetailPage = ({ route }: any) => {
       });
 
       if (res.data.success) {
-        Alert.alert('Success', 'Schedule approved');
+        setAlert({
+          visible: true,
+          title: 'Success',
+          message: 'Schedule approved',
+        });
         router.replace('/dde/ddeDashboard');
       } else {
-        Alert.alert('Error', res.data.message);
+        setAlert({ visible: true, title: 'Error', message: res.data.message });
       }
     } catch (err) {
-      Alert.alert('Error', 'Server error');
+      setAlert({ visible: true, title: 'Error', message: 'Server error' });
     } finally {
       setActionLoading(false);
     }
@@ -116,13 +126,17 @@ const ScheduleDetailPage = ({ route }: any) => {
       });
 
       if (res.data.success) {
-        Alert.alert('Success', 'Revision requested successfully');
+        setAlert({
+          visible: true,
+          title: 'Success',
+          message: 'Revision requested successfully',
+        });
         router.replace('/dde/ddeDashboard');
       } else {
-        Alert.alert('Error', res.data.message);
+        setAlert({ visible: true, title: 'Error', message: res.data.message });
       }
     } catch (err) {
-      Alert.alert('Error', 'Server error');
+      setAlert({ visible: true, title: 'Error', message: 'Server error' });
     } finally {
       setActionLoading(false);
     }
@@ -169,7 +183,11 @@ const ScheduleDetailPage = ({ route }: any) => {
                 style={[styles.modalBtn, styles.sendBtn]}
                 onPress={() => {
                   if (!comment.trim()) {
-                    Alert.alert('Error', 'Please enter a comment');
+                    setAlert({
+                      visible: true,
+                      title: 'Error',
+                      message: 'Please enter a comment',
+                    });
                     return;
                   }
                   setShowCommentModal(false);
@@ -186,10 +204,18 @@ const ScheduleDetailPage = ({ route }: any) => {
 
       {/* Main Screen */}
       <SafeAreaView style={styles.container}>
+        <AppAlert
+          visible={alert.visible}
+          title={alert.title}
+          message={alert.message}
+          onClose={() =>
+            setAlert({ visible: false, title: 'Alert', message: '' })
+          }
+        />
+
         <View style={styles.header}>
-          <Icon
-            name="arrow-back"
-            type="material"
+          <MaterialCommunityIcons
+            name="arrow-left"
             color="#fff"
             size={28}
             onPress={() => router.replace('/dde/ddeDashboard')}

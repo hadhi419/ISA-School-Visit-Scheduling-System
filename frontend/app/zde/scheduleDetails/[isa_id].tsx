@@ -1,10 +1,11 @@
 import { useAuth } from '@/AuthContext';
-import { Icon } from '@rneui/base';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+
+import AppAlert from '@/components/AppAlert';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -35,6 +36,16 @@ const ScheduleDetailPage = ({ route }: any) => {
   const [detail, setDetail] = useState<VisitDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const [appAlert, setAppAlert] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
   const { isLoggedIn } = useAuth();
 
@@ -79,14 +90,27 @@ const ScheduleDetailPage = ({ route }: any) => {
       const data = res.data;
 
       if (data.success) {
-        Alert.alert('Success', 'Schedule approved and copied to visit plan.');
+        setAppAlert({
+          visible: true,
+          title: 'Success',
+          message: 'Schedule approved and copied to visit plan.',
+        });
         router.replace('/zde/zdeDashboard');
       } else {
-        Alert.alert('Error', data.message || 'Failed to approve schedule.');
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: data.message || 'Failed to approve schedule.',
+        });
       }
     } catch (err) {
       //console.error(err);
-      Alert.alert('Error', 'Server error while approving schedule.');
+
+      setAppAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Server error while approving schedule.',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -104,13 +128,25 @@ const ScheduleDetailPage = ({ route }: any) => {
       });
       const data = await res.data;
       if (data.success) {
-        Alert.alert('Success', 'Revision requested successfully.');
+        setAppAlert({
+          visible: true,
+          title: 'Success',
+          message: 'Revision requested successfully.',
+        });
       } else {
-        Alert.alert('Error', data.message || 'Failed to request revisions.');
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: data.message || 'Failed to request revisions.',
+        });
       }
     } catch (err) {
       //console.error(err);
-      Alert.alert('Error', 'Server error while requesting revisions.');
+      setAppAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Server error while requesting revisions.',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -128,11 +164,17 @@ const ScheduleDetailPage = ({ route }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppAlert
+        visible={appAlert.visible}
+        title={appAlert.title}
+        message={appAlert.message}
+        onClose={() => setAppAlert({ ...appAlert, visible: false })}
+      />
+
       {/* Header */}
       <View style={styles.header}>
-        <Icon
-          name="arrow-back"
-          type="material"
+        <MaterialCommunityIcons
+          name="arrow-left"
           color="#fff"
           size={28}
           onPress={() => router.back()}

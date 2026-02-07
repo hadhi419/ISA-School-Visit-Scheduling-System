@@ -2,7 +2,6 @@ import api from '@/api/axiosInstance';
 import { useAuth } from '@/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { Icon } from '@rneui/themed';
 import { router } from 'expo-router';
 import React, { FC, useEffect, useState } from 'react';
 import {
@@ -280,9 +279,9 @@ const LocationMonitoring: FC = () => {
             <>
               {/* Header */}
               <View style={styles.header}>
-                <Icon
+                <MaterialIcons
                   name="arrow-back"
-                  type="material"
+                  size={28}
                   color="#fff"
                   onPress={() => router.back()}
                 />

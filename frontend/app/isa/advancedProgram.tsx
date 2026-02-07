@@ -1,5 +1,5 @@
+import AppAlert from '@/components/AppAlert';
 import { Picker } from '@react-native-picker/picker';
-import { Icon } from '@rneui/themed';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import {
@@ -233,11 +233,23 @@ const AdvancedProgram: FC = () => {
 
   const [viewMode, setViewMode] = useState<'calendar' | 'card'>('calendar');
 
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+
   const [scheduledEvents, setRemoteData] = useState<ScheduledEvent[]>([]);
 
   const [canEdit, setCanEdit] = useState(false);
 
   const [showPicker, setShowPicker] = useState(false);
+
+  const [appAlert, setAppAlert] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
   const monthToFetch = useMemo(
     () =>
@@ -363,10 +375,18 @@ const AdvancedProgram: FC = () => {
           month: nextMonthName,
           isa_id: id,
         });
-        alert('Monthly schedule submitted successfully!');
+        setAppAlert({
+          visible: true,
+          title: 'Success',
+          message: 'Monthly schedule submitted successfully!',
+        });
       } catch (err) {
         //console.error(err);
-        alert('Failed to submit monthly schedule.');
+        setAppAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Failed to submit monthly schedule.',
+        });
       } finally {
         await fetchData(); // keep your existing call
         const elapsed = Date.now() - start;
@@ -469,14 +489,27 @@ const AdvancedProgram: FC = () => {
       });
       const uniquePayloads = Array.from(payloadMap.values());
       //console.log('Payload to be sent:', uniquePayloads);
-      if (uniquePayloads.length === 0) return alert('No new visits to save.');
+      if (uniquePayloads.length === 0)
+        return setAppAlert({
+          visible: true,
+          title: 'Info',
+          message: 'No new visits to save.',
+        });
       await api.post('/visits', uniquePayloads);
-      alert('✅ Schedule saved to the database!');
+      setAppAlert({
+        visible: true,
+        title: 'Success',
+        message: '✅ Schedule saved to the database!',
+      });
       // fetchMonthVisits(nextMonthName);
       //fetchMonthVisits(monthToFetch);
     } catch (err) {
+      setAppAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Failed to save schedule.',
+      });
       //console.error(err);
-      alert('Failed to save schedule.');
     }
   };
 
@@ -531,12 +564,17 @@ const AdvancedProgram: FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppAlert
+        visible={appAlert.visible}
+        title={appAlert.title}
+        message={appAlert.message}
+        onClose={() => setAppAlert({ ...appAlert, visible: false })}
+      />
       <View style={styles.header}>
-        <Icon
+        <MaterialIcons
           name="arrow-back"
-          type="material"
-          color="#E0E0E0"
           size={28}
+          color="#E0E0E0"
           onPress={() => router.push('/isa/isaDashboard')}
         />
         <Text style={styles.headerTitle}>Advanced Program</Text>
@@ -545,11 +583,10 @@ const AdvancedProgram: FC = () => {
             setViewMode(viewMode === 'calendar' ? 'card' : 'calendar')
           }
         >
-          <Icon
+          <MaterialIcons
             name={viewMode === 'calendar' ? 'view-list' : 'calendar-today'}
-            type="material"
-            color="#fff"
             size={28}
+            color="#fff"
           />
         </Pressable>
       </View>
@@ -628,7 +665,7 @@ const AdvancedProgram: FC = () => {
                   },
                 ]}
                 disabled={unscheduledWeekdays > 0}
-                onPress={handleSubmitSchedule}
+                onPress={() => setShowSubmitConfirm(true)}
               >
                 <Text style={styles.submitButtonText}>Submit Schedule</Text>
               </Pressable>
@@ -776,7 +813,7 @@ const AdvancedProgram: FC = () => {
 
               return (
                 <Pressable
-                  disabled={isWeekend || !canEdit}
+                  disabled={!canEdit}
                   style={[cardStyle, { backgroundColor: BackgroundColor }]}
                   onPress={() => onDayPress(item.date, false)}
                 >
@@ -811,7 +848,7 @@ const AdvancedProgram: FC = () => {
                           (item.schedule == 'Parti' &&
                             'Meeting / Seminar / Workshops ') ||
                           (item.schedule == 'HOLI' && 'Holiday') ||
-                          (item.schedule == 'PL' && 'Personal Leabe') ||
+                          (item.schedule == 'PL' && 'Personal Leave') ||
                           (item.schedule == 'Other' && ' Others') ||
                           (item.schedule == 'ADVO' && 'In school')}
                       </Text>
@@ -850,6 +887,46 @@ const AdvancedProgram: FC = () => {
         >
           <Text style={[styles.submitButtonText, { color: '#fff' }]}>Save</Text>
         </Pressable> */}
+
+      <Modal visible={showSubmitConfirm} transparent animationType="fade">
+        <View style={styles.popupOverlay}>
+          <View style={styles.popupCardApprovalStyle}>
+            <Text style={styles.popupTitle}>Confirm Submission</Text>
+
+            <Text
+              style={{ textAlign: 'center', marginBottom: 20, color: '#333' }}
+            >
+              Are you sure you want to submit this monthly schedule? You will
+              not be able to edit it after submission.
+            </Text>
+
+            <View style={styles.popupActionsApproval}>
+              <TouchableOpacity
+                style={[
+                  styles.popupButtonApproval,
+                  { backgroundColor: '#9e9e9e' },
+                ]}
+                onPress={() => setShowSubmitConfirm(false)}
+              >
+                <Text style={styles.popupButtonTextApproval}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.popupButtonApproval,
+                  { backgroundColor: '#388E3C' },
+                ]}
+                onPress={() => {
+                  setShowSubmitConfirm(false);
+                  handleSubmitSchedule(); // ✅ real submit happens here
+                }}
+              >
+                <Text style={styles.popupButtonTextApproval}>Yes, Submit</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

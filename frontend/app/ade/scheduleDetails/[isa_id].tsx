@@ -1,11 +1,11 @@
+import AppAlert from '@/components/AppAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Icon } from '@rneui/base';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { jwtDecode } from 'jwt-decode';
 import React, { useEffect, useState } from 'react';
+
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import api from '../../../api/axiosInstance';
@@ -46,6 +47,12 @@ const ScheduleDetailPage = ({ route }: any) => {
 
   const [user_Id, setUser_Id] = useState<number | null>(null);
   const { id, isLoggedIn } = useAuth();
+
+  const [alert, setAlert] = useState({
+    visible: false,
+    message: '',
+    title: 'Error',
+  });
 
   const params = useLocalSearchParams();
   const paramsId = params.isa_id;
@@ -123,14 +130,31 @@ const ScheduleDetailPage = ({ route }: any) => {
       const data = res.data;
 
       if (data.success) {
-        Alert.alert('Success', 'Schedule approved and copied to visit plan.');
+        setAlert({
+          visible: true,
+          title: 'Error',
+          message: 'Schedule approved and copied to visit plan.',
+        });
+
         router.replace('/ade/adeDashboard');
       } else {
-        Alert.alert('Error', data.message || 'Failed to approve schedule.');
+        setAlert({
+          visible: true,
+          title: 'Error',
+          message: data.message || 'Failed to approve schedule.',
+        });
       }
     } catch (err) {
-      //console.error(err);
-      Alert.alert('Error', 'Server error while approving schedule.');
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Server error while approving schedule.';
+
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message,
+      });
     } finally {
       setActionLoading(false);
     }
@@ -146,13 +170,25 @@ const ScheduleDetailPage = ({ route }: any) => {
       });
       const data = await res.data;
       if (data.success) {
-        Alert.alert('Success', 'Revision requested successfully.');
+        setAlert({
+          visible: true,
+          title: 'Success',
+          message: 'Revision requested successfully.',
+        });
       } else {
-        Alert.alert('Error', data.message || 'Failed to request revisions.');
+        setAlert({
+          visible: true,
+          title: 'Error',
+          message: data.message || 'Failed to request revisions.',
+        });
       }
     } catch (err) {
       //console.error(err);
-      Alert.alert('Error', 'Server error while requesting revisions.');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Server error while requesting revisions.',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -169,17 +205,26 @@ const ScheduleDetailPage = ({ route }: any) => {
       });
 
       if (res.data.success) {
-        Alert.alert('Success', 'Revision requested successfully.');
+        setAlert({
+          visible: true,
+          title: 'Success',
+          message: 'Revision requested successfully.',
+        });
         router.replace('/ade/adeDashboard');
       } else {
-        Alert.alert(
-          'Error',
-          res.data.message || 'Failed to request revisions.'
-        );
+        setAlert({
+          visible: true,
+          title: 'Success',
+          message: res.data.message || 'Failed to request revisions.',
+        });
       }
     } catch (err) {
       //console.error(err);
-      Alert.alert('Error', 'Server error while requesting revisions.');
+      setAlert({
+        visible: true,
+        title: 'Success',
+        message: 'Server error while requesting revisions.',
+      });
     } finally {
       setActionLoading(false);
     }
@@ -225,8 +270,11 @@ const ScheduleDetailPage = ({ route }: any) => {
                 style={[styles.modalBtn, styles.sendBtn]}
                 onPress={async () => {
                   if (!comment.trim()) {
-                    Alert.alert('Error', 'Please enter a comment');
-                    return;
+                    setAlert({
+                      visible: true,
+                      title: 'Success',
+                      message: 'Please enter a comment',
+                    });
                   }
 
                   setShowCommentModal(false);
@@ -243,13 +291,13 @@ const ScheduleDetailPage = ({ route }: any) => {
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Icon
-            name="arrow-back"
-            type="material"
-            color="#fff"
+          <IconButton
+            icon="arrow-left"
+            iconColor="#fff" // <- use iconColor instead of color
             size={28}
             onPress={() => router.replace('/ade/adeDashboard')}
           />
+
           <Text style={styles.headerTitle}>Schedule for {detail.isa_name}</Text>
           <View style={{ width: 28 }} />
         </View>
@@ -285,6 +333,15 @@ const ScheduleDetailPage = ({ route }: any) => {
         >
           <Text style={styles.buttonText}>Request Revisions</Text>
         </Pressable>
+
+        <AppAlert
+          visible={alert.visible}
+          title={alert.title}
+          message={alert.message}
+          onClose={() =>
+            setAlert({ visible: false, message: '', title: 'Error' })
+          }
+        />
       </SafeAreaView>
     </>
   );

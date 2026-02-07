@@ -1,7 +1,9 @@
 import api from '@/api/axiosInstance';
-import { Icon } from '@rneui/themed';
+import AppAlert from '@/components/AppAlert';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+
 import {
   Modal,
   Pressable,
@@ -36,6 +38,12 @@ const LocationsList = () => {
   const [editCategory, setEditCategory] = useState('');
   const [editAddress, setEditAddress] = useState('');
 
+  const [alert, setAlert] = useState({
+    visible: false,
+    title: 'Alert',
+    message: '',
+  });
+
   const fetchLocations = async () => {
     try {
       setLoading(true);
@@ -43,7 +51,11 @@ const LocationsList = () => {
       setLocations(res.data.locations);
     } catch (err) {
       //console.log(err);
-      alert('Error fetching locations.');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Error fetching locations.',
+      });
     } finally {
       setLoading(false);
     }
@@ -68,7 +80,11 @@ const LocationsList = () => {
     if (!selectedLocation) return;
 
     if (!selectedLocation || !editCategory || !editAddress || !editName) {
-      alert('All fields to should be filled');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'All fields should be filled.',
+      });
       return;
     }
     try {
@@ -83,27 +99,44 @@ const LocationsList = () => {
       setEditAddress('');
       setEditCategory('');
       setEditName('');
-      alert('Location updated successfully!');
+      setAlert({
+        visible: true,
+        title: 'Success',
+        message: 'Location updated successfully!',
+      });
       setShowModal(false);
       fetchLocations();
     } catch (err) {
       //console.log(err);
-      alert('Error updating location.');
+      setAlert({
+        visible: true,
+        title: 'Error',
+        message: 'Error updating location.',
+      });
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <AppAlert
+        visible={alert.visible}
+        title={alert.title}
+        message={alert.message}
+        onClose={() =>
+          setAlert({ visible: false, title: 'Alert', message: '' })
+        }
+      />
+
       {/* Header */}
       <View style={styles.header}>
-        <Icon
+        <MaterialIcons
           name="arrow-back"
-          type="material"
-          color="#fff"
           size={28}
+          color="#E0E0E0"
           onPress={() => router.back()}
         />
         <Text style={styles.headerTitle}>All Locations</Text>
+        <View style={{ width: 28 }} />
       </View>
 
       <ScrollView
@@ -116,9 +149,8 @@ const LocationsList = () => {
           <View key={loc.id} style={styles.card}>
             {/* Left: location icon */}
             <View style={styles.iconArea}>
-              <Icon
+              <MaterialCommunityIcons
                 name="map-marker"
-                type="material-community"
                 color="#1976D2"
                 size={28}
               />
@@ -138,12 +170,7 @@ const LocationsList = () => {
               style={styles.editButton}
               onPress={() => handleEditClick(loc)}
             >
-              <Icon
-                name="pencil"
-                type="material-community"
-                color="#fff"
-                size={24}
-              />
+              <MaterialCommunityIcons name="pencil" color="#fff" size={24} />
             </TouchableOpacity>
           </View>
         ))}
