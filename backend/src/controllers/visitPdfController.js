@@ -7,11 +7,9 @@ export const generateVisitPdf = async (req, res) => {
   try {
     const { isa_id, month, year, date, location_id } = req.query;
 
-    // Validate required fields
-    if (!isa_id || !month || !year || !officer_email) {
+    if (!isa_id || !month || !year) {
       return res.status(400).json({
-        success: false,
-        message: 'isa_id, month, year, and officer_email are required',
+        error: 'isa_id, month, and year are required',
       });
     }
 
@@ -482,17 +480,9 @@ ISA Management System`,
       ],
     });
 
-    res.json({
-      success: true,
-      message: 'PDF generated and emailed successfully',
-    });
+    res.json({ message: 'PDF generated and emailed successfully' });
   } catch (err) {
-    console.error('Error in generateVisitPdf:', err);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: 'Failed to generate PDF or send email',
-      });
+    console.error(err);
+    res.status(500).json({ error: 'PDF generation failed' });
   }
 };
