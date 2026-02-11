@@ -48,6 +48,8 @@ const ScheduleDetailPage = ({ route }: any) => {
   const [user_Id, setUser_Id] = useState<number | null>(null);
   const { id, isLoggedIn } = useAuth();
 
+  const [actionLoadingText, setActionLoadingText] = useState('Processing...');
+
   const [alert, setAlert] = useState({
     visible: false,
     message: '',
@@ -121,6 +123,7 @@ const ScheduleDetailPage = ({ route }: any) => {
   const handleApprove = async () => {
     if (!detail) return;
 
+    setActionLoadingText('Approving schedule...');
     setActionLoading(true);
     try {
       const res = await api.post(`/approvals/ade/approve/${isa_id}`, {
@@ -132,10 +135,9 @@ const ScheduleDetailPage = ({ route }: any) => {
       if (data.success) {
         setAlert({
           visible: true,
-          title: 'Error',
+          title: 'Success',
           message: 'Schedule approved and copied to visit plan.',
         });
-
         router.replace('/ade/adeDashboard');
       } else {
         setAlert({
@@ -145,58 +147,57 @@ const ScheduleDetailPage = ({ route }: any) => {
         });
       }
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Server error while approving schedule.';
-
       setAlert({
         visible: true,
         title: 'Error',
-        message,
+        message:
+          err instanceof Error
+            ? err.message
+            : 'Server error while approving schedule.',
       });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleRequestRevision = async () => {
-    if (!detail) return;
-    setActionLoading(true);
-    try {
-      const res = await api.post(`approvals/ade/reject/${isa_id}`, {
-        approved_by: 9,
-        comment: 'Please revise the schedule',
-      });
-      const data = await res.data;
-      if (data.success) {
-        setAlert({
-          visible: true,
-          title: 'Success',
-          message: 'Revision requested successfully.',
-        });
-      } else {
-        setAlert({
-          visible: true,
-          title: 'Error',
-          message: data.message || 'Failed to request revisions.',
-        });
-      }
-    } catch (err) {
-      //console.error(err);
-      setAlert({
-        visible: true,
-        title: 'Error',
-        message: 'Server error while requesting revisions.',
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  // const handleRequestRevision = async () => {
+  //   if (!detail) return;
+  //   setActionLoading(true);
+  //   try {
+  //     const res = await api.post(`approvals/ade/reject/${isa_id}`, {
+  //       approved_by: 9,
+  //       comment: 'Please revise the schedule',
+  //     });
+  //     const data = await res.data;
+  //     if (data.success) {
+  //       setAlert({
+  //         visible: true,
+  //         title: 'Success',
+  //         message: 'Revision requested successfully.',
+  //       });
+  //     } else {
+  //       setAlert({
+  //         visible: true,
+  //         title: 'Error',
+  //         message: data.message || 'Failed to request revisions.',
+  //       });
+  //     }
+  //   } catch (err) {
+  //     //console.error(err);
+  //     setAlert({
+  //       visible: true,
+  //       title: 'Error',
+  //       message: 'Server error while requesting revisions.',
+  //     });
+  //   } finally {
+  //     setActionLoading(false);
+  //   }
+  // };
 
   const handleRequestRevisionWithComment = async (commentText: string) => {
     if (!detail) return;
 
+    setActionLoadingText('Requesting revision...');
     setActionLoading(true);
     try {
       const res = await api.post(`/approvals/ade/reject/${isa_id}`, {
@@ -342,6 +343,16 @@ const ScheduleDetailPage = ({ route }: any) => {
             setAlert({ visible: false, message: '', title: 'Error' })
           }
         />
+
+        {/* Action Loading Overlay */}
+        {actionLoading && (
+          <View style={styles.actionLoadingOverlay}>
+            <ActivityIndicator size="large" color="#1976D2" />
+            <Text style={styles.actionLoadingText}>
+              {actionLoadingText || 'Processing...'}
+            </Text>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );
@@ -451,5 +462,23 @@ const styles = StyleSheet.create({
   modalBtnText: {
     color: '#fff',
     fontWeight: '700',
+  },
+  actionLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+
+  actionLoadingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 10,
+    fontWeight: '600',
   },
 });

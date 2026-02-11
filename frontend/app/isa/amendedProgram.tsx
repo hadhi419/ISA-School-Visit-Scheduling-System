@@ -368,7 +368,7 @@ const AmmendedProgram: FC = () => {
           color="#E0E0E0"
           onPress={() => router.back()}
         />
-        <Text style={styles.headerTitle}>Amended Program</Text>
+        <Text style={styles.headerTitle}>Submit Reports</Text>
         <View style={{ width: 28 }} />
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>

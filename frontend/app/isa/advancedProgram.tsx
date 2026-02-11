@@ -321,6 +321,7 @@ const AdvancedProgram: FC = () => {
       //console.log('Haaaaaaaaaadhi', response.data);
 
       const canEditValue = canEditResponse.data.canEdit as boolean;
+      console.log('can ', canEditValue);
       setCanEdit(canEditValue);
 
       //console.log('Can Edit Response:', canEditResponse.data);

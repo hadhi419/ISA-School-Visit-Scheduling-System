@@ -48,6 +48,8 @@ const ScheduleDetailPage = ({ route }: any) => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [comment, setComment] = useState('');
 
+  const [actionLoadingText, setActionLoadingText] = useState('Processing...');
+
   const { id, isLoggedIn } = useAuth();
 
   const params = useLocalSearchParams();
@@ -94,6 +96,7 @@ const ScheduleDetailPage = ({ route }: any) => {
   }, [paramsId]);
 
   const handleApprove = async () => {
+    setActionLoadingText('Approving schedule...');
     setActionLoading(true);
     try {
       const res = await api.post(`/approvals/dde/approve/${isa_id}`, {
@@ -118,6 +121,7 @@ const ScheduleDetailPage = ({ route }: any) => {
   };
 
   const handleRequestRevisionWithComment = async (commentText: string) => {
+    setActionLoadingText('Requesting revision...');
     setActionLoading(true);
     try {
       const res = await api.post(`/approvals/dde/reject/${isa_id}`, {
@@ -252,6 +256,15 @@ const ScheduleDetailPage = ({ route }: any) => {
         >
           <Text style={styles.buttonText}>Request Revisions</Text>
         </Pressable>
+        {/* Action Loading Overlay */}
+        {actionLoading && (
+          <View style={styles.actionLoadingOverlay}>
+            <ActivityIndicator size="large" color="#1976D2" />
+            <Text style={styles.actionLoadingText}>
+              {actionLoadingText || 'Processing...'}
+            </Text>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );
@@ -361,5 +374,23 @@ const styles = StyleSheet.create({
   modalBtnText: {
     color: '#fff',
     fontWeight: '700',
+  },
+  actionLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+
+  actionLoadingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 10,
+    fontWeight: '600',
   },
 });

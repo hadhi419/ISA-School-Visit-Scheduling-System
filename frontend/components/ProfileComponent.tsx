@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import AppAlert from './AppAlert';
 
 type Props = {
   onClose: () => void;
@@ -169,6 +170,14 @@ export default function ProfileComponent({ onClose }: Props) {
           </View>
         </View>
       )}
+      <AppAlert
+        visible={appAlert.visible}
+        title={appAlert.title}
+        message={appAlert.message}
+        onClose={() =>
+          setAppAlert({ visible: false, message: '', title: 'Error' })
+        }
+      />
     </View>
   );
 }

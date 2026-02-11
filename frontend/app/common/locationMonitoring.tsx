@@ -470,6 +470,16 @@ const LocationMonitoring: FC = () => {
                           }
                           setDatePickerVisible(false);
                         }}
+                        theme={{
+                          colors: {
+                            background: '#ffffff',
+                            surface: '#ffffff',
+                            primary: '#1976D2',
+                            text: '#000000',
+                            onSurface: '#000000',
+                            outline: '#1976D2',
+                          },
+                        }}
                       />
                     </>
                   )}

@@ -55,14 +55,14 @@ const MonitoringReportForm: FC = () => {
     message: '',
   });
 
-  if (!observations) {
-    setAppAlert({
-      visible: true,
-      title: 'Error',
-      message: 'Observations are required.',
-    });
-    return;
-  }
+  // if (!observations) {
+  //   setAppAlert({
+  //     visible: true,
+  //     title: 'Error',
+  //     message: 'Observations are required.',
+  //   });
+  //   return;
+  // }
 
   const [locationChanged, setLocationChanged] = useState(false);
   const [actualLocationId, setActualLocationId] = useState<number | null>(null);
@@ -311,7 +311,7 @@ const MonitoringReportForm: FC = () => {
           name="delete-outline"
           color="#CC3333"
           size={24}
-        />{' '}
+        />
       </Pressable>
     </View>
   );
@@ -327,11 +327,13 @@ const MonitoringReportForm: FC = () => {
       />
 
       <View style={styles.header}>
-        <MaterialCommunityIcons
-          name="arrow-left" // Use arrow-left instead of arrow-back for MCI
-          size={28}
-          color="#fff"
-        />
+        <Pressable
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+          }}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={28} color="#E0E0E0" />
+        </Pressable>
         <Text style={styles.headerTitle}>Submit Monitoring Report</Text>
       </View>
 
@@ -606,32 +608,7 @@ const MonitoringReportForm: FC = () => {
             Upload Photos
           </Text>
         </Pressable>
-        <Pressable
-          style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
-          onPress={pickDocument}
-        >
-          <MaterialCommunityIcons
-            name="file-document-outline"
-            color="#1565C0"
-            size={24}
-          />
-          <Text style={[styles.uploadButtonText, { color: '#1565C0' }]}>
-            Upload Photos
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
-          onPress={pickDocument}
-        >
-          <MaterialCommunityIcons
-            name="camera-outline"
-            color="#1565C0"
-            size={24}
-          />
-          <Text style={[styles.uploadButtonText, { color: '#1565C0' }]}>
-            Upload Photos
-          </Text>
-        </Pressable>
+
         <Pressable
           style={[styles.uploadButton, { backgroundColor: '#B3E5FC' }]}
           onPress={pickDocument}
@@ -670,15 +647,24 @@ const PRIMARY_COLOR = '#1976D2';
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
+  backIcon: { marginRight: 10 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: 16,
     paddingVertical: 15,
+    position: 'relative',
   },
-  backIcon: { marginRight: 10 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#fff' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+  },
   container: { padding: 15 },
   detailCard: {
     backgroundColor: '#f5f5f5',

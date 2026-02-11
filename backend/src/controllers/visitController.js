@@ -70,6 +70,7 @@ export const checkMonthlyEditPermission = async (req, res) => {
     }
 
     const canEdit = await checkEditPermissionForMonth(month, isa_id);
+    console.log(canEdit);
 
     res.json({
       canEdit,

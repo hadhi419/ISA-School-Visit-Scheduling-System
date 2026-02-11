@@ -184,6 +184,7 @@ export const checkEditPermissionForMonth = async (month, isa_id) => {
       `,
       [month, isa_id]
     );
+    console.log(rows[0]);
 
     // If any row is locked → cannot edit
     return rows[0].lockedCount === 0;

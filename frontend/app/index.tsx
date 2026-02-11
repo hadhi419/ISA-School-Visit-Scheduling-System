@@ -40,15 +40,21 @@ const Login: React.FC = () => {
     try {
       setLoading(true);
 
+      console.log('Haadhi');
+
       const response = await axios.post(
-        'https://isa-school-visit-scheduling-system.fly.dev/api/auth/login',
+        //'https://isa-school-visit-scheduling-system.fly.dev/api/auth/login',
+        'http://172.20.10.3:5000/api/auth/login',
         {
           email,
           password,
         }
       );
 
+      console.log('hahi');
+
       const { token } = response.data;
+      console.log(response.data);
 
       const decoded: any = jwtDecode(token);
       const userRole = decoded.role;
@@ -81,6 +87,7 @@ const Login: React.FC = () => {
           });
       }
     } catch (err: any) {
+      console.log(err);
       setAlert({
         visible: true,
         title: 'Error',

@@ -1,4 +1,5 @@
 import db from '../config/db.js';
+import { transporter } from '../utils/mailer.js';
 
 export const getSubmittedVisitsSummaryService = async (month) => {
   try {
@@ -9,8 +10,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
     ////console.log('2', month);
 
     const [rows] = await db.query(
-      `
-      SELECT 
+      `SELECT 
         u.id AS isa_id,
         u.full_name AS isa_name,
         v.status,
@@ -106,11 +106,13 @@ export const ddeApproveScheduleService = async (isa_id, approved_by) => {
 
     // 2. Insert each visit into visit_plan
     const [visits] = await db.query(
-      `SELECT isa_id, location_id, visit_date AS planned_date, month
+      `SELECT isa_id, location_id, date AS planned_date, month
             FROM visits
             WHERE isa_id = ? AND status = 'DDE_APPROVED'`,
       [isa_id]
     );
+
+    console.log(visits);
 
     for (const v of visits) {
       // Avoid duplicate entries: check if it already exists
@@ -136,11 +138,68 @@ export const ddeApproveScheduleService = async (isa_id, approved_by) => {
 
     ////console.log(result);
 
+    const isa = await getIsaContact(isa_id);
+
+    if (isa?.email) {
+      await sendStatusMail({
+        to: isa.email,
+        name: isa.full_name,
+        status: 'APPROVED',
+        role: 'DDE',
+      });
+    }
+
     return { message: 'DDE approved and visits copied to visit_plan' };
   } catch (err) {
     ////console.error(err);
     throw err;
   }
+};
+
+const getIsaContact = async (isa_id) => {
+  const [rows] = await db.query(
+    `SELECT full_name, email FROM users WHERE id = ?`,
+    [isa_id]
+  );
+
+  return rows[0]; // { full_name, email }
+};
+
+const sendStatusMail = async ({ to, name, status, role, comment = '' }) => {
+  let subject = '';
+  let text = '';
+
+  if (status === 'APPROVED') {
+    subject = `Schedule Approved by ${role}`;
+    text = `Dear ${name},
+
+Your monthly visit schedule has been APPROVED by ${role}.
+
+You may proceed with the next steps.
+
+Regards,
+ISA Management System`;
+  } else {
+    subject = `Schedule Rejected by ${role}`;
+    text = `Dear ${name},
+
+Your monthly visit schedule has been REJECTED by ${role}.
+
+Reason:
+${comment || 'No comment provided'}
+
+Please revise and resubmit.
+
+Regards,
+ISA Management System`;
+  }
+
+  await transporter.sendMail({
+    from: '"ISA Management System" <no-reply@isa.lk>',
+    to,
+    subject,
+    text,
+  });
 };
 
 export const ddeRejectScheduleService = async (
@@ -169,6 +228,18 @@ export const ddeRejectScheduleService = async (
        VALUES (?, ?, 'DDE', 'REJECTED', ?, NOW())`,
       [visit.visit_id, approved_by, comment]
     );
+  }
+
+  const isa = await getIsaContact(isa_id);
+
+  if (isa?.email) {
+    await sendStatusMail({
+      to: isa.email,
+      name: isa.full_name,
+      status: 'REJECTED',
+      role: 'DDE',
+      comment,
+    });
   }
 
   return updateResult.affectedRows;
@@ -209,6 +280,18 @@ export const adeRejectScheduleService = async (
     //////console.log(row);
   }
 
+  const isa = await getIsaContact(isa_id);
+
+  if (isa?.email) {
+    await sendStatusMail({
+      to: isa.email,
+      name: isa.full_name,
+      status: 'REJECTED',
+      role: 'ADE',
+      comment,
+    });
+  }
+
   return updateResult.affectedRows;
 };
 
@@ -216,6 +299,7 @@ export const adeApproveScheduleService = async (isa_id, approved_by) => {
   try {
     ////console.log(approved_by);
     // 1. Update visits table: mark as ADE_APPROVED
+    console.log('Hadhi');
     await db.query(
       `UPDATE visits
             SET status = 'ADE_APPROVED'
@@ -223,35 +307,25 @@ export const adeApproveScheduleService = async (isa_id, approved_by) => {
       [isa_id]
     );
 
-    // // 2. Insert each visit into visit_plan
-    // const [visits] = await db.query(
-    //   `SELECT isa_id, location_id, visit_date AS planned_date, month
-    //   FROM visits
-    //   WHERE isa_id = ? AND status = 'DDE_APPROVED'`,
-    //   [isa_id]
-    // );
-
-    // for (const v of visits) {
-    //   // Avoid duplicate entries: check if it already exists
-    //   const [existing] = await db.query(
-    //     `SELECT id FROM visit_plan WHERE isa_id = ? AND month = ? AND location_id = ? AND planned_date = ?`,
-    //     [v.isa_id, v.month, v.location_id, v.planned_date]
-    //   );
-    //   if (existing.length === 0) {
-    //     await db.query(
-    //       `INSERT INTO visit_plan (isa_id, month, location_id, planned_date)
-    //       VALUES (?, ?, ?, ?)`,
-    //       [v.isa_id, v.month, v.location_id, v.planned_date]
-    //     );
-    //   }
-    // }
-
     // 3. Log approval
     const result = await db.query(
       `INSERT INTO approval_logs (visit_id, approved_by, role, status)
             SELECT id, ?, 'ADE', 'APPROVED' FROM visits WHERE isa_id = ? AND status = 'ADE_APPROVED'`,
       [approved_by, isa_id]
     );
+
+    console.log(result);
+
+    const isa = await getIsaContact(isa_id);
+
+    if (isa?.email) {
+      await sendStatusMail({
+        to: isa.email,
+        name: isa.full_name,
+        status: 'APPROVED',
+        role: 'ADE',
+      });
+    }
 
     ////console.log(result);
 
@@ -268,10 +342,12 @@ export const getLatestRejectionForISAService = async (isa_id) => {
     SELECT 
       al.comment,
       al.role,
-      al.approved_at
-    FROM approval_logs al
-    JOIN visits v ON v.id = al.visit_id
+      al.approved_at,
+      v.status
+    FROM visits v
+    JOIN approval_logs al ON al.visit_id = v.id
     WHERE v.isa_id = ?
+      AND v.status IN ('ADE_REJECTED', 'DDE_REJECTED', 'ZDE_REJECTED')
       AND al.status = 'REJECTED'
     ORDER BY al.approved_at DESC
     LIMIT 1

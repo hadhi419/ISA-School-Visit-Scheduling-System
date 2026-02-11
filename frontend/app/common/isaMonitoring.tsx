@@ -3,6 +3,7 @@ import { useAuth } from '@/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
+
 import React, { FC, useEffect, useState } from 'react';
 import {
   FlatList,
@@ -49,7 +50,7 @@ const ISAMonitoring: FC = () => {
 
   const [filterMode, setFilterMode] = useState<FilterMode>('DATE');
 
-  const [selectedMonth, setSelectedMonth] = useState<string>(
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(
     new Date().toLocaleString('en-US', { month: 'long' })
   );
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
@@ -86,6 +87,31 @@ const ISAMonitoring: FC = () => {
 
     return Array.from({ length: totalWeeks }, (_, i) => i + 1);
   };
+
+  useEffect(() => {
+    // if (!isLoggedIn) {
+    //   router.replace('/');
+    //   return;
+    // }
+
+    // const now = new Date();
+    // if (!selectedMonth) {
+    //   setWeeks([]);
+    //   return;
+    // }
+
+    //const monthNumber1to12 = months.indexOf(selectedMonth) + 1;
+
+    //const currentYear = now.getFullYear();
+
+    // Update weeks for month/week mode
+    //const newWeeks = getWeeksInMonth(monthNumber1to12, currentYear);
+    setWeeks([]);
+
+    // Only fetch data when an ISA is selected or filter changes
+    fetchData();
+  }, [selectedDate]);
+
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
@@ -93,7 +119,13 @@ const ISAMonitoring: FC = () => {
     }
 
     const now = new Date();
+    if (!selectedMonth) {
+      setWeeks([]);
+      return;
+    }
+
     const monthNumber1to12 = months.indexOf(selectedMonth) + 1;
+
     const currentYear = now.getFullYear();
 
     // Update weeks for month/week mode
@@ -124,36 +156,20 @@ const ISAMonitoring: FC = () => {
   };
 
   const fetchData = async () => {
-    const date = formatDateToYMD(selectedDate);
-
     const minTime = 500;
     const start = Date.now();
     setLoading(true);
 
     try {
-      if (!selectedIsa || selectedIsa == -1 || selectedIsa == 0) {
-        ////console.log(selectedMonth);
+      // //console.log(selectedMonth);
+      //console.log('date', selectedDate);
 
-        const date = formatDateToYMD(selectedDate);
-        //console.log('date', selectedDate);
-        const response = await api.get(
-          `/visits/isa?isa_id=${selectedIsa}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
-        );
-        setDuties(response.data.data);
-
-        //console.log('daaaaaaaata', response.data.data);
-        ////console.log('Duties', duties);
-      } else {
-        // //console.log(selectedMonth);
-        //console.log('date', selectedDate);
-
-        const date = formatDateToYMD(selectedDate);
-        const response = await api.get(
-          `/visits/isa?isa_id=${selectedIsa}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
-        );
-        setDuties(response.data.data);
-        //console.log('Daaaaaaata', response.data.data);
-      }
+      const date = formatDateToYMD(selectedDate);
+      const response = await api.get(
+        `/visits/isa?isa_id=${selectedIsa}&date=${date}&month=${selectedMonth}&week=${selectedWeek}`
+      );
+      setDuties(response.data.data);
+      //console.log('Daaaaaaata', response.data.data);
 
       const isaResponse = await api.get(`/visits/isaDetails`);
 
@@ -172,17 +188,17 @@ const ISAMonitoring: FC = () => {
     return new Date(`${monthName} 1, 2026`).getMonth(); // 0 = January
   };
 
-  useEffect(() => {
-    //console.log('Monthhhh', selectedMonth);
-    if (!selectedIsa || selectedIsa === -1) {
-      fetchData();
-      setDuties([]);
-      return;
-    }
-    fetchData();
+  // useEffect(() => {
+  //   //console.log('Monthhhh', selectedMonth);
+  //   if (!selectedIsa || selectedIsa === -1) {
+  //     fetchData();
+  //     setDuties([]);
+  //     return;
+  //   }
+  //   fetchData();
 
-    //console.log(selectedMonth);
-  }, [selectedIsa, selectedDate, selectedMonth, selectedWeek]);
+  //   //console.log(selectedMonth);
+  // }, [selectedIsa, selectedDate, selectedMonth, selectedWeek]);
 
   const renderHeader = () => (
     <>
@@ -316,7 +332,7 @@ const ISAMonitoring: FC = () => {
               value={selectedDate ? (formatDateToYMD(selectedDate) ?? '') : ''}
               onChange={(e) => {
                 setSelectedDate(new Date(e.target.value));
-                setSelectedMonth(' ');
+                setSelectedMonth(null);
               }}
             />
           ) : (
@@ -341,7 +357,7 @@ const ISAMonitoring: FC = () => {
                 onConfirm={({ date }) => {
                   if (date) {
                     setSelectedDate(date);
-                    setSelectedMonth('');
+                    setSelectedMonth(null);
                   }
                   setDatePickerVisible(false);
                 }}

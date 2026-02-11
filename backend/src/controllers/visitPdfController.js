@@ -1,4 +1,3 @@
-import puppeteerCore from 'puppeteer-core';
 import puppeteer from 'puppeteer';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
@@ -400,30 +399,39 @@ export const generateVisitPdf = async (req, res) => {
     // await browser.close();
 
     async function launchBrowser() {
-      const isFly = !!process.env.FLY_APP_NAME;
+      // isFly = !!process.env.FLY_APP_NAME;
 
-      if (isFly) {
-        // Fly.io / Docker
-        return await puppeteerCore.launch({
-          executablePath:
-            process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-          headless: true,
-          timeout: 60000,
-          args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-          ],
-        });
-      }
-
+      // if (isFly) {
+      //   // Fly.io / Docker
+      //   return await puppeteerCore.launch({
+      //     executablePath:
+      //       process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+      //     headless: true,
+      //     timeout: 60000,
+      //     args: [
+      //       '--no-sandbox',
+      //       '--disable-setuid-sandbox',
+      //       '--disable-dev-shm-usage',
+      //     ],
+      //   });
+      // }
+      console.log('23');
       // Local (Windows / Mac)
       return await puppeteer.launch({
         headless: true,
+
+        executablePath:
+          'C:\\Users\\USER\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe', // your Chrome path
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
       });
     }
-
+    console.log('23232');
     const browser = await launchBrowser();
+    console.log('24');
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
 
