@@ -403,7 +403,7 @@ export const generateVisitPdf = async (req, res) => {
 
       if (isFly) {
         // Fly.io / Docker
-        return await puppeteer.launch({
+        return await puppeteerCore.launch({
           executablePath:
             process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
           headless: true,
@@ -415,20 +415,13 @@ export const generateVisitPdf = async (req, res) => {
           ],
         });
       }
-      console.log('23');
+
       // Local (Windows / Mac)
       return await puppeteer.launch({
         headless: true,
-
-        executablePath:
-          'C:\\Users\\USER\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-        ],
       });
     }
+
     console.log('23232');
     const browser = await launchBrowser();
     console.log('24');
