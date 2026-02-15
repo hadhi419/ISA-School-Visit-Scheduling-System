@@ -399,7 +399,7 @@ export const generateVisitPdf = async (req, res) => {
     // await browser.close();
 
     async function launchBrowser() {
-      isFly = !!process.env.FLY_APP_NAME;
+      const isFly = !!process.env.FLY_APP_NAME;
 
       if (isFly) {
         // Fly.io / Docker
