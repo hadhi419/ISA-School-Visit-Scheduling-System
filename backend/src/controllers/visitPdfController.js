@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import { fetchVisitsForPdf } from '../models/visitPdfModel.js';
 import { transporter } from '../utils/mailer.js';
+import puppeteerCore from 'puppeteer-core';
 
 export const generateVisitPdf = async (req, res) => {
   try {
