@@ -1,6 +1,7 @@
 import api from '@/api/axiosInstance';
 import { useAuth } from '@/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 
@@ -62,6 +63,8 @@ const ISAMonitoring: FC = () => {
   const { setLoading } = useLoading();
 
   const [weeks, setWeeks] = useState<number[]>([]);
+
+  const [showAndroidPicker, setShowAndroidPicker] = useState(false);
 
   const months = [
     'January',
@@ -217,7 +220,11 @@ const ISAMonitoring: FC = () => {
       <View style={styles.tabContainer}>
         <Pressable
           style={[styles.tab, filterMode === 'DATE' && styles.activeTab]}
-          onPress={() => setFilterMode('DATE')}
+          onPress={() => {
+            setFilterMode('DATE');
+            setSelectedMonth(null);
+            setSelectedWeek(0);
+          }}
         >
           <Text
             style={[
@@ -231,7 +238,10 @@ const ISAMonitoring: FC = () => {
 
         <Pressable
           style={[styles.tab, filterMode === 'MONTH_WEEK' && styles.activeTab]}
-          onPress={() => setFilterMode('MONTH_WEEK')}
+          onPress={() => {
+            setFilterMode('MONTH_WEEK');
+            setSelectedDate(null);
+          }}
         >
           <Text
             style={[
@@ -335,7 +345,7 @@ const ISAMonitoring: FC = () => {
                 setSelectedMonth(null);
               }}
             />
-          ) : (
+          ) : Platform.OS === 'ios' ? (
             <>
               <Pressable
                 style={styles.iosPickerButton}
@@ -349,19 +359,48 @@ const ISAMonitoring: FC = () => {
               </Pressable>
 
               <DatePickerModal
-                locale="en"
+                locale="en-GB"
                 mode="single"
                 visible={isDatePickerVisible}
                 date={selectedDate ?? new Date()}
                 onDismiss={() => setDatePickerVisible(false)}
                 onConfirm={({ date }) => {
+                  setDatePickerVisible(false);
                   if (date) {
                     setSelectedDate(date);
                     setSelectedMonth(null);
                   }
-                  setDatePickerVisible(false);
                 }}
               />
+            </>
+          ) : (
+            /* ✅ ANDROID — native picker (VERY STABLE) */
+            <>
+              <Pressable
+                style={styles.iosPickerButton}
+                onPress={() => setShowAndroidPicker(true)}
+              >
+                <Text style={styles.iosPickerText}>
+                  {selectedDate
+                    ? selectedDate.toDateString()
+                    : '-- Select Date --'}
+                </Text>
+              </Pressable>
+
+              {showAndroidPicker && (
+                <DateTimePicker
+                  value={selectedDate ?? new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowAndroidPicker(false);
+                    if (date) {
+                      setSelectedDate(date);
+                      setSelectedMonth(null);
+                    }
+                  }}
+                />
+              )}
             </>
           )}
 
@@ -433,18 +472,20 @@ const ISAMonitoring: FC = () => {
               </>
             ) : (
               /* Android */
-              <Picker
-                selectedValue={selectedMonth}
-                onValueChange={(val) => {
-                  setSelectedMonth(val);
-                  setSelectedWeek(null);
-                  setShowMonthPicker(false);
-                }}
-              >
-                {months.map((month) => (
-                  <Picker.Item key={month} label={month} value={month} />
-                ))}
-              </Picker>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={selectedMonth}
+                  onValueChange={(val) => {
+                    setSelectedMonth(val);
+                    setSelectedWeek(null);
+                    setShowMonthPicker(false);
+                  }}
+                >
+                  {months.map((month) => (
+                    <Picker.Item key={month} label={month} value={month} />
+                  ))}
+                </Picker>
+              </View>
             )}
           </View>
 
@@ -504,22 +545,25 @@ const ISAMonitoring: FC = () => {
               </>
             ) : (
               /* Android */
-              <Picker
-                selectedValue={selectedWeek ?? -1}
-                onValueChange={(val) => {
-                  setSelectedWeek(Number(val));
-                  setShowWeekPicker(false);
-                }}
-              >
-                <Picker.Item label="-- Select Week --" value={-1} />
-                {weeks.map((weekNum) => (
-                  <Picker.Item
-                    key={weekNum}
-                    label={`Week ${weekNum}`}
-                    value={weekNum}
-                  />
-                ))}
-              </Picker>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={selectedMonth}
+                  onValueChange={(val) => {
+                    setSelectedMonth(val);
+                    setSelectedWeek(null);
+                    setShowMonthPicker(false);
+                  }}
+                >
+                  <Picker.Item label="-- Select Week --" value={-1} />
+                  {weeks.map((weekNum) => (
+                    <Picker.Item
+                      key={weekNum}
+                      label={`Week ${weekNum}`}
+                      value={weekNum}
+                    />
+                  ))}
+                </Picker>
+              </View>
             )}
           </View>
         </>

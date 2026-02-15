@@ -188,9 +188,9 @@ const HigherOfficialDashboard = () => {
     <SafeAreaView style={styles.safeArea}>
       {/* BLUE HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleLogout}>
+        {/* <TouchableOpacity onPress={handleLogout}>
           <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Welcome, {name}</Text>
         {/* <MaterialCommunityIcons
             name="account-circle"

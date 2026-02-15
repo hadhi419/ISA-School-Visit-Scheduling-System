@@ -262,7 +262,7 @@ const Dashboard: FC<DashboardProps> = () => {
           </TouchableOpacity>
         )}
 
-        <Text style={styles.headerTitle}>Good Morning, {name}</Text>
+        <Text style={styles.headerTitle}>Welcome, {name}</Text>
 
         <MaterialCommunityIcons
           name="account"

@@ -165,9 +165,7 @@ const LocationSelection = () => {
         onClose={() => setAppAlert({ ...appAlert, visible: false })}
       />
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={28} color="#E0E0E0" />
-        </Pressable>
+       
 
         <Text style={styles.headerTitle}>Select Location</Text>
         <View style={{ width: 28 }} />

@@ -1,6 +1,7 @@
 import api from '@/api/axiosInstance';
 import { useAuth } from '@/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 import React, { FC, useEffect, useState } from 'react';
@@ -40,7 +41,8 @@ const LocationMonitoring: FC = () => {
   const [filterMode, setFilterMode] = useState<FilterMode>('DATE');
 
   const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(-1);
+  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+
   const [visits, setVisits] = useState<VisitItem[]>([]);
   const [showPicker, setShowPicker] = useState(false);
 
@@ -60,6 +62,8 @@ const LocationMonitoring: FC = () => {
   const [showWeekPicker, setShowWeekPicker] = useState(false);
 
   const [weeks, setWeeks] = useState<number[]>([]);
+
+  const [showAndroidPicker, setShowAndroidPicker] = useState(false);
 
   //const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -135,33 +139,33 @@ const LocationMonitoring: FC = () => {
     fetchLocations();
   }, []);
 
-  // 🔹 Load locations
-  useEffect(() => {
-    const now = new Date();
+  // // 🔹 Load locations
+  // useEffect(() => {
+  //   const now = new Date();
 
-    const monthNumber1to12 = monthsToGetWeeks.indexOf(selectedMonth) + 1; // 3
-    // //console.log('monthNameToNumber ', monthNumber1to12);
-    const currentYear = now.getFullYear();
+  //   const monthNumber1to12 = monthsToGetWeeks.indexOf(selectedMonth) + 1; // 3
+  //   // //console.log('monthNameToNumber ', monthNumber1to12);
+  //   const currentYear = now.getFullYear();
 
-    const weeks = getWeeksInMonth(monthNumber1to12, currentYear);
-    //  //console.log('Hehehee', weeks);
+  //   const weeks = getWeeksInMonth(monthNumber1to12, currentYear);
+  //   //  //console.log('Hehehee', weeks);
 
-    setWeeks(weeks);
+  //   setWeeks(weeks);
 
-    ////console.log(weeks);
+  //   ////console.log(weeks);
 
-    if (!isLoggedIn) {
-      router.replace('/');
-    }
-    ////console.log(role);
-    ////console.log(id);
-    const today = new Date();
+  //   if (!isLoggedIn) {
+  //     router.replace('/');
+  //   }
+  //   ////console.log(role);
+  //   ////console.log(id);
+  //   const today = new Date();
 
-    setSelectedDate(today);
+  //   setSelectedDate(today);
 
-    fetchData();
-    fetchLocations();
-  }, [selectedMonth]);
+  //   fetchData();
+  //   fetchLocations();
+  // }, [selectedMonth]);
 
   useEffect(() => {
     if (filterMode === 'DATE') {
@@ -249,22 +253,21 @@ const LocationMonitoring: FC = () => {
     }
   };
 
-  useEffect(() => {
-    setSelectedDate(null);
-    fetchData();
-  }, [selectedMonth, selectedWeek]);
+  // useEffect(() => {
+  //   setSelectedDate(null);
+  //   fetchData();
+  // }, [selectedMonth, selectedWeek]);
 
   // 🔹 Load visits by location
   useEffect(() => {
     if (!isLoggedIn) {
       router.replace('/');
     }
-    // //console.log('daaate', selectedDate);
-    if (!selectedLocation || selectedLocation === -1) {
+    if (!selectedLocation) {
       setVisits([]);
       return;
     }
-    //console.log('Debugging');
+
     fetchData();
   }, [selectedLocation, selectedDate, selectedMonth, selectedWeek]);
 
@@ -295,7 +298,11 @@ const LocationMonitoring: FC = () => {
                     styles.tab,
                     filterMode === 'DATE' && styles.activeTab,
                   ]}
-                  onPress={() => setFilterMode('DATE')}
+                  onPress={() => {
+                    setFilterMode('DATE');
+                    setSelectedMonth('');
+                    setSelectedWeek(0);
+                  }}
                 >
                   <Text
                     style={[
@@ -312,7 +319,10 @@ const LocationMonitoring: FC = () => {
                     styles.tab,
                     filterMode === 'MONTH_WEEK' && styles.activeTab,
                   ]}
-                  onPress={() => setFilterMode('MONTH_WEEK')}
+                  onPress={() => {
+                    setFilterMode('MONTH_WEEK');
+                    setSelectedDate(null);
+                  }}
                 >
                   <Text
                     style={[
@@ -421,7 +431,6 @@ const LocationMonitoring: FC = () => {
                   <Text style={styles.filterLabel}>Filter by Date</Text>
 
                   {Platform.OS === 'web' ? (
-                    // ✅ Web fallback
                     <input
                       type="date"
                       style={{
@@ -438,12 +447,11 @@ const LocationMonitoring: FC = () => {
                           : ''
                       }
                       onChange={(e) => {
-                        setSelectedMonth('');
                         setSelectedDate(new Date(e.target.value));
+                        setSelectedMonth('');
                       }}
                     />
-                  ) : (
-                    // ✅ Mobile (iOS + Android)
+                  ) : Platform.OS === 'ios' ? (
                     <>
                       <Pressable
                         style={styles.iosPickerButton}
@@ -457,30 +465,48 @@ const LocationMonitoring: FC = () => {
                       </Pressable>
 
                       <DatePickerModal
+                        locale="en-GB"
                         mode="single"
-                        locale="en"
                         visible={isDatePickerVisible}
-                        onDismiss={() => setDatePickerVisible(false)}
                         date={selectedDate ?? new Date()}
+                        onDismiss={() => setDatePickerVisible(false)}
                         onConfirm={({ date }) => {
-                          if (date) {
-                            setSelectedMonth('');
-                            setSelectedDate(date);
-                            // now matches Date | null
-                          }
                           setDatePickerVisible(false);
-                        }}
-                        theme={{
-                          colors: {
-                            background: '#ffffff',
-                            surface: '#ffffff',
-                            primary: '#1976D2',
-                            text: '#000000',
-                            onSurface: '#000000',
-                            outline: '#1976D2',
-                          },
+                          if (date) {
+                            setSelectedDate(date);
+                            setSelectedMonth('');
+                          }
                         }}
                       />
+                    </>
+                  ) : (
+                    /* ✅ ANDROID — native picker (VERY STABLE) */
+                    <>
+                      <Pressable
+                        style={styles.iosPickerButton}
+                        onPress={() => setShowAndroidPicker(true)}
+                      >
+                        <Text style={styles.iosPickerText}>
+                          {selectedDate
+                            ? selectedDate.toDateString()
+                            : '-- Select Date --'}
+                        </Text>
+                      </Pressable>
+
+                      {showAndroidPicker && (
+                        <DateTimePicker
+                          value={selectedDate ?? new Date()}
+                          mode="date"
+                          display="default"
+                          onChange={(event, date) => {
+                            setShowAndroidPicker(false);
+                            if (date) {
+                              setSelectedDate(date);
+                              setSelectedMonth('');
+                            }
+                          }}
+                        />
+                      )}
                     </>
                   )}
 
@@ -552,21 +578,23 @@ const LocationMonitoring: FC = () => {
                       </>
                     ) : (
                       /* Android */
-                      <Picker
-                        selectedValue={selectedMonth}
-                        onValueChange={(val) => {
-                          setSelectedMonth(val);
-                          setSelectedWeek(null);
-                        }}
-                      >
-                        {months.map((month) => (
-                          <Picker.Item
-                            key={month}
-                            label={month}
-                            value={month}
-                          />
-                        ))}
-                      </Picker>
+                      <View style={styles.pickerWrapper}>
+                        <Picker
+                          selectedValue={selectedMonth}
+                          onValueChange={(val) => {
+                            setSelectedMonth(val);
+                            setSelectedWeek(null);
+                          }}
+                        >
+                          {months.map((month) => (
+                            <Picker.Item
+                              key={month}
+                              label={month}
+                              value={month}
+                            />
+                          ))}
+                        </Picker>
+                      </View>
                     )}
                   </View>
 
@@ -628,19 +656,21 @@ const LocationMonitoring: FC = () => {
                       </>
                     ) : (
                       /* Android */
-                      <Picker
-                        selectedValue={selectedWeek ?? -1}
-                        onValueChange={(val) => setSelectedWeek(Number(val))}
-                      >
-                        <Picker.Item label="-- Select Week --" value={-1} />
-                        {weeks.map((weekNum) => (
-                          <Picker.Item
-                            key={weekNum}
-                            label={`Week ${weekNum}`}
-                            value={weekNum}
-                          />
-                        ))}
-                      </Picker>
+                      <View style={styles.pickerWrapper}>
+                        <Picker
+                          selectedValue={selectedWeek ?? -1}
+                          onValueChange={(val) => setSelectedWeek(Number(val))}
+                        >
+                          <Picker.Item label="-- Select Week --" value={-1} />
+                          {weeks.map((weekNum) => (
+                            <Picker.Item
+                              key={weekNum}
+                              label={`Week ${weekNum}`}
+                              value={weekNum}
+                            />
+                          ))}
+                        </Picker>
+                      </View>
                     )}
                   </View>
                 </>

@@ -212,14 +212,18 @@ const GenerateISAPdf: FC = () => {
 
       <View style={styles.pickersContainer}>
         {/* ISA Picker */}
-        {Platform.OS === 'web' ? (
+        {Platform.OS === 'android' || Platform.OS === 'web' ? (
           <View style={styles.customPicker}>
             <Text style={styles.pickerLabel}>Select ISA</Text>
             <Picker
               selectedValue={selectedIsa}
               onValueChange={(value) => setSelectedIsa(value)}
             >
-              <Picker.Item label="-- Select ISA --" value={null} />
+              <Picker.Item
+                style={styles.pickerValue}
+                label="Select ISA"
+                value={null}
+              />
               {isas.map((isa) => (
                 <Picker.Item
                   key={isa.id}
@@ -283,14 +287,18 @@ const GenerateISAPdf: FC = () => {
         )}
 
         {/* Month Picker */}
-        {Platform.OS === 'web' ? (
+        {Platform.OS === 'web' || Platform.OS === 'android' ? (
           <View style={styles.customPicker}>
             <Text style={styles.pickerLabel}>Month</Text>
             <Picker
               selectedValue={selectedMonth}
               onValueChange={(value) => setSelectedMonth(value)}
             >
-              <Picker.Item label="-- Select Month --" value={null} />
+              <Picker.Item
+                style={styles.pickerValue}
+                label="Select Month"
+                value={null}
+              />
               {MONTHS.map((m) => (
                 <Picker.Item key={m} label={m} value={m} />
               ))}
@@ -342,14 +350,18 @@ const GenerateISAPdf: FC = () => {
         )}
 
         {/* Year Picker */}
-        {Platform.OS === 'web' ? (
+        {Platform.OS === 'web' || Platform.OS === 'android' ? (
           <View style={styles.customPicker}>
             <Text style={styles.pickerLabel}>Year</Text>
             <Picker
               selectedValue={selectedYear?.toString() ?? ''}
               onValueChange={(value) => setSelectedYear(parseInt(value, 10))}
             >
-              <Picker.Item label="-- Select Year --" value="" />
+              <Picker.Item
+                style={styles.pickerValue}
+                label="Select Year"
+                value=""
+              />
               {YEARS.map((y) => (
                 <Picker.Item key={y} label={y} value={y} />
               ))}

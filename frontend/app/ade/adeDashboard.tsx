@@ -5,11 +5,11 @@ import { router, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal } from 'react-native';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../../api/axiosInstance';
 
 import {
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -287,7 +287,7 @@ const HigherOfficialDashboard = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f8f9fb' },
+  safeArea: { flex: 1, backgroundColor: '#ffffff' },
   scrollContent: { paddingBottom: 40 },
 
   header: {

@@ -164,14 +164,14 @@ const HigherOfficialDashboard = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => {
             logout();
             router.replace('/');
           }}
         >
           <MaterialCommunityIcons name="logout" size={28} color="#eee" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Welcome, ZDE</Text>
         <MaterialCommunityIcons
           name="account"
