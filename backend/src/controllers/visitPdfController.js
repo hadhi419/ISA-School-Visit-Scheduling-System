@@ -403,7 +403,7 @@ export const generateVisitPdf = async (req, res) => {
 
       if (isFly) {
         // Fly.io / Docker
-        return await puppeteerCore.launch({
+        return await puppeteer.launch({
           executablePath:
             process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
           headless: true,
