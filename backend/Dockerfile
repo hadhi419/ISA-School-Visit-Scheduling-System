@@ -23,11 +23,34 @@ FROM base
 
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
-    chromium chromium-sandbox \
+    chromium \
+    chromium-sandbox \
+    ca-certificates \
     fonts-liberation \
-    libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcomposite1 \
-    libxdamage1 libxrandr2 libgbm1 libasound2 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnss3 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxrandr2 \
+    xdg-utils \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+
+
+    
 
 COPY --from=build /app /app
 
