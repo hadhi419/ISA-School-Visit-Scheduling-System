@@ -40,10 +40,11 @@ export const registerUser = async (req, res) => {
 // Login user
 export const loginUser = async (req, res) => {
   try {
+    console.log('Heyyy');
     const { email, password } = req.body;
 
     const user = await getUserByEmail(email);
-    //////console.log(user);
+    console.log(user);
 
     ////console.log(user.role);
     if (!user)

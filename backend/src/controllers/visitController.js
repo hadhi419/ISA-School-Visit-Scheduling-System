@@ -11,12 +11,13 @@ import {
 export const postMultipleVisits = async (req, res) => {
   try {
     const visitsArray = req.body;
-    //////console.log(visitsArray);
+    console.log(visitsArray);
     const message = await postVisits(visitsArray);
-    //////console.log(message);
+    console.log(message);
+    console.log('Hello');
     res.json({ message });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err });
   }
 };
 

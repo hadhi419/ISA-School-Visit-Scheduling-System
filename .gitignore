@@ -1,6 +1,8 @@
 # ===== Dependencies =====
 node_modules/
 
+backend/.env
+
 # ===== Expo =====
 .expo/
 expo/
