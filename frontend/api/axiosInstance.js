@@ -2,9 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  //baseURL: 'https://isa-school-visit-scheduling-system.onrender.com/api',
-  // baseURL: 'https://isa-school-visit-scheduling-system.fly.dev/api',
+  //baseURL: 'http://localhost:5000/api',
+  // baseURL: 'https://isa-school-visit-scheduling-system.onrender.com/api',
+  baseURL: 'https://isa-school-visit-scheduling-system-ik-sta.fly.dev/api',
 });
 
 api.interceptors.request.use(
