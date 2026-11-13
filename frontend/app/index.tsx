@@ -44,7 +44,7 @@ const Login: React.FC = () => {
 
       const response = await axios.post(
         //'https://isa-school-visit-scheduling-system.fly.dev/api/auth/login',
-        'http://3.107.169.221:5000/api/auth/login',
+        'https://3.107.169.221:5000/api/auth/login',
         {
           email,
           password,
