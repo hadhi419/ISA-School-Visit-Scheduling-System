@@ -41,7 +41,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
       [selectedMonth]
     );
 
-    ////console.log(rows);
+    console.log(rows);
 
     return rows;
   } catch (err) {
