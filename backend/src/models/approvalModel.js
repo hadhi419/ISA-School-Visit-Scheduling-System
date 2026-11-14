@@ -42,6 +42,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
     );
 
     console.log(rows);
+    console.log("Hadhi"};
 
     return rows;
   } catch (err) {
