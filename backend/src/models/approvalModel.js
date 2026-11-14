@@ -11,45 +11,32 @@ export const getSubmittedVisitsSummaryService = async (month) => {
 
     const [rows] = await db.query(
       `
-SELECT
-    u.id AS isa_id,
-    u.full_name AS isa_name,
+SELECT 
+        u.id AS isa_id,
+        u.full_name AS isa_name,
 
-    CASE
-        WHEN COUNT(v.id) = 0 THEN 'IN_PROCESS'
-        WHEN SUM(CASE WHEN v.status LIKE '%REJECTED%' THEN 1 ELSE 0 END) > 0
-            THEN MAX(CASE WHEN v.status LIKE '%REJECTED%' THEN v.status END)
-        WHEN SUM(CASE WHEN v.status LIKE '%DDE_APPROVED%' THEN 1 ELSE 0 END) > 0
-            THEN MAX(CASE WHEN v.status LIKE '%DDE_APPROVED%' THEN v.status END)
-        WHEN SUM(CASE WHEN v.status LIKE '%ADE_APPROVED%' THEN 1 ELSE 0 END) > 0
-            THEN MAX(CASE WHEN v.status LIKE '%ADE_APPROVED%' THEN v.status END)
-        WHEN SUM(CASE WHEN v.status = 'PENDING' THEN 1 ELSE 0 END) > 0
-            THEN 'PENDING'
-        ELSE 'IN_PROCESS'
-    END AS status,
+      
+        MAX(
+          CASE
+            WHEN v.status LIKE '%REJECTED%' THEN v.status
+            WHEN v.status LIKE '%APPROVED%' THEN v.status
+            WHEN v.status = 'PENDING' THEN 'PENDING'
+            ELSE 'IN_PROCESS'
+          END
+        ) AS overall_status,
 
-    CASE
-        WHEN COUNT(v.id) = 0 THEN FALSE
-        WHEN SUM(
-            CASE
-                WHEN v.status <> 'IN_PROCESS' THEN 1
-                ELSE 0
-            END
-        ) > 0 THEN TRUE
-        ELSE FALSE
-    END AS scheduleSubmitted
+       CASE 
+        WHEN COUNT(v.id) = 0 THEN 0
+        WHEN SUM(CASE WHEN v.status <> 'IN_PROCESS' THEN 1 ELSE 0 END) > 0 THEN 1
+        ELSE 0
+      END AS schedule_submitted
 
-FROM users u
 
-LEFT JOIN visits v
-    ON v.isa_id = u.id
-    AND v.month = 'March'
-
-WHERE u.role = 'ISA'
-
-GROUP BY u.id, u.full_name
-
-ORDER BY u.full_name ASC;
+      FROM users u
+      LEFT JOIN visits v ON v.isa_id = u.id AND v.month = ?
+      WHERE u.role = 'ISA'
+      GROUP BY u.id, u.full_name
+      ORDER BY u.full_name ASC
 
       `,
       [selectedMonth]
