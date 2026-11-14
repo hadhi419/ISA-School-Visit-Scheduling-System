@@ -12,8 +12,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
     const [rows] = await db.query(
       `SELECT 
         u.id AS isa_id,
-        u.full_name AS isa_name,
-        v.status,
+        u.full_name AS isa_name
 
       
         MAX(
