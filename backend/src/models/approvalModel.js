@@ -46,7 +46,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
 
     return rows;
   } catch (err) {
-    ////console.error(err);
+    console.error(err);
     return [];
   }
 };
