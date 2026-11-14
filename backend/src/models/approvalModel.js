@@ -6,7 +6,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
     const selectedMonth =
       month || new Date().toLocaleString('default', { month: 'long' });
 
-    ////console.log(selectedMonth);
+    console.log("hsfuhrrrg");
     ////console.log('2', month);
 
     const [rows] = await db.query(
