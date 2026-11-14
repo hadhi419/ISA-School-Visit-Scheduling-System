@@ -42,7 +42,7 @@ export const getSubmittedVisitsSummaryService = async (month) => {
     );
 
     console.log(rows);
-    console.log("Hadhi"};
+    console.log("Hadhi");
 
     return rows;
   } catch (err) {
